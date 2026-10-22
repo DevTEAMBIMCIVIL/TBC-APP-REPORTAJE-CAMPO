@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1A1A1A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icono-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Acta de Visita · TeamBIMCivil</title>
 <!-- Librerías locales (sin CDN): jsPDF 4.2.1 y fuente ActaSans para el PDF -->
 <script src="lib/jspdf.umd.min.js"></script>
@@ -704,6 +708,152 @@
     background-position: right 14px center;
     padding-right: 36px;
   }
+  /* ── v2.1 · CABECERA, AVISOS, GPS Y MIS ACTAS ── */
+  .header-acta-num { max-width: 36vw; overflow: hidden; text-overflow: ellipsis; }
+  .header-btn {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 1px solid #444;
+    background: #2A2A2A;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .estado-guardado { font-size: 9px; color: #8C8C8C; margin-top: 3px; letter-spacing: 0.2px; }
+  .estado-guardado.ok { color: #6FCF97; }
+  .estado-guardado.lectura { color: #F2C94C; }
+  .estado-guardado.error { color: #FF8A8A; }
+  .aviso-banda { padding: 10px 16px; font-size: 12px; line-height: 1.5; }
+  .aviso-banda a { color: inherit; font-weight: 700; word-break: break-all; }
+  .aviso-entorno { background: #FEE; color: var(--rojo); border-bottom: 1px solid #F5BFBF; }
+  .aviso-version {
+    background: #FFF8E5;
+    color: #7A5A00;
+    border-bottom: 1px solid #F0D88A;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .aviso-version button {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--negro);
+    color: white;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .gps-status a { color: inherit; font-weight: 700; }
+  .gps-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .gps-btn-sec {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: 2px solid var(--verde);
+    border-radius: 10px;
+    background: #E8F5ED;
+    color: var(--verde);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .gps-sin {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gris-claro);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--negro);
+    cursor: pointer;
+  }
+  .gps-sin input { width: 20px; height: 20px; accent-color: var(--rojo); }
+  .sin-gps-campos { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field-input:disabled { background: #F5F5F5; color: var(--gris); }
+  .photo-slot .photo-meta {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    max-width: calc(100% - 12px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+  .emit-nota {
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #FFFBEA;
+    border: 1px solid #F0D88A;
+    color: #7A5A00;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .emit-extra { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .emit-extra .btn { width: 100%; flex: none; font-size: 13px; }
+  .panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 400; }
+  .panel-overlay.open { display: block; }
+  .panel { max-width: 430px; height: 100%; margin: 0 auto; overflow-y: auto; background: var(--fondo); padding: 0 16px 24px; }
+  .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 -16px 16px;
+    padding: 14px 16px;
+    background: var(--negro);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title { color: white; font-size: 16px; font-weight: 800; }
+  .panel-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px 8px; }
+  .panel-actions { display: flex; flex-direction: column; gap: 8px; }
+  .panel-note { font-size: 11px; color: var(--gris); text-align: center; margin: 10px 0 14px; }
+  .panel-empty { text-align: center; color: var(--gris); font-size: 13px; padding: 30px 0; }
+  .acta-card {
+    background: white;
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .acta-card.actual { border: 2px solid var(--rojo); }
+  .acta-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .acta-card-num { font-size: 15px; font-weight: 800; color: var(--negro); word-break: break-word; }
+  .acta-card-sub { font-size: 11.5px; color: var(--gris); margin-top: 3px; }
+  .acta-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .acta-card-actions button {
+    flex: 1 1 auto;
+    padding: 8px 10px;
+    border: 1px solid var(--gris-medio);
+    border-radius: 8px;
+    background: white;
+    color: var(--negro);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .acta-card-actions button.peligro { flex: 0 0 auto; color: var(--rojo); border-color: #F5BFBF; }
   .hidden { display: none !important; }
 
 </style>
@@ -725,8 +875,10 @@
   <div class="header-text">
     <h1>TeamBIMCivil</h1>
     <p>Acta de Visita de Campo</p>
+    <div class="estado-guardado" id="estadoGuardado"></div>
   </div>
   <div class="header-acta-num" id="headerActaNum">Nueva Acta</div>
+  <button class="header-btn" onclick="abrirMisActas()" aria-label="Mis actas" title="Mis actas">📂</button>
 </header>
 
 <!-- STEPPER -->
@@ -757,6 +909,16 @@
   </div>
 </nav>
 
+<!-- AVISOS -->
+<div class="aviso-banda aviso-entorno hidden" id="avisoEntorno">
+  ⚠️ <strong>Has abierto la app como archivo:</strong> así no funcionan el GPS, el guardado ni la instalación.
+  Ábrela desde <a id="avisoEntornoEnlace" href="#"></a>
+</div>
+<div class="aviso-banda aviso-version hidden" id="avisoVersion">
+  <span>🔄 Hay una versión nueva de la app.</span>
+  <button onclick="location.reload()">Actualizar</button>
+</div>
+
 <!-- ═══════════════════════════════════════════
      FASE 1 – IDENTIFICACIÓN
 ═══════════════════════════════════════════ -->
@@ -766,7 +928,7 @@
 
   <div class="field-group">
     <div class="field-label">Nº de Acta <span class="required">*</span></div>
-    <input type="text" class="field-input" id="actaNum" placeholder="Ej. TBC-2026-0042" oninput="actualizarNumActa()">
+    <input type="text" class="field-input" id="actaNum" placeholder="Ej. TBC-2026-0042">
   </div>
 
   <div class="field-group">
@@ -800,10 +962,22 @@
       <div class="gps-warning">
         ⚠️ Asegúrate de tener la <strong>localización activada</strong> en tu dispositivo antes de obtener las coordenadas.
       </div>
-      <button class="gps-btn" onclick="obtenerGPS()">
-        📍 Obtener coordenadas GPS
-      </button>
+      <button class="gps-btn" id="gpsBtn" onclick="iniciarGPS()">📍 Obtener coordenadas GPS</button>
       <div class="gps-status" id="gpsStatus"></div>
+      <button class="gps-btn-sec hidden" id="gpsUsarBtn" onclick="fijarPosicion()">✔ Usar esta posición</button>
+      <label class="gps-sin">
+        <input type="checkbox" id="sinGpsCheck" onchange="cambiarSinGps(this.checked)">
+        Sin cobertura GPS (interior, túnel…)
+      </label>
+      <div class="sin-gps-campos hidden" id="sinGpsCampos">
+        <div class="field-label">Referencia de ubicación <span class="required">*</span></div>
+        <input type="text" class="field-input" id="sinGpsRef" placeholder="PK 2+100, dirección o estancia">
+        <div class="field-label" style="margin-top:6px;">Coordenadas manuales (opcional)</div>
+        <div class="coord-row">
+          <input type="text" class="field-input" id="sinGpsLat" inputmode="decimal" placeholder="Latitud: 37.38921">
+          <input type="text" class="field-input" id="sinGpsLng" inputmode="decimal" placeholder="Longitud: -5.98446">
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -813,9 +987,9 @@
 ═══════════════════════════════════════════ -->
 <section class="phase-container" id="phase2">
   <p class="phase-title">📸 <span>Fotografías</span></p>
-  <p class="phase-subtitle">Captura o selecciona hasta 10 fotos del campo. Usa la cámara trasera para mejor calidad.</p>
+  <p class="phase-subtitle">Captura o selecciona hasta <span id="photoMaxSub">50</span> fotos del campo. Usa la cámara trasera para mejor calidad.</p>
 
-  <div class="photo-counter"><span id="photoCountVal">0</span> / 10 fotos añadidas</div>
+  <div class="photo-counter"><span id="photoCountVal">0</span> / <span id="photoMax">50</span> fotos añadidas</div>
 
   <div class="photos-grid" id="photosGrid"></div>
 
@@ -909,14 +1083,16 @@
     </div>
   </div>
 
+  <div class="emit-nota" id="emitNota"></div>
+
   <div style="padding:12px; background:#F8F8F8; border-radius:10px; border:1px dashed var(--gris-medio); font-size:11.5px; color:var(--gris); line-height:1.6;">
     ℹ️ <strong>Nota WhatsApp:</strong> Al pulsar "Compartir", el PDF se descargará automáticamente y se abrirá WhatsApp Web. Adjunta manualmente el archivo descargado en la conversación deseada.
   </div>
 
-  <div style="margin-top: 16px; text-align:center;">
-    <button class="btn btn-secondary" style="width:100%; color:#999; font-size:13px;" onclick="nuevaActa()">
-      🔄 Nueva Acta
-    </button>
+  <div class="emit-extra">
+    <button class="btn btn-dark hidden" id="btnCorregir" onclick="corregirActa(state.acta.id)">📝 Corregir (copia editable)</button>
+    <button class="btn btn-secondary" onclick="nuevaActa()">🔄 Nueva Acta</button>
+    <button class="btn btn-secondary" onclick="abrirMisActas()">📂 Mis actas</button>
   </div>
 </section>
 
@@ -924,6 +1100,22 @@
 <div class="nav-bar" id="navBar">
   <button class="btn btn-secondary" id="btnBack" onclick="anterior()" style="display:none">← Atrás</button>
   <button class="btn btn-primary" id="btnNext" onclick="siguiente()">Siguiente →</button>
+</div>
+
+<!-- MIS ACTAS -->
+<div class="panel-overlay" id="panelActas">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">📂 Mis actas</div>
+      <button class="panel-close" onclick="cerrarMisActas()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-primary" onclick="nuevaActa()">➕ Nueva acta</button>
+      <button class="btn btn-dark hidden" id="btnInstalar" onclick="instalarApp()">📲 Instalar la app en el teléfono</button>
+    </div>
+    <div class="panel-note">Las actas se guardan solo en este teléfono. Las emitidas son de solo lectura.</div>
+    <div id="listaActas"></div>
+  </div>
 </div>
 
 <!-- ALERT MODAL -->
@@ -945,28 +1137,36 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.0
-//  · Navegación por fases: cada fase declara alEntrar() y validar().
-//  · Firma vectorial: se guardan los trazos y se redibujan al cambiar
-//    el tamaño del lienzo (al mostrarse la fase o al girar el móvil).
-//  · PDF con jsPDF local (lib/) y fuente ActaSans (lib/fuentes-pdf.js).
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.1
+//  · Navegación por fases: cada fase declara alEntrar(), alSalir() y validar().
+//  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
+//    Las actas emitidas (PDF descargado) son de solo lectura.
+//  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto.
+//  · Firma vectorial y PDF con jsPDF local (lib/).
+//  · Se instala y funciona sin cobertura gracias a sw.js.
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '2.0';
-const MAX_FOTOS = 10;
-const MAX_COMENTARIO = 1000;      // caracteres por comentario de foto
-const FOTO_ANCHO_MAX = 1200;      // px, como en la v1
-const FOTO_CALIDAD = 0.75;        // JPEG, como en la v1
+const VERSION = '2.1';
+const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
+const MAX_FOTOS = 50;
+const MAX_COMENTARIO = 1000;          // caracteres por comentario de foto
+const FOTO_ANCHO_MAX = 1200;          // px, como en la v1
+const FOTO_CALIDAD = 0.75;            // JPEG, como en la v1
+const GPS_OBJETIVO_M = 10;            // con esta precisión la posición se fija sola
+const GPS_ESPERA_MS = 60000;          // búsqueda máxima de señal
+const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fotos durante 2 min
+const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
 
 // ═══════════════════════════════════
 //  ESTADO
 // ═══════════════════════════════════
 const state = {
   fase: 1,
-  gps: null,              // { lat, lng, acc }
-  fotos: [],              // { dataUrl, ancho, alto, comentario }
+  acta: null,            // registro del acta en pantalla (se guarda tal cual en el teléfono)
+  persistida: false,     // false = acta nueva sin cambios: aún no se guarda
   fotosEnProceso: 0,
-  firma: [],              // trazos: { refW, refH, puntos: [[x, y], …] } en px CSS del lienzo
+  blobs: new Map(),      // id de foto → Blob JPEG
+  urls: new Map(),       // id de foto → URL para mostrarla
 };
 
 // ═══════════════════════════════════
@@ -976,9 +1176,14 @@ const $ = id => document.getElementById(id);
 const dos = n => String(n).padStart(2, '0');
 const fechaLocal = (d = new Date()) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
 const horaLocal = (d = new Date()) => `${dos(d.getHours())}:${dos(d.getMinutes())}`;
+const fechaHoraCorta = iso => (iso ? `${fechaLocal(new Date(iso))} ${horaLocal(new Date(iso))}` : '');
 const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ENTIDADES[c]);
 const esperar = ms => new Promise(resolver => setTimeout(resolver, ms));
+const nuevoId = prefijo => `${prefijo}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const soloLectura = () => state.acta?.estado === 'emitida';
+// El GPS, el guardado y la instalación solo funcionan en HTTPS (o en localhost), no abriendo el archivo.
+const entornoSeguro = () => window.isSecureContext && /^https?:$/.test(location.protocol);
 
 // Muestra el aviso modal y devuelve false (permite `return condición || aviso(…)`).
 function aviso(icono, titulo, mensaje) {
@@ -991,24 +1196,196 @@ function aviso(icono, titulo, mensaje) {
 function cerrarAviso() { $('alertOverlay').classList.remove('open'); }
 
 // ═══════════════════════════════════
-//  INICIO
+//  ALMACÉN EN EL TELÉFONO (IndexedDB)
+//  · actas: un registro por acta (datos, GPS, fotos sin imagen, firma).
+//  · fotos: la imagen JPEG de cada foto, por separado.
 // ═══════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('.header-text p').textContent = `Acta de Visita de Campo · v${VERSION}`;
-  ponerFechaHoraActual();
-  iniciarFirma();
-  $('commentsContainer').addEventListener('input', alEscribirComentario);
-  irAFase(1);
-});
+const Almacen = (() => {
+  let promesaBD = null;
+  function bd() {
+    if (!promesaBD) {
+      promesaBD = new Promise((resolver, rechazar) => {
+        if (!window.indexedDB) return rechazar(new Error('Este navegador no permite guardar datos.'));
+        const peticion = indexedDB.open('tbc-actas', 1);
+        peticion.onupgradeneeded = () => {
+          const base = peticion.result;
+          base.createObjectStore('actas', { keyPath: 'id' });
+          base.createObjectStore('fotos', { keyPath: 'id' }).createIndex('porActa', 'actaId');
+        };
+        peticion.onsuccess = () => resolver(peticion.result);
+        peticion.onerror = () => rechazar(peticion.error);
+      });
+      promesaBD.catch(() => { promesaBD = null; });
+    }
+    return promesaBD;
+  }
+  async function operar(almacen, modo, accion) {
+    const base = await bd();
+    return new Promise((resolver, rechazar) => {
+      const tx = base.transaction(almacen, modo);
+      const peticion = accion(tx.objectStore(almacen));
+      tx.oncomplete = () => resolver(peticion ? peticion.result : undefined);
+      tx.onerror = tx.onabort = () => rechazar(tx.error);
+    });
+  }
+  return {
+    guardarActa: acta => operar('actas', 'readwrite', s => s.put(acta)),
+    leerActa: id => operar('actas', 'readonly', s => s.get(id)),
+    listarActas: () => operar('actas', 'readonly', s => s.getAll()),
+    guardarFoto: (id, actaId, blob) => operar('fotos', 'readwrite', s => s.put({ id, actaId, blob })),
+    fotosDeActa: actaId => operar('fotos', 'readonly', s => s.index('porActa').getAll(actaId)),
+    borrarFoto: id => operar('fotos', 'readwrite', s => s.delete(id)),
+    async borrarActa(id) {
+      const base = await bd();
+      return new Promise((resolver, rechazar) => {
+        const tx = base.transaction(['actas', 'fotos'], 'readwrite');
+        tx.objectStore('actas').delete(id);
+        const fotos = tx.objectStore('fotos');
+        fotos.index('porActa').openKeyCursor(IDBKeyRange.only(id)).onsuccess = e => {
+          const cursor = e.target.result;
+          if (cursor) { fotos.delete(cursor.primaryKey); cursor.continue(); }
+        };
+        tx.oncomplete = () => resolver();
+        tx.onerror = tx.onabort = () => rechazar(tx.error);
+      });
+    },
+  };
+})();
 
-function ponerFechaHoraActual() {
+function actaNueva(base = {}) {
   const ahora = new Date();
-  $('fechaVisita').value = fechaLocal(ahora);   // fecha local (la v1 usaba UTC)
-  $('horaVisita').value = horaLocal(ahora);
+  return {
+    id: nuevoId('acta'),
+    esquema: 1,
+    estado: 'borrador',               // 'borrador' | 'emitida'
+    creada: ahora.toISOString(),
+    modificada: ahora.toISOString(),
+    emitida: null,
+    fase: 1,
+    datos: { actaNum: '', tecnico: '', expediente: '', descripcion: '', fecha: fechaLocal(ahora), hora: horaLocal(ahora), ...base },
+    gps: null,                        // { lat, lng, acc, hora }
+    sinGps: { activo: false, referencia: '', lat: '', lng: '' },
+    fotos: [],                        // { id, ancho, alto, comentario, hora, horaFuente, gps }
+    firma: [],                        // trazos: { refW, refH, puntos: [[x, y], …] }
+  };
 }
 
-function actualizarNumActa() {
-  $('headerActaNum').textContent = $('actaNum').value.trim() || 'Nueva Acta';
+// ═══════════════════════════════════
+//  AUTOGUARDADO
+// ═══════════════════════════════════
+let temporizadorGuardado = null;
+let persistenciaPedida = false;
+
+function guardarPronto() {
+  if (!state.acta || soloLectura()) return;
+  state.persistida = true;
+  state.acta.modificada = new Date().toISOString();
+  indicarGuardado('pendiente');
+  clearTimeout(temporizadorGuardado);
+  temporizadorGuardado = setTimeout(guardarYa, 400);
+}
+
+async function guardarYa() {
+  clearTimeout(temporizadorGuardado);
+  if (!state.acta || !state.persistida) return;
+  try {
+    await Almacen.guardarActa(state.acta);
+    recordarActaActual(state.acta.id);
+    indicarGuardado(soloLectura() ? 'lectura' : 'ok');
+    if (!persistenciaPedida && navigator.storage && navigator.storage.persist) {
+      persistenciaPedida = true;
+      navigator.storage.persist().catch(() => {});   // pide al navegador que no borre los datos
+    }
+  } catch (e) {
+    indicarGuardado('error');
+  }
+}
+
+function recordarActaActual(id) {
+  try { localStorage.setItem(CLAVE_ACTA_ACTUAL, id); } catch (e) { /* sin almacenamiento local */ }
+}
+
+function indicarGuardado(estado) {
+  const textos = {
+    nueva: 'Nueva acta', pendiente: 'Guardando…', ok: '✓ Guardada en el teléfono',
+    lectura: '🔒 Emitida · solo lectura', error: '⚠ No se puede guardar en este navegador',
+  };
+  const el = $('estadoGuardado');
+  el.textContent = textos[estado] || '';
+  el.className = `estado-guardado ${estado}`;
+}
+
+// ═══════════════════════════════════
+//  INICIO
+// ═══════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  document.querySelector('.header-text p').textContent = `Acta de Visita de Campo · v${VERSION}`;
+  $('photoMax').textContent = MAX_FOTOS;
+  $('photoMaxSub').textContent = MAX_FOTOS;
+  avisarSiEsArchivo();
+  iniciarFirma();
+  enlazarCampos();
+  $('commentsContainer').addEventListener('input', alEscribirComentario);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') guardarYa(); });
+  window.addEventListener('pagehide', () => { guardarYa(); });
+  registrarServiceWorker();
+  prepararInstalacion();
+  await cargarActaInicial();
+});
+
+function avisarSiEsArchivo() {
+  if (entornoSeguro()) return;
+  const enlace = $('avisoEntornoEnlace');
+  enlace.href = URL_OFICIAL;
+  enlace.textContent = URL_OFICIAL.replace(/^https:\/\//, '');
+  $('avisoEntorno').classList.remove('hidden');
+}
+
+async function cargarActaInicial() {
+  let acta = null;
+  try {
+    const id = localStorage.getItem(CLAVE_ACTA_ACTUAL);
+    if (id) acta = await Almacen.leerActa(id);
+  } catch (e) { /* sin almacén: se trabaja solo en memoria */ }
+  await abrirActa(acta || actaNueva(), { nueva: !acta });
+}
+
+async function abrirActa(acta, { nueva = false } = {}) {
+  detenerGPS();
+  detenerGPSFotos();
+  liberarFotos();
+  state.acta = acta;
+  state.persistida = !nueva;
+  if (!nueva) {
+    const fotos = await Almacen.fotosDeActa(acta.id).catch(() => []);
+    for (const f of fotos) {
+      state.blobs.set(f.id, f.blob);
+      state.urls.set(f.id, URL.createObjectURL(f.blob));
+    }
+    acta.fotos = acta.fotos.filter(f => state.blobs.has(f.id));
+    recordarActaActual(acta.id);
+  }
+  pintarActa();
+  irAFase(soloLectura() ? ULTIMA_FASE : (acta.fase || 1), { guardar: false });
+  indicarGuardado(soloLectura() ? 'lectura' : (nueva ? 'nueva' : 'ok'));
+}
+
+function liberarFotos() {
+  state.urls.forEach(url => URL.revokeObjectURL(url));
+  state.urls.clear();
+  state.blobs.clear();
+}
+
+// Copia el acta en pantalla a los campos del formulario.
+function pintarActa() {
+  for (const [clave, id] of Object.entries(CAMPOS)) $(id).value = state.acta.datos[clave] || '';
+  const bloqueado = soloLectura();
+  document.querySelectorAll('.field-input').forEach(el => { el.disabled = bloqueado; });
+  $('sinGpsCheck').disabled = bloqueado;
+  actualizarNumActa();
+  pintarGPS();
+  pintarSinGps();
+  pintarFotos();
 }
 
 // ═══════════════════════════════════
@@ -1016,18 +1393,25 @@ function actualizarNumActa() {
 // ═══════════════════════════════════
 const FASES = {
   1: { validar: validarIdentificacion },
-  2: { alEntrar: pintarFotos, validar: validarFotos },
+  2: { alEntrar: entrarFotos, alSalir: detenerGPSFotos, validar: validarFotos },
   3: { alEntrar: construirComentarios },
   4: { alEntrar: entrarFirma, validar: validarFirma },
-  5: { alEntrar: construirRevision },
+  5: { alEntrar: construirRevision, validar: validarEmision },
   6: { alEntrar: construirEmision },
 };
 const ULTIMA_FASE = 6;
 
-function irAFase(n) {
+function irAFase(n, { guardar = true } = {}) {
+  if (soloLectura() && n < 5) {
+    aviso('🔒', 'Acta emitida', 'Esta acta ya está emitida y no se puede modificar. Para corregirla, pulsa «Corregir»: se crea una copia editable.');
+    return;
+  }
+  const anteriorFase = FASES[state.fase];
+  if (state.fase !== n && anteriorFase && anteriorFase.alSalir) anteriorFase.alSalir();
   document.querySelectorAll('.phase-container')
     .forEach(seccion => seccion.classList.toggle('active', seccion.id === `phase${n}`));
   state.fase = n;
+  if (guardar && !soloLectura() && state.acta.fase !== n) { state.acta.fase = n; guardarPronto(); }
   const fase = FASES[n];
   if (fase.alEntrar) fase.alEntrar();   // la fase ya es visible: el lienzo de firma tiene tamaño
   actualizarStepper();
@@ -1037,7 +1421,7 @@ function irAFase(n) {
 
 function siguiente() {
   const fase = FASES[state.fase];
-  if (fase.validar && !fase.validar()) return;
+  if (!soloLectura() && fase.validar && !fase.validar()) return;
   if (state.fase < ULTIMA_FASE) irAFase(state.fase + 1);
 }
 
@@ -1055,84 +1439,292 @@ function actualizarStepper() {
 
 function actualizarNavegacion() {
   const atras = $('btnBack'), sig = $('btnNext');
-  atras.style.display = state.fase > 1 ? 'flex' : 'none';
+  const minimo = soloLectura() ? 5 : 1;
+  atras.style.display = state.fase > minimo ? 'flex' : 'none';
   sig.style.display = state.fase === ULTIMA_FASE ? 'none' : 'flex';
-  const emitir = state.fase === ULTIMA_FASE - 1;
+  const emitir = state.fase === ULTIMA_FASE - 1 && !soloLectura();
   sig.textContent = emitir ? 'Emitir Acta →' : 'Siguiente →';
   sig.className = emitir ? 'btn btn-success' : 'btn btn-primary';
 }
 
 // ═══════════════════════════════════
-//  FASE 1 · IDENTIFICACIÓN Y GPS
+//  FASE 1 · IDENTIFICACIÓN Y UBICACIÓN
 // ═══════════════════════════════════
+const CAMPOS = {   // clave en el acta → id del campo
+  actaNum: 'actaNum', tecnico: 'tecnico', expediente: 'expediente',
+  descripcion: 'descripcion', fecha: 'fechaVisita', hora: 'horaVisita',
+};
+const CAMPOS_SIN_GPS = { referencia: 'sinGpsRef', lat: 'sinGpsLat', lng: 'sinGpsLng' };
+
+function enlazarCampos() {
+  for (const [clave, id] of Object.entries(CAMPOS)) {
+    $(id).addEventListener('input', () => {
+      if (soloLectura()) return;
+      state.acta.datos[clave] = $(id).value;
+      if (clave === 'actaNum') actualizarNumActa();
+      guardarPronto();
+    });
+  }
+  for (const [clave, id] of Object.entries(CAMPOS_SIN_GPS)) {
+    $(id).addEventListener('input', () => {
+      if (soloLectura()) return;
+      state.acta.sinGps[clave] = $(id).value;
+      guardarPronto();
+    });
+  }
+}
+
+function actualizarNumActa() {
+  $('headerActaNum').textContent = (state.acta && state.acta.datos.actaNum.trim()) || 'Nueva Acta';
+}
+
 function validarIdentificacion() {
+  const d = state.acta.datos;
   const obligatorios = [
     ['actaNum', 'Introduce el número de acta para continuar.'],
     ['tecnico', 'Introduce el nombre del técnico.'],
     ['expediente', 'Introduce el expediente del trabajo.'],
-    ['fechaVisita', 'Selecciona la fecha de la visita.'],
+    ['fecha', 'Selecciona la fecha de la visita.'],
   ];
-  for (const [id, mensaje] of obligatorios) {
-    if (!$(id).value.trim()) return aviso('⚠️', 'Campo requerido', mensaje);
+  for (const [clave, mensaje] of obligatorios) {
+    if (!String(d[clave] || '').trim()) return aviso('⚠️', 'Campo requerido', mensaje);
   }
-  return Boolean(state.gps) || aviso('📍', 'GPS requerido', 'Debes obtener la localización GPS antes de continuar.');
+  return validarUbicacion();
 }
 
-function obtenerGPS() {
+function validarUbicacion() {
+  if (state.acta.gps) return true;
+  const s = state.acta.sinGps;
+  if (!s.activo) {
+    return aviso('📍', 'Ubicación requerida', 'Obtén la posición GPS o, si no hay señal, marca «Sin cobertura GPS» e indica una referencia.');
+  }
+  if (!s.referencia.trim()) {
+    return aviso('📍', 'Referencia requerida', 'Sin cobertura GPS hay que indicar una referencia de ubicación: PK, dirección o estancia.');
+  }
+  if (coordenadasManuales(state.acta) === false) {
+    return aviso('📍', 'Coordenadas no válidas', 'Escribe latitud y longitud en grados decimales (p. ej. 37.38921 y -5.98446) o deja las dos vacías.');
+  }
+  return true;
+}
+
+// null = sin coordenadas; false = no válidas; { lat, lng } = válidas
+function coordenadasManuales(acta) {
+  const texto = v => String(v || '').trim().replace(',', '.');
+  const tLat = texto(acta.sinGps.lat), tLng = texto(acta.sinGps.lng);
+  if (!tLat && !tLng) return null;
+  const lat = Number(tLat), lng = Number(tLng);
+  if (!tLat || !tLng || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+  return { lat: lat.toFixed(6), lng: lng.toFixed(6) };
+}
+
+function textoUbicacion(acta, paraPDF) {
+  if (acta.gps) {
+    const g = acta.gps;
+    return paraPDF ? `Lat: ${g.lat}  |  Lng: ${g.lng}  |  Prec: ±${g.acc} m` : `${g.lat}, ${g.lng} (±${g.acc} m)`;
+  }
+  if (acta.sinGps.activo) {
+    const c = coordenadasManuales(acta);
+    return `Sin cobertura GPS · Ref.: ${acta.sinGps.referencia.trim()}` + (c ? ` · Coord. manuales: ${c.lat}, ${c.lng}` : '');
+  }
+  return '—';
+}
+
+// ── GPS en vivo: se va quedando con la lectura más precisa ──
+const gpsVivo = { watchId: null, mejor: null, temporizador: null, buscando: false };
+
+function iniciarGPS() {
+  if (soloLectura()) return;
+  if (!entornoSeguro()) return mostrarErrorGPS('archivo');
+  if (!navigator.geolocation) return mostrarErrorGPS('sin-api');
+  detenerGPS();
+  gpsVivo.mejor = null;
+  gpsVivo.buscando = true;
   const estado = $('gpsStatus');
   estado.className = 'gps-status loading';
-  estado.textContent = '🔄 Obteniendo coordenadas…';
-  if (!navigator.geolocation) {
-    estado.className = 'gps-status err';
-    estado.textContent = '❌ Tu navegador no soporta geolocalización.';
-    return;
+  estado.textContent = '📡 Buscando señal GPS…';
+  gpsVivo.watchId = navigator.geolocation.watchPosition(alRecibirPosicion, alFallarGPS,
+    { enableHighAccuracy: true, maximumAge: 0, timeout: GPS_ESPERA_MS });
+  gpsVivo.temporizador = setTimeout(finBusquedaGPS, GPS_ESPERA_MS);
+}
+
+function alRecibirPosicion(pos) {
+  if (!gpsVivo.buscando) return;
+  const lectura = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) };
+  if (!gpsVivo.mejor || lectura.acc < gpsVivo.mejor.acc) gpsVivo.mejor = lectura;
+  if (gpsVivo.mejor.acc <= GPS_OBJETIVO_M) return fijarPosicion();
+  const estado = $('gpsStatus');
+  estado.className = 'gps-status loading';
+  estado.textContent = `📡 Precisión actual ±${lectura.acc} m · mejor ±${gpsVivo.mejor.acc} m. Espera a que mejore o úsala ya.`;
+  const usar = $('gpsUsarBtn');
+  usar.textContent = `✔ Usar esta posición (±${gpsVivo.mejor.acc} m)`;
+  usar.classList.remove('hidden');
+}
+
+function fijarPosicion() {
+  const mejor = gpsVivo.mejor;
+  detenerGPS();
+  if (!mejor) return;
+  state.acta.gps = { ...mejor, hora: new Date().toISOString() };
+  state.acta.sinGps.activo = false;
+  pintarGPS();
+  pintarSinGps();
+  guardarPronto();
+}
+
+function finBusquedaGPS() {
+  if (gpsVivo.mejor) return fijarPosicion();
+  detenerGPS();
+  mostrarErrorGPS(3);
+}
+
+function alFallarGPS(err) {
+  if (err.code === 1) {             // permiso denegado: no tiene sentido seguir buscando
+    if (gpsVivo.mejor) return fijarPosicion();
+    detenerGPS();
+    return mostrarErrorGPS(1);
   }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude.toFixed(6);
-      const lng = pos.coords.longitude.toFixed(6);
-      const acc = Math.round(pos.coords.accuracy);
-      state.gps = { lat, lng, acc };
-      estado.className = 'gps-status ok';
-      estado.innerHTML = `✅ <strong>Lat:</strong> ${lat} &nbsp; <strong>Lng:</strong> ${lng}<br><small>Precisión: ±${acc} m · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" rel="noopener" style="color:var(--verde)">Ver en Maps</a></small>`;
-    },
-    err => {
-      estado.className = 'gps-status err';
-      const mensajes = { 1: 'Permiso denegado. Activa la localización.', 2: 'Posición no disponible.', 3: 'Tiempo de espera agotado.' };
-      estado.textContent = `❌ ${mensajes[err.code] || 'Error desconocido.'}`;
-    },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-  );
+  // Pérdidas de señal pasajeras: se sigue buscando hasta que se agote el tiempo (finBusquedaGPS).
+  if (!gpsVivo.mejor) {
+    const estado = $('gpsStatus');
+    estado.className = 'gps-status loading';
+    estado.innerHTML = '📡 Aún sin señal GPS… Comprueba que la ubicación del teléfono está activada.<br><small>Si estás en interior o en un túnel, marca «Sin cobertura GPS».</small>';
+  }
+}
+
+function detenerGPS() {
+  if (gpsVivo.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(gpsVivo.watchId);
+  clearTimeout(gpsVivo.temporizador);
+  gpsVivo.watchId = null;
+  gpsVivo.buscando = false;
+  const usar = $('gpsUsarBtn');
+  if (usar) usar.classList.add('hidden');
+}
+
+function mostrarErrorGPS(motivo) {
+  const sinCobertura = '<br><small>Si no es posible, marca «Sin cobertura GPS» e indica una referencia.</small>';
+  const textos = {
+    archivo: `❌ La app está abierta como archivo y así el GPS no funciona. Ábrela desde <a href="${URL_OFICIAL}">${esc(URL_OFICIAL.replace(/^https:\/\//, ''))}</a>`,
+    'sin-api': '❌ Este navegador no permite obtener la ubicación.' + sinCobertura,
+    1: '❌ Permiso de ubicación denegado.<br><small><strong>Android (Chrome):</strong> toca el icono junto a la dirección → Permisos → Ubicación → Permitir. Si usas la app instalada: Chrome → ⋮ → Configuración → Configuración de sitios → Ubicación.<br><strong>iPhone:</strong> Ajustes → Privacidad → Localización → Safari → «Al usar la app».</small>' + sinCobertura,
+    2: '❌ Ubicación no disponible: activa la ubicación del teléfono.' + sinCobertura,
+    3: '❌ No se ha conseguido señal GPS en 60 s.' + sinCobertura,
+  };
+  const estado = $('gpsStatus');
+  estado.className = 'gps-status err';
+  estado.innerHTML = textos[motivo] || ('❌ Error desconocido.' + sinCobertura);
+}
+
+function pintarGPS() {
+  const g = state.acta.gps, estado = $('gpsStatus');
+  if (g) {
+    estado.className = 'gps-status ok';
+    estado.innerHTML = `✅ <strong>Lat:</strong> ${esc(g.lat)} &nbsp; <strong>Lng:</strong> ${esc(g.lng)}<br><small>Precisión: ±${esc(g.acc)} m · <a href="https://maps.google.com/?q=${esc(g.lat)},${esc(g.lng)}" target="_blank" rel="noopener">Ver en Maps</a></small>`;
+  } else if (!gpsVivo.buscando) {
+    estado.className = 'gps-status';
+    estado.textContent = '';
+  }
+  $('gpsBtn').textContent = g ? '🔄 Repetir medición GPS' : '📍 Obtener coordenadas GPS';
+  $('gpsBtn').disabled = soloLectura();
+}
+
+function pintarSinGps() {
+  const s = state.acta.sinGps;
+  $('sinGpsCheck').checked = s.activo;
+  $('sinGpsCampos').classList.toggle('hidden', !s.activo);
+  for (const [clave, id] of Object.entries(CAMPOS_SIN_GPS)) $(id).value = s[clave] || '';
+}
+
+function cambiarSinGps(activo) {
+  if (soloLectura()) return;
+  state.acta.sinGps.activo = activo;
+  if (activo) {
+    detenerGPS();
+    state.acta.gps = null;      // o GPS o referencia: no las dos cosas
+  }
+  pintarGPS();
+  pintarSinGps();
+  guardarPronto();
 }
 
 // ═══════════════════════════════════
 //  FASE 2 · FOTOS
 // ═══════════════════════════════════
+// Mientras se hacen fotos, el GPS del móvil se mantiene escuchando (si ya hay permiso)
+// para anotar la posición de cada foto.
+const gpsFotos = { watchId: null, ultima: null };
+
+function entrarFotos() {
+  pintarFotos();
+  iniciarGPSFotos();
+}
+
+async function iniciarGPSFotos() {
+  if (gpsFotos.watchId !== null || soloLectura() || !navigator.geolocation || !entornoSeguro()) return;
+  let concedido = Boolean(state.acta.gps);
+  try {
+    if (navigator.permissions) concedido = (await navigator.permissions.query({ name: 'geolocation' })).state === 'granted';
+  } catch (e) { /* sin API de permisos: se usa la pista anterior */ }
+  if (!concedido || state.fase !== 2 || gpsFotos.watchId !== null) return;
+  gpsFotos.watchId = navigator.geolocation.watchPosition(pos => {
+    gpsFotos.ultima = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy), t: Date.now() };
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 30000 });
+}
+
+function detenerGPSFotos() {
+  if (gpsFotos.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(gpsFotos.watchId);
+  gpsFotos.watchId = null;
+}
+
+function gpsParaFoto() {
+  const u = gpsFotos.ultima;
+  return u && Date.now() - u.t < GPS_FOTO_VALIDEZ_MS ? { lat: u.lat, lng: u.lng, acc: u.acc, fuente: 'movil' } : null;
+}
+
 function abrirSelectorFotos() {
-  if (state.fotosEnProceso || state.fotos.length >= MAX_FOTOS) return;
+  if (soloLectura() || state.fotosEnProceso || state.acta.fotos.length >= MAX_FOTOS) return;
   $('photoInput').value = '';
   $('photoInput').click();
 }
 
 async function anadirFotos(input) {
-  const libres = MAX_FOTOS - state.fotos.length - state.fotosEnProceso;
-  const archivos = Array.from(input.files || []).slice(0, Math.max(0, libres));
+  if (soloLectura()) return;
+  const elegidas = Array.from(input.files || []);
   input.value = '';
-  if (!archivos.length) return;
-  state.fotosEnProceso += archivos.length;
-  pintarFotos();
-  let fallidas = 0;
-  for (const archivo of archivos) {          // en serie: se respeta el orden de selección
-    try {
-      const foto = await comprimirImagen(archivo);
-      state.fotos.push({ ...foto, comentario: '' });
-    } catch (e) {
-      fallidas++;
-    }
-    state.fotosEnProceso--;
+  const libres = Math.max(0, MAX_FOTOS - state.acta.fotos.length - state.fotosEnProceso);
+  const archivos = elegidas.slice(0, libres);
+  const descartadas = elegidas.length - archivos.length;
+  if (archivos.length) {
+    state.fotosEnProceso += archivos.length;
     pintarFotos();
+    const acta = state.acta;
+    let fallidas = 0, sinGuardar = 0;
+    for (const archivo of archivos) {          // en serie: se respeta el orden de selección
+      try {
+        const [exif, comprimida] = await Promise.all([leerExif(archivo), comprimirImagen(archivo)]);
+        const ahora = new Date();
+        const foto = {
+          id: nuevoId('foto'), ancho: comprimida.ancho, alto: comprimida.alto, comentario: '',
+          hora: exif.fecha || `${fechaLocal(ahora)} ${horaLocal(ahora)}`,
+          horaFuente: exif.fecha ? 'camara' : 'movil',
+          gps: exif.gps || gpsParaFoto(),
+        };
+        try { await Almacen.guardarFoto(foto.id, acta.id, comprimida.blob); } catch (e) { sinGuardar++; }
+        if (state.acta !== acta) continue;     // se cambió de acta mientras tanto
+        state.blobs.set(foto.id, comprimida.blob);
+        state.urls.set(foto.id, URL.createObjectURL(comprimida.blob));
+        acta.fotos.push(foto);
+        guardarPronto();
+      } catch (e) {
+        fallidas++;
+      } finally {
+        state.fotosEnProceso--;
+        pintarFotos();
+      }
+    }
+    if (fallidas) aviso('⚠️', 'Fotos no añadidas', `${fallidas} archivo(s) no se han podido leer como imagen.`);
+    else if (sinGuardar) aviso('⚠️', 'Fotos sin guardar', `${sinGuardar} foto(s) no se han podido guardar en el teléfono (¿memoria llena?). Siguen en el acta mientras no cierres la app.`);
   }
-  if (fallidas) aviso('⚠️', 'Fotos no añadidas', `${fallidas} archivo(s) no se han podido leer como imagen.`);
+  if (descartadas) aviso('📸', 'Límite de fotos', `El acta admite ${MAX_FOTOS} fotos: ${descartadas} no se han añadido.`);
 }
 
 function comprimirImagen(archivo) {
@@ -1147,49 +1739,130 @@ function comprimirImagen(archivo) {
       lienzo.height = alto;
       lienzo.getContext('2d').drawImage(img, 0, 0, ancho, alto);
       URL.revokeObjectURL(url);
-      resolver({ dataUrl: lienzo.toDataURL('image/jpeg', FOTO_CALIDAD), ancho, alto });
+      lienzo.toBlob(blob => (blob ? resolver({ blob, ancho, alto }) : rechazar(new Error('No se pudo comprimir'))), 'image/jpeg', FOTO_CALIDAD);
     };
     img.onerror = () => { URL.revokeObjectURL(url); rechazar(new Error('Imagen no válida')); };
     img.src = url;
   });
 }
 
-function quitarFoto(indice) {
-  state.fotos.splice(indice, 1);
+// Lee del JPEG original (antes de comprimir) la fecha de la cámara y la posición GPS, si las trae.
+async function leerExif(archivo) {
+  try {
+    const vista = new DataView(await archivo.slice(0, 256 * 1024).arrayBuffer());
+    if (vista.getUint16(0) !== 0xFFD8) return {};
+    let p = 2;
+    while (p + 10 <= vista.byteLength) {
+      const marca = vista.getUint16(p), largo = vista.getUint16(p + 2);
+      if (marca === 0xFFE1 && vista.getUint32(p + 4) === 0x45786966) return leerTiff(vista, p + 10);   // «Exif»
+      if ((marca & 0xFF00) !== 0xFF00 || marca === 0xFFDA) break;
+      p += 2 + largo;
+    }
+  } catch (e) { /* foto sin EXIF legible */ }
+  return {};
+}
+
+function leerTiff(vista, inicio) {
+  const le = vista.getUint16(inicio) === 0x4949;
+  const u16 = o => vista.getUint16(inicio + o, le);
+  const u32 = o => vista.getUint32(inicio + o, le);
+  const ifd = o => {
+    const entradas = {};
+    for (let i = 0, n = u16(o); i < n; i++) {
+      const e = o + 2 + i * 12;
+      entradas[u16(e)] = { num: u32(e + 4), campo: e + 8 };
+    }
+    return entradas;
+  };
+  const ascii = ent => {
+    const o = ent.num > 4 ? u32(ent.campo) : ent.campo;
+    let s = '';
+    for (let i = 0; i < ent.num - 1; i++) s += String.fromCharCode(vista.getUint8(inicio + o + i));
+    return s;
+  };
+  const racionales = ent => {
+    const o = u32(ent.campo);
+    return Array.from({ length: ent.num }, (_, i) => u32(o + i * 8) / (u32(o + i * 8 + 4) || 1));
+  };
+  const resultado = {};
+  const ifd0 = ifd(u32(4));
+  const exif = ifd0[0x8769] ? ifd(u32(ifd0[0x8769].campo)) : {};
+  const fecha = exif[0x9003] || exif[0x9004] || ifd0[0x0132];
+  const m = fecha && ascii(fecha).match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/);
+  if (m) resultado.fecha = `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
+  if (ifd0[0x8825]) {
+    const g = ifd(u32(ifd0[0x8825].campo));
+    if (g[2] && g[4] && g[2].num === 3 && g[4].num === 3) {
+      const grados = ([d, mi, s]) => d + mi / 60 + s / 3600;
+      let lat = grados(racionales(g[2])), lng = grados(racionales(g[4]));
+      if (g[1] && ascii(g[1]) === 'S') lat = -lat;
+      if (g[3] && ascii(g[3]) === 'W') lng = -lng;
+      if (Number.isFinite(lat) && Number.isFinite(lng) && (lat || lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+        resultado.gps = { lat: lat.toFixed(6), lng: lng.toFixed(6), fuente: 'camara' };
+      }
+    }
+  }
+  return resultado;
+}
+
+async function quitarFoto(indice) {
+  if (soloLectura()) return;
+  const [foto] = state.acta.fotos.splice(indice, 1);
+  if (!foto) return;
+  URL.revokeObjectURL(state.urls.get(foto.id));
+  state.urls.delete(foto.id);
+  state.blobs.delete(foto.id);
+  Almacen.borrarFoto(foto.id).catch(() => {});
+  guardarPronto();
   pintarFotos();
 }
 
+// «20:22 · 📍 ±8 m» (pantalla) o «20:22 · 37.389210, -5.984460 (±8 m)» (PDF)
+function textoMetaFoto(foto, paraPDF) {
+  const [dia, hora] = String(foto.hora || '').split(' ');
+  const cuando = dia && dia !== state.acta.datos.fecha ? `${dia} ${hora}` : (hora || '');
+  const g = foto.gps;
+  const precision = g && g.acc ? ` (±${g.acc} m)` : '';
+  if (paraPDF) {
+    const donde = g ? `${g.lat}, ${g.lng}${precision}${g.fuente === 'camara' ? ' (cámara)' : ''}` : 'sin GPS';
+    return `${cuando} · ${donde}`;
+  }
+  return `🕒 ${cuando} · ${g ? `📍${g.acc ? ` ±${g.acc} m` : ''}` : 'sin GPS'}`;
+}
+
 function pintarFotos() {
-  const total = state.fotos.length, enProceso = state.fotosEnProceso;
-  $('photoCountVal').textContent = total;
+  const fotos = state.acta.fotos, enProceso = state.fotosEnProceso;
+  $('photoCountVal').textContent = fotos.length;
   const boton = $('addPhotoBtn');
-  boton.disabled = enProceso > 0 || total >= MAX_FOTOS;
+  boton.disabled = soloLectura() || enProceso > 0 || fotos.length >= MAX_FOTOS;
   boton.textContent = enProceso ? `⏳ Procesando ${enProceso} foto(s)…` : '📷 Añadir foto';
-  $('photosGrid').innerHTML = state.fotos.map((f, i) => `
+  $('photosGrid').innerHTML = fotos.map((f, i) => `
     <div class="photo-slot">
-      <img src="${f.dataUrl}" alt="Foto ${i + 1}">
+      <img src="${state.urls.get(f.id)}" alt="Foto ${i + 1}">
       <span class="photo-num">Foto ${i + 1}</span>
-      <button class="remove-btn" onclick="quitarFoto(${i})" aria-label="Quitar foto ${i + 1}">✕</button>
+      <span class="photo-meta">${esc(textoMetaFoto(f, false))}</span>
+      ${soloLectura() ? '' : `<button class="remove-btn" onclick="quitarFoto(${i})" aria-label="Quitar foto ${i + 1}">✕</button>`}
     </div>`).join('');
 }
 
 function validarFotos() {
   if (state.fotosEnProceso) return aviso('⏳', 'Procesando fotos', 'Espera a que terminen de procesarse las fotos.');
-  return state.fotos.length > 0 || aviso('📸', 'Sin fotos', 'Añade al menos una fotografía para continuar.');
+  return state.acta.fotos.length > 0 || aviso('📸', 'Sin fotos', 'Añade al menos una fotografía para continuar.');
 }
 
 // ═══════════════════════════════════
 //  FASE 3 · COMENTARIOS
 // ═══════════════════════════════════
 function construirComentarios() {
-  $('noPhotosMsg').classList.toggle('hidden', state.fotos.length > 0);
-  $('commentsContainer').innerHTML = state.fotos.map((f, i) => `
+  const fotos = state.acta.fotos;
+  $('noPhotosMsg').classList.toggle('hidden', fotos.length > 0);
+  $('commentsContainer').innerHTML = fotos.map((f, i) => `
     <div class="comment-card">
       <div class="comment-photo-header">
-        <img class="comment-thumb" src="${f.dataUrl}" alt="Foto ${i + 1}">
+        <img class="comment-thumb" src="${state.urls.get(f.id)}" alt="Foto ${i + 1}">
         <div>
           <div class="comment-photo-label">Fotografía ${i + 1}</div>
-          <div class="comment-photo-sub">Añade observación o hallazgo</div>
+          <div class="comment-photo-sub">${esc(textoMetaFoto(f, false))}</div>
         </div>
       </div>
       <textarea class="comment-textarea" data-foto="${i}" maxlength="${MAX_COMENTARIO}"
@@ -1200,9 +1873,10 @@ function construirComentarios() {
 
 function alEscribirComentario(e) {
   const area = e.target;
-  if (!area.classList.contains('comment-textarea')) return;
-  state.fotos[Number(area.dataset.foto)].comentario = area.value;
+  if (!area.classList.contains('comment-textarea') || soloLectura()) return;
+  state.acta.fotos[Number(area.dataset.foto)].comentario = area.value;
   area.nextElementSibling.firstElementChild.textContent = area.value.length;
+  guardarPronto();
 }
 
 // ═══════════════════════════════════
@@ -1225,8 +1899,9 @@ function iniciarFirma() {
 
 function entrarFirma() {
   ajustarLienzo();
-  $('sigNameDisplay').textContent = $('tecnico').value.trim() || '—';
-  $('sigDateDisplay').textContent = `${$('fechaVisita').value} ${$('horaVisita').value}`;
+  const d = state.acta.datos;
+  $('sigNameDisplay').textContent = d.tecnico.trim() || '—';
+  $('sigDateDisplay').textContent = `${d.fecha} ${d.hora}`;
 }
 
 function ajustarLienzo() {
@@ -1252,11 +1927,12 @@ function puntoDe(evento) {
 }
 
 function empezarTrazo(e) {
+  if (soloLectura()) return;
   e.preventDefault();
   if (!lienzoFirma.ancho) ajustarLienzo();
   if (lienzoFirma.el.setPointerCapture) lienzoFirma.el.setPointerCapture(e.pointerId);
   lienzoFirma.trazo = { refW: lienzoFirma.ancho, refH: lienzoFirma.alto, puntos: [puntoDe(e)] };
-  state.firma.push(lienzoFirma.trazo);
+  state.acta.firma.push(lienzoFirma.trazo);
   redibujarFirma();
 }
 
@@ -1277,16 +1953,22 @@ function continuarTrazo(e) {
   ctx.stroke();
 }
 
-function terminarTrazo() { lienzoFirma.trazo = null; }
+function terminarTrazo() {
+  if (!lienzoFirma.trazo) return;
+  lienzoFirma.trazo = null;
+  guardarPronto();
+}
 
 function borrarFirma() {
-  state.firma = [];
+  if (soloLectura()) return;
+  state.acta.firma = [];
   lienzoFirma.trazo = null;
   redibujarFirma();
+  guardarPronto();
 }
 
 function validarFirma() {
-  const puntos = state.firma.reduce((n, t) => n + t.puntos.length, 0);
+  const puntos = state.acta.firma.reduce((n, t) => n + t.puntos.length, 0);
   return puntos >= 5 || aviso('✍️', 'Firma requerida', 'Por favor, firma en el recuadro para continuar.');
 }
 
@@ -1299,7 +1981,7 @@ function estiloTrazo(ctx, grosor) {
 
 // Trazos escalados (sin deformar) a un marco de ancho × alto.
 function trazosEnMarco(ancho, alto) {
-  return state.firma.filter(t => t.puntos.length).map(t => {
+  return state.acta.firma.filter(t => t.puntos.length).map(t => {
     const k = Math.min(ancho / t.refW, alto / t.refH);
     return t.puntos.map(([x, y]) => [x * k, y * k]);
   });
@@ -1317,7 +1999,7 @@ function dibujarTrazos(ctx, trazos, k = 1, dx = 0, dy = 0) {
 
 function redibujarFirma() {
   const { ctx, ancho, alto } = lienzoFirma;
-  if (!ctx || !ancho) return;
+  if (!ctx || !ancho || !state.acta) return;
   ctx.clearRect(0, 0, ancho, alto);
   estiloTrazo(ctx, GROSOR_FIRMA);
   dibujarTrazos(ctx, trazosEnMarco(ancho, alto));
@@ -1325,7 +2007,7 @@ function redibujarFirma() {
 
 // Imagen JPEG de la firma, recortada a su contenido, en proporción 2,5 : 1 (recuadro de 70 × 28 mm del PDF).
 function firmaComoImagen() {
-  const base = state.firma.find(t => t.puntos.length);
+  const base = state.acta.firma.find(t => t.puntos.length);
   if (!base) return null;
   const trazos = trazosEnMarco(base.refW, base.refH);
   const xs = trazos.flat().map(p => p[0]), ys = trazos.flat().map(p => p[1]);
@@ -1348,6 +2030,13 @@ function firmaComoImagen() {
 // ═══════════════════════════════════
 //  FASE 5 · REVISIÓN (se construye al entrar)
 // ═══════════════════════════════════
+function validarEmision() {   // comprobación final antes de emitir: lleva a la fase que falte
+  for (const [fase, validar] of [[1, validarIdentificacion], [2, validarFotos], [4, validarFirma]]) {
+    if (!validar()) { irAFase(fase); return false; }
+  }
+  return true;
+}
+
 function construirRevision() {
   const d = recogerDatos();
   const campo = (etiqueta, valor) => `
@@ -1362,15 +2051,16 @@ function construirRevision() {
     campo('Descripción', d.descripcion || '—'),
     campo('Fecha', d.fecha),
     campo('Hora', d.hora || '—'),
-    campo('Localización GPS', d.gps ? `${d.gps.lat}, ${d.gps.lng} (±${d.gps.acc} m)` : '—'),
+    campo('Localización GPS', textoUbicacion(state.acta, false)),
   ].join('');
 
-  $('reviewPhotoCount').textContent = state.fotos.length;
-  $('reviewPhotos').innerHTML = state.fotos.map((f, i) => `
+  const fotos = state.acta.fotos;
+  $('reviewPhotoCount').textContent = fotos.length;
+  $('reviewPhotos').innerHTML = fotos.map((f, i) => `
     <div class="review-photo-row">
-      <img class="review-photo-thumb" src="${f.dataUrl}" alt="Foto ${i + 1}">
+      <img class="review-photo-thumb" src="${state.urls.get(f.id)}" alt="Foto ${i + 1}">
       <div>
-        <div class="review-photo-num">FOTO ${i + 1}</div>
+        <div class="review-photo-num">FOTO ${i + 1} · ${esc(textoMetaFoto(f, false))}</div>
         <div class="review-photo-comment">${esc(f.comentario.trim()) || '(Sin comentario)'}</div>
       </div>
     </div>`).join('');
@@ -1388,23 +2078,22 @@ function construirRevision() {
 //  FASE 6 · EMISIÓN
 // ═══════════════════════════════════
 function construirEmision() {
-  const d = recogerDatos();
+  const d = recogerDatos(), emitida = soloLectura();
   $('emitActaTitle').textContent = `Acta ${d.actaNum}`;
   $('emitActaSub').innerHTML =
-    `<strong>${esc(d.tecnico)}</strong> · ${esc(d.expediente)}<br>${esc(d.fecha)} · ${state.fotos.length} foto(s)<br>
-    <span style="color:var(--verde);font-weight:700;">✅ Lista para emitir</span>`;
+    `<strong>${esc(d.tecnico)}</strong> · ${esc(d.expediente)}<br>${esc(d.fecha)} · ${state.acta.fotos.length} foto(s)<br>
+    <span style="color:var(--verde);font-weight:700;">✅ ${emitida ? `Emitida el ${esc(fechaHoraCorta(state.acta.emitida))}` : 'Lista para emitir'}</span>`;
+  $('emitNota').innerHTML = emitida
+    ? '🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a descargar o compartir el PDF. Para corregirla, pulsa «Corregir»: se crea una copia editable que habrá que volver a firmar.'
+    : 'ℹ️ Al descargar o compartir el PDF, el acta queda <strong>emitida</strong> y ya no se podrá modificar.';
+  $('btnCorregir').classList.toggle('hidden', !emitida);
 }
 
 function recogerDatos() {
-  const valor = id => $(id).value.trim();
+  const d = state.acta.datos, limpio = v => String(v || '').trim();
   return {
-    actaNum: valor('actaNum'),
-    tecnico: valor('tecnico'),
-    expediente: valor('expediente'),
-    descripcion: valor('descripcion'),
-    fecha: $('fechaVisita').value,
-    hora: $('horaVisita').value,
-    gps: state.gps,
+    actaNum: limpio(d.actaNum), tecnico: limpio(d.tecnico), expediente: limpio(d.expediente),
+    descripcion: limpio(d.descripcion), fecha: d.fecha || '', hora: d.hora || '',
   };
 }
 
@@ -1421,7 +2110,7 @@ const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de text
 // La fuente del PDF no tiene emojis: se retiran para que no salgan como cajas.
 const textoPDF = t => String(t ?? '').replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').trim();
 
-function crearPDF() {
+async function crearPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
   pdf.setLineHeightFactor(INTERLINEADO);
@@ -1467,7 +2156,7 @@ function crearPDF() {
     ['Descripción', d.descripcion || '—'],
     ['Fecha', d.fecha],
     ['Hora', d.hora || '—'],
-    ['Localización GPS', d.gps ? `Lat: ${d.gps.lat}  |  Lng: ${d.gps.lng}  |  Prec: ±${d.gps.acc} m` : '—'],
+    ['Localización GPS', textoUbicacion(state.acta, true)],
   ];
   const xValor = M + 50, anchoValor = W - M - xValor - 2;
   filas.forEach(([etiqueta, valor], i) => {
@@ -1484,34 +2173,38 @@ function crearPDF() {
   });
   y += 6;
 
-  // ── Fotografías: 2 por fila, cada una encajada en su caja 4:3 sin deformar y con su comentario completo ──
-  if (state.fotos.length) {
+  // ── Fotografías: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
+  const fotos = state.acta.fotos;
+  if (fotos.length) {
+    const imagenes = await Promise.all(fotos.map(async f => new Uint8Array(await state.blobs.get(f.id).arrayBuffer())));
     const hueco = 6;
     const anchoCelda = (W - 2 * M - hueco) / 2;
     const altoCaja = anchoCelda * 0.75;
-    const ptPie = 7.5;
+    const ptMeta = 7, ptPie = 7.5;
+    const altoMeta = 4.5, altoPie = altoLinea(ptPie);
     letra('italic', ptPie, [60, 60, 60]);
     const filasFotos = [];
-    for (let i = 0; i < state.fotos.length; i += 2) {
-      const celdas = state.fotos.slice(i, i + 2).map((foto, j) => ({
-        foto, numero: i + j + 1,
+    for (let i = 0; i < fotos.length; i += 2) {
+      const celdas = fotos.slice(i, i + 2).map((foto, j) => ({
+        foto, imagen: imagenes[i + j], numero: i + j + 1,
+        meta: textoPDF(textoMetaFoto(foto, true)),
         pie: pdf.splitTextToSize(textoPDF(foto.comentario) || '(Sin comentario)', anchoCelda),
       }));
       const lineasPie = Math.max(...celdas.map(c => c.pie.length));
-      filasFotos.push({ celdas, alto: altoCaja + 5 + (lineasPie - 1) * altoLinea(ptPie) + 9 });
+      filasFotos.push({ celdas, alto: altoCaja + altoMeta + altoPie + (lineasPie - 1) * altoPie + 7 });
     }
 
-    banda(`FOTOGRAFÍAS DE CAMPO (${state.fotos.length})`, filasFotos[0].alto);
+    banda(`FOTOGRAFÍAS DE CAMPO (${fotos.length})`, filasFotos[0].alto);
     for (const fila of filasFotos) {
       asegurar(fila.alto);
-      fila.celdas.forEach(({ foto, numero, pie }, j) => {
+      fila.celdas.forEach(({ foto, imagen, numero, meta, pie }, j) => {
         const x = M + j * (anchoCelda + hueco);
         const k = Math.min(anchoCelda / foto.ancho, altoCaja / foto.alto);
         const wi = foto.ancho * k, hi = foto.alto * k;
         const xi = x + (anchoCelda - wi) / 2, yi = y + (altoCaja - hi) / 2;
         pdf.setFillColor(245, 245, 245);
         pdf.rect(x, y, anchoCelda, altoCaja, 'F');
-        pdf.addImage(foto.dataUrl, 'JPEG', xi, yi, wi, hi);
+        pdf.addImage(imagen, 'JPEG', xi, yi, wi, hi, `foto-${foto.id}`);
         pdf.setDrawColor(200, 200, 200);
         pdf.setLineWidth(0.3);
         pdf.rect(x, y, anchoCelda, altoCaja);
@@ -1519,8 +2212,10 @@ function crearPDF() {
         pdf.roundedRect(xi + 2, yi + 2, 14, 6, 1, 1, 'F');
         letra('bold', 7, PDF.BLANCO);
         pdf.text(`Foto ${numero}`, xi + 9, yi + 6.5, { align: 'center' });
+        letra('normal', ptMeta, PDF.GRIS);
+        pdf.text(pdf.splitTextToSize(meta, anchoCelda)[0], x, y + altoCaja + altoMeta);
         letra('italic', ptPie, [60, 60, 60]);
-        pdf.text(pie, x, y + altoCaja + 5);
+        pdf.text(pie, x, y + altoCaja + altoMeta + altoPie);
       });
       y += fila.alto;
     }
@@ -1557,13 +2252,26 @@ function crearPDF() {
   return { pdf, nombre };
 }
 
+// Descargar el PDF emite el acta: a partir de ahí queda en solo lectura.
 async function descargarPDF() {
+  if (!soloLectura() && !validarEmision()) return false;
   const capa = $('loadingOverlay');
   capa.classList.add('open');
   await esperar(60);                 // deja que se pinte el aviso «Generando…»
   try {
-    const { pdf, nombre } = crearPDF();
+    const { pdf, nombre } = await crearPDF();
     pdf.save(nombre);
+    if (!soloLectura()) {
+      const ahora = new Date().toISOString();
+      state.acta.estado = 'emitida';
+      state.acta.emitida = ahora;
+      state.acta.modificada = ahora;
+      state.persistida = true;
+      await guardarYa();
+      pintarActa();
+      construirEmision();
+      actualizarNavegacion();
+    }
     return true;
   } catch (err) {
     aviso('❌', 'Error al generar PDF', err.message || 'Inténtalo de nuevo.');
@@ -1580,27 +2288,145 @@ async function enviarWhatsApp() {
   if (!(await descargarPDF())) return;
   setTimeout(() => {
     const d = recogerDatos();
-    const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${d.fecha}\n📍 GPS: ${d.gps ? `${d.gps.lat}, ${d.gps.lng}` : 'N/D'}\n\n[Adjunta el PDF descargado]`);
+    const ubicacion = state.acta.gps ? `${state.acta.gps.lat}, ${state.acta.gps.lng}` : (textoUbicacion(state.acta, false) || 'N/D');
+    const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${d.fecha}\n📍 GPS: ${ubicacion}\n\n[Adjunta el PDF descargado]`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }, 800);
 }
 
 // ═══════════════════════════════════
-//  NUEVA ACTA
+//  MIS ACTAS
 // ═══════════════════════════════════
-function nuevaActa() {
-  if (!confirm('¿Seguro que quieres iniciar una nueva acta? Se perderán todos los datos actuales.')) return;
-  state.gps = null;
-  state.fotos = [];
-  state.firma = [];
-  lienzoFirma.trazo = null;
-  ['actaNum', 'tecnico', 'expediente', 'descripcion'].forEach(id => { $(id).value = ''; });
-  ponerFechaHoraActual();
-  $('gpsStatus').className = 'gps-status';
-  $('gpsStatus').textContent = '';
-  actualizarNumActa();
-  pintarFotos();
-  irAFase(1);
+async function abrirMisActas() {
+  await guardarYa();
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ }
+  actas.sort((a, b) => String(b.modificada).localeCompare(String(a.modificada)));
+  $('listaActas').innerHTML = actas.length
+    ? actas.map(tarjetaActa).join('')
+    : '<div class="panel-empty">Todavía no hay actas guardadas en este teléfono.</div>';
+  $('panelActas').classList.add('open');
+}
+
+function cerrarMisActas() { $('panelActas').classList.remove('open'); }
+
+function tarjetaActa(a) {
+  const emitida = a.estado === 'emitida';
+  const actual = state.acta && a.id === state.acta.id;
+  return `
+    <div class="acta-card${actual ? ' actual' : ''}" data-acta="${esc(a.id)}">
+      <div class="acta-card-top">
+        <div class="acta-card-num">${esc(a.datos.actaNum.trim() || 'Sin número')}</div>
+        <span class="status-badge ${emitida ? 'badge-ok' : 'badge-warn'}">${emitida ? 'Emitida' : 'Borrador'}</span>
+      </div>
+      <div class="acta-card-sub">${esc(a.datos.expediente.trim() || '—')} · ${esc(a.datos.fecha)} · ${a.fotos.length} foto(s)</div>
+      <div class="acta-card-sub">${emitida ? `Emitida ${esc(fechaHoraCorta(a.emitida))}` : `Modificada ${esc(fechaHoraCorta(a.modificada))}`}${actual ? ' · <strong>en pantalla</strong>' : ''}</div>
+      <div class="acta-card-actions">
+        <button onclick="abrirActaGuardada('${esc(a.id)}')">${emitida ? '👁 Ver' : '✏️ Abrir'}</button>
+        ${emitida ? `<button onclick="corregirActa('${esc(a.id)}')">📝 Corregir</button>` : ''}
+        <button onclick="nuevaVisita('${esc(a.id)}')">➕ Nueva visita</button>
+        <button class="peligro" onclick="borrarActaGuardada('${esc(a.id)}')" aria-label="Borrar">🗑</button>
+      </div>
+    </div>`;
+}
+
+async function abrirActaGuardada(id) {
+  await guardarYa();
+  const acta = await Almacen.leerActa(id).catch(() => null);
+  if (!acta) return aviso('⚠️', 'Acta no encontrada', 'No se ha podido abrir el acta.');
+  await abrirActa(acta);
+  cerrarMisActas();
+}
+
+// Nueva acta en blanco; la anterior queda guardada en «Mis actas».
+async function nuevaActa() {
+  await guardarYa();
+  await abrirActa(actaNueva(), { nueva: true });
+  cerrarMisActas();
+}
+
+// Nueva acta para otra visita al mismo expediente: copia técnico, expediente y descripción.
+async function nuevaVisita(id) {
+  await guardarYa();
+  const origen = await Almacen.leerActa(id).catch(() => null);
+  if (!origen) return;
+  const { tecnico, expediente, descripcion } = origen.datos;
+  await abrirActa(actaNueva({ tecnico, expediente, descripcion }), { nueva: true });
+  guardarPronto();
+  cerrarMisActas();
+}
+
+// Copia completa (datos, ubicación, fotos y notas) de un acta emitida para corregirla. La firma no se copia.
+async function corregirActa(id) {
+  await guardarYa();
+  const origen = await Almacen.leerActa(id).catch(() => null);
+  if (!origen) return;
+  const copia = actaNueva();
+  copia.datos = { ...origen.datos };
+  copia.gps = origen.gps ? { ...origen.gps } : null;
+  copia.sinGps = { ...origen.sinGps };
+  copia.corrigeA = origen.id;
+  try {
+    const imagenes = new Map((await Almacen.fotosDeActa(origen.id)).map(f => [f.id, f.blob]));
+    for (const f of origen.fotos) {
+      const blob = imagenes.get(f.id);
+      if (!blob) continue;
+      const nueva = { ...f, id: nuevoId('foto'), gps: f.gps ? { ...f.gps } : null };
+      await Almacen.guardarFoto(nueva.id, copia.id, blob);
+      copia.fotos.push(nueva);
+    }
+    await Almacen.guardarActa(copia);
+  } catch (e) {
+    return aviso('⚠️', 'No se pudo copiar', 'No se ha podido crear la copia del acta en el teléfono.');
+  }
+  await abrirActa(copia);
+  cerrarMisActas();
+  aviso('📝', 'Copia para corregir', `Copia del acta ${origen.datos.actaNum}. Corrige lo necesario y vuelve a firmar antes de emitirla.`);
+}
+
+async function borrarActaGuardada(id) {
+  const acta = await Almacen.leerActa(id).catch(() => null);
+  const nombre = acta ? (acta.datos.actaNum.trim() || 'sin número') : '';
+  if (!confirm(`¿Borrar el acta ${nombre} de este teléfono? No se puede deshacer.`)) return;
+  await Almacen.borrarActa(id).catch(() => {});
+  if (state.acta && state.acta.id === id) {
+    try { localStorage.removeItem(CLAVE_ACTA_ACTUAL); } catch (e) { /* sin almacenamiento local */ }
+    await abrirActa(actaNueva(), { nueva: true });
+  }
+  await abrirMisActas();
+}
+
+// ═══════════════════════════════════
+//  APP INSTALABLE Y SIN COBERTURA
+// ═══════════════════════════════════
+function registrarServiceWorker() {
+  if (!('serviceWorker' in navigator) || !entornoSeguro()) return;
+  const habiaVersion = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (habiaVersion) $('avisoVersion').classList.remove('hidden');   // se ha instalado una versión nueva
+  });
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+let eventoInstalacion = null;
+function prepararInstalacion() {
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    eventoInstalacion = e;
+    $('btnInstalar').classList.remove('hidden');
+  });
+  window.addEventListener('appinstalled', () => {
+    eventoInstalacion = null;
+    $('btnInstalar').classList.add('hidden');
+  });
+}
+
+async function instalarApp() {
+  if (!eventoInstalacion) return;
+  eventoInstalacion.prompt();
+  await eventoInstalacion.userChoice.catch(() => {});
+  eventoInstalacion = null;
+  $('btnInstalar').classList.add('hidden');
 }
 </script>
 </body>
