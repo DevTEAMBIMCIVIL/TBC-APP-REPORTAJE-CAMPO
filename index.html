@@ -854,6 +854,141 @@
     cursor: pointer;
   }
   .acta-card-actions button.peligro { flex: 0 0 auto; color: var(--rojo); border-color: #F5BFBF; }
+  /* ── v2.2 · NUMERACIÓN, ASISTENTES, ACUERDOS, FIRMAS Y REVISIONES ── */
+  .num-row { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; }
+  .num-row .field-label { margin-bottom: 6px; }
+  .rev-input { text-align: center; background: #F5F5F5; color: var(--gris); }
+  .num-ayuda { margin-top: 6px; font-size: 11px; color: #4F4F4F; line-height: 1.45; }
+  .num-ayuda:empty { display: none; }
+  .asistente-card, .indicacion-card {
+    background: white;
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .asistente-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gris);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .asistente-nombre { font-size: 15px; font-weight: 700; color: var(--negro); }
+  .asistente-sub { font-size: 12px; color: var(--gris); margin-bottom: 4px; }
+  .quitar-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #F5BFBF;
+    border-radius: 8px;
+    background: white;
+    color: var(--rojo);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .asistente-firma { margin-top: 4px; padding-top: 10px; }
+  .sugeridos { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 11px; color: #4F4F4F; }
+  .sugeridos span { width: 100%; }
+  .sugeridos button {
+    padding: 8px 12px;
+    border: 1px solid var(--gris-medio);
+    border-radius: 20px;
+    background: white;
+    color: var(--negro);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .obs-textarea { min-height: 120px; resize: vertical; line-height: 1.45; }
+  .obs-count { font-size: 10px; color: #8C8C8C; text-align: right; margin-top: 4px; }
+  .ind-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--rojo);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  .ind-textarea { min-height: 64px; resize: vertical; line-height: 1.4; font-size: 14px; }
+  .ind-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; }
+  .ind-row .field-input { padding: 10px; font-size: 13px; }
+  .firma-asistente { margin-top: 14px; }
+  .firma-asistente small { display: block; font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 1px; }
+  canvas.firma-lienzo { display: block; width: 100%; height: 150px; touch-action: none; cursor: crosshair; background: white; }
+  .firma-asistente.no-firma-activa canvas { opacity: 0.25; pointer-events: none; }
+  .no-firma {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--gris-claro);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .no-firma input { width: 18px; height: 18px; accent-color: var(--rojo); }
+  .no-firma-card {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px dashed var(--gris-medio);
+    border-radius: var(--radio);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .no-firma-card small { color: var(--gris); }
+  .badge-gris { background: #F0F0F0; color: #4F4F4F; }
+  .review-firmas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .review-firma-item { font-size: 11px; color: var(--gris); line-height: 1.4; }
+  .review-firma-item img, .review-sin-firma {
+    width: 100%;
+    height: 56px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+  .review-firma-item img { object-fit: contain; border: 1px solid var(--gris-claro); background: white; }
+  .review-sin-firma {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--gris-medio);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .review-lista { margin: 4px 0 0; padding-left: 0; list-style: none; font-size: 12px; line-height: 1.5; }
+  .review-lista li { padding: 6px 0; border-bottom: 1px solid #F0F0F0; }
+  .review-lista li:last-child { border-bottom: none; }
+  .review-ind-meta { display: block; font-size: 11px; color: var(--gris); }
+  .prompt-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 84px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .prompt-textarea:focus { outline: none; border-color: var(--rojo); }
+  .prompt-actions { display: flex; gap: 10px; }
   .hidden { display: none !important; }
 
 </style>
@@ -889,22 +1024,30 @@
   </div>
   <div class="step-item" data-step="2">
     <div class="step-dot">2</div>
-    <div class="step-label">Fotos</div>
+    <div class="step-label">Asist.</div>
   </div>
   <div class="step-item" data-step="3">
     <div class="step-dot">3</div>
-    <div class="step-label">Notas</div>
+    <div class="step-label">Fotos</div>
   </div>
   <div class="step-item" data-step="4">
     <div class="step-dot">4</div>
-    <div class="step-label">Firma</div>
+    <div class="step-label">Notas</div>
   </div>
   <div class="step-item" data-step="5">
     <div class="step-dot">5</div>
-    <div class="step-label">Revisión</div>
+    <div class="step-label">Acuerdos</div>
   </div>
   <div class="step-item" data-step="6">
     <div class="step-dot">6</div>
+    <div class="step-label">Firmas</div>
+  </div>
+  <div class="step-item" data-step="7">
+    <div class="step-dot">7</div>
+    <div class="step-label">Revisión</div>
+  </div>
+  <div class="step-item" data-step="8">
+    <div class="step-dot">8</div>
     <div class="step-label">Emisión</div>
   </div>
 </nav>
@@ -920,15 +1063,24 @@
 </div>
 
 <!-- ═══════════════════════════════════════════
-     FASE 1 – IDENTIFICACIÓN
+     FASE · IDENTIFICACIÓN
 ═══════════════════════════════════════════ -->
 <section class="phase-container active" id="phase1">
   <p class="phase-title">📋 <span>Identificación</span></p>
   <p class="phase-subtitle">Completa los datos generales de la visita de campo.</p>
 
   <div class="field-group">
-    <div class="field-label">Nº de Acta <span class="required">*</span></div>
-    <input type="text" class="field-input" id="actaNum" placeholder="Ej. TBC-2026-0042">
+    <div class="num-row">
+      <div>
+        <label class="field-label" for="actaNum">Nº de Acta <span class="required">*</span></label>
+        <input type="text" class="field-input" id="actaNum" placeholder="Se genera al indicar el expediente">
+      </div>
+      <div>
+        <label class="field-label" for="actaRev">Rev.</label>
+        <input type="text" class="field-input rev-input" id="actaRev" value="0" readonly tabindex="-1">
+      </div>
+    </div>
+    <div class="num-ayuda" id="numAyuda"></div>
   </div>
 
   <div class="field-group">
@@ -942,8 +1094,8 @@
   </div>
 
   <div class="field-group">
-    <div class="field-label">Descripción de la visita</div>
-    <input type="text" class="field-input" id="descripcion" placeholder="Objeto / motivo de la visita">
+    <div class="field-label">Objeto de la visita</div>
+    <input type="text" class="field-input" id="descripcion" placeholder="Motivo de la visita">
   </div>
 
   <div class="field-group">
@@ -983,9 +1135,28 @@
 </section>
 
 <!-- ═══════════════════════════════════════════
-     FASE 2 – FOTOS
+     FASE · ASISTENTES
 ═══════════════════════════════════════════ -->
 <section class="phase-container" id="phase2">
+  <p class="phase-title">👥 <span>Asistentes</span></p>
+  <p class="phase-subtitle">Personas presentes en la visita. Marca quién firma el acta.</p>
+
+  <div class="asistente-card">
+    <div class="asistente-cabecera"><span>Técnico · firma obligatoria</span></div>
+    <div class="asistente-nombre" id="tecnicoNombreAsist">—</div>
+    <div class="asistente-sub">TEAMBIMCIVIL</div>
+    <label class="field-label" for="cargoTecnico">Cargo del técnico</label>
+    <input type="text" class="field-input" id="cargoTecnico" placeholder="Dirección facultativa, técnico redactor…">
+  </div>
+  <div id="asistentesLista"></div>
+  <button class="add-photo-btn" onclick="anadirAsistente()">➕ Añadir asistente</button>
+  <div class="sugeridos hidden" id="asistentesSugeridos"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FASE · FOTOS
+═══════════════════════════════════════════ -->
+<section class="phase-container" id="phase3">
   <p class="phase-title">📸 <span>Fotografías</span></p>
   <p class="phase-subtitle">Captura o selecciona hasta <span id="photoMaxSub">50</span> fotos del campo. Usa la cámara trasera para mejor calidad.</p>
 
@@ -1000,9 +1171,9 @@
 </section>
 
 <!-- ═══════════════════════════════════════════
-     FASE 3 – COMENTARIOS
+     FASE · COMENTARIOS
 ═══════════════════════════════════════════ -->
-<section class="phase-container" id="phase3">
+<section class="phase-container" id="phase4">
   <p class="phase-title">✏️ <span>Comentarios</span></p>
   <p class="phase-subtitle">Añade una nota descriptiva o hallazgo para cada fotografía.</p>
   <div id="commentsContainer"></div>
@@ -1012,15 +1183,33 @@
 </section>
 
 <!-- ═══════════════════════════════════════════
-     FASE 4 – FIRMA
+     FASE · OBSERVACIONES E INDICACIONES
 ═══════════════════════════════════════════ -->
-<section class="phase-container" id="phase4">
-  <p class="phase-title">✍️ <span>Firma del técnico</span></p>
-  <p class="phase-subtitle">Firma con el dedo en el recuadro inferior para validar el acta.</p>
+<section class="phase-container" id="phase5">
+  <p class="phase-title">📝 <span>Observaciones e indicaciones</span></p>
+  <p class="phase-subtitle">Lo observado en la visita y lo que se ordena o se acuerda.</p>
+
+  <div class="field-group">
+    <label class="field-label" for="observaciones">Observaciones generales</label>
+    <textarea class="field-input obs-textarea" id="observaciones" placeholder="Estado general, incidencias, comprobaciones realizadas…"></textarea>
+    <div class="obs-count"><span id="obsCount">0</span> / <span id="obsMax">3000</span></div>
+  </div>
+  <div class="field-label">Indicaciones <span>(<span id="indCount">0</span>)</span></div>
+  <div id="indicacionesLista"></div>
+  <button class="add-photo-btn" onclick="anadirIndicacion()">➕ Añadir indicación</button>
+  <datalist id="responsablesLista"></datalist>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FASE · FIRMA
+═══════════════════════════════════════════ -->
+<section class="phase-container" id="phase6">
+  <p class="phase-title">✍️ <span>Firmas</span></p>
+  <p class="phase-subtitle">Firma del técnico (obligatoria) y de los asistentes que firman, con el dedo en su recuadro.</p>
 
   <div class="signature-wrapper">
     <div class="signature-header">
-      Firma digital del técnico
+      Firma del técnico
       <button class="clear-sig-btn" onclick="borrarFirma()">Borrar</button>
     </div>
     <canvas id="sigCanvas"></canvas>
@@ -1031,12 +1220,14 @@
     <div style="font-size:15px; font-weight:700; color:var(--negro); margin-top:3px;" id="sigNameDisplay">—</div>
     <div style="font-size:11px; color:var(--gris); margin-top:2px;" id="sigDateDisplay">—</div>
   </div>
+
+  <div id="firmasAsistentes"></div>
 </section>
 
 <!-- ═══════════════════════════════════════════
-     FASE 5 – SUPERVISIÓN / REVISIÓN
+     FASE · SUPERVISIÓN / REVISIÓN
 ═══════════════════════════════════════════ -->
-<section class="phase-container" id="phase5">
+<section class="phase-container" id="phase7">
   <p class="phase-title">🔍 <span>Supervisión del Acta</span></p>
   <p class="phase-subtitle">Revisa toda la información antes de emitir el acta definitiva.</p>
 
@@ -1046,12 +1237,22 @@
   </div>
 
   <div class="review-section">
+    <div class="review-section-title">👥 Asistentes (<span id="reviewAsistCount">0</span>)</div>
+    <div class="review-card" id="reviewAsistentes"></div>
+  </div>
+
+  <div class="review-section">
+    <div class="review-section-title">📝 Observaciones e indicaciones</div>
+    <div class="review-card" id="reviewAcuerdos"></div>
+  </div>
+
+  <div class="review-section">
     <div class="review-section-title">📸 Fotografías y notas (<span id="reviewPhotoCount">0</span>)</div>
     <div class="review-card" id="reviewPhotos"></div>
   </div>
 
   <div class="review-section">
-    <div class="review-section-title">✍️ Firma</div>
+    <div class="review-section-title">✍️ Firmas</div>
     <div class="review-card" id="reviewFirma"></div>
   </div>
 
@@ -1062,9 +1263,9 @@
 </section>
 
 <!-- ═══════════════════════════════════════════
-     FASE 6 – EMISIÓN
+     FASE · EMISIÓN
 ═══════════════════════════════════════════ -->
-<section class="phase-container" id="phase6">
+<section class="phase-container" id="phase8">
   <p class="phase-title">📄 <span>Emisión del Acta</span></p>
   <p class="phase-subtitle">El acta está lista para generar y compartir.</p>
 
@@ -1090,7 +1291,7 @@
   </div>
 
   <div class="emit-extra">
-    <button class="btn btn-dark hidden" id="btnCorregir" onclick="corregirActa(state.acta.id)">📝 Corregir (copia editable)</button>
+    <button class="btn btn-dark hidden" id="btnCorregir" onclick="corregirActa(state.acta.id)">📝 Corregir (nueva revisión)</button>
     <button class="btn btn-secondary" onclick="nuevaActa()">🔄 Nueva Acta</button>
     <button class="btn btn-secondary" onclick="abrirMisActas()">📂 Mis actas</button>
   </div>
@@ -1128,6 +1329,20 @@
   </div>
 </div>
 
+<!-- VENTANA DE TEXTO -->
+<div class="alert-overlay" id="promptOverlay">
+  <div class="alert-box">
+    <div class="alert-icon">📝</div>
+    <div class="alert-title" id="promptTitle">Motivo</div>
+    <div class="alert-msg" id="promptMsg"></div>
+    <textarea class="prompt-textarea" id="promptTexto" maxlength="300" aria-labelledby="promptTitle"></textarea>
+    <div class="prompt-actions">
+      <button class="btn btn-secondary" onclick="cerrarPregunta(null)">Cancelar</button>
+      <button class="btn btn-primary" id="promptAceptar" onclick="cerrarPregunta($('promptTexto').value)">Aceptar</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner"></div>
@@ -1137,25 +1352,33 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.1
-//  · Navegación por fases: cada fase declara alEntrar(), alSalir() y validar().
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.2
+//  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
-//    Las actas emitidas (PDF descargado) son de solo lectura.
+//    Las actas emitidas (PDF descargado) son de solo lectura; «Corregir»
+//    crea la revisión siguiente del mismo número (control ISO 9001).
+//  · Numeración automática por expediente, asistentes, observaciones,
+//    indicaciones y firmas de todos los asistentes.
 //  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto.
-//  · Firma vectorial y PDF con jsPDF local (lib/).
-//  · Se instala y funciona sin cobertura gracias a sw.js.
+//  · PDF con jsPDF local (lib/). Se instala y funciona sin cobertura (sw.js).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '2.1';
+const VERSION = '2.2';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
+const EMPRESA = 'TEAMBIMCIVIL';
+// Código del formato en el sistema de gestión de calidad (ISO 9001). Vacío: el PDF no lo muestra.
+const FORMATO_SGC = { codigo: '', revision: '0' };
 const MAX_FOTOS = 50;
 const MAX_COMENTARIO = 1000;          // caracteres por comentario de foto
+const MAX_OBSERVACIONES = 3000;
+const MAX_INDICACION = 500;
 const FOTO_ANCHO_MAX = 1200;          // px, como en la v1
 const FOTO_CALIDAD = 0.75;            // JPEG, como en la v1
 const GPS_OBJETIVO_M = 10;            // con esta precisión la posición se fija sola
 const GPS_ESPERA_MS = 60000;          // búsqueda máxima de señal
 const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fotos durante 2 min
 const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
+const ESQUEMA = 2;                    // versión del registro del acta en el teléfono
 
 // ═══════════════════════════════════
 //  ESTADO
@@ -1176,12 +1399,18 @@ const $ = id => document.getElementById(id);
 const dos = n => String(n).padStart(2, '0');
 const fechaLocal = (d = new Date()) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
 const horaLocal = (d = new Date()) => `${dos(d.getHours())}:${dos(d.getMinutes())}`;
-const fechaHoraCorta = iso => (iso ? `${fechaLocal(new Date(iso))} ${horaLocal(new Date(iso))}` : '');
+// '2026-10-22' → '22/10/2026'
+const fechaES = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+// fecha y hora ISO completas → '22/10/2026 10:30' (hora local)
+const fechaHoraES = iso => (iso ? `${fechaES(fechaLocal(new Date(iso)))} ${horaLocal(new Date(iso))}` : '');
 const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ENTIDADES[c]);
+const escaparRegex = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const esperar = ms => new Promise(resolver => setTimeout(resolver, ms));
 const nuevoId = prefijo => `${prefijo}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 const soloLectura = () => state.acta?.estado === 'emitida';
+const puntosDe = trazos => (trazos || []).reduce((n, t) => n + t.puntos.length, 0);
+const empresaCargo = (empresa, cargo) => [empresa, cargo].map(v => String(v || '').trim()).filter(Boolean).join(' · ');
 // El GPS, el guardado y la instalación solo funcionan en HTTPS (o en localhost), no abriendo el archivo.
 const entornoSeguro = () => window.isSecureContext && /^https?:$/.test(location.protocol);
 
@@ -1195,9 +1424,28 @@ function aviso(icono, titulo, mensaje) {
 }
 function cerrarAviso() { $('alertOverlay').classList.remove('open'); }
 
+// Pide un texto en una ventana propia; resuelve con el texto o null si se cancela.
+let resolverPregunta = null;
+function pedirTexto(titulo, mensaje, ejemplo) {
+  $('promptTitle').textContent = titulo;
+  $('promptMsg').textContent = mensaje;
+  const area = $('promptTexto');
+  area.value = '';
+  area.placeholder = ejemplo || '';
+  $('promptOverlay').classList.add('open');
+  setTimeout(() => area.focus(), 50);
+  return new Promise(resolver => { resolverPregunta = resolver; });
+}
+function cerrarPregunta(valor) {
+  $('promptOverlay').classList.remove('open');
+  const resolver = resolverPregunta;
+  resolverPregunta = null;
+  if (resolver) resolver(valor);
+}
+
 // ═══════════════════════════════════
 //  ALMACÉN EN EL TELÉFONO (IndexedDB)
-//  · actas: un registro por acta (datos, GPS, fotos sin imagen, firma).
+//  · actas: un registro por acta (datos, GPS, asistentes, acuerdos, fotos sin imagen, firmas).
 //  · fotos: la imagen JPEG de cada foto, por separado.
 // ═══════════════════════════════════
 const Almacen = (() => {
@@ -1230,8 +1478,8 @@ const Almacen = (() => {
   }
   return {
     guardarActa: acta => operar('actas', 'readwrite', s => s.put(acta)),
-    leerActa: id => operar('actas', 'readonly', s => s.get(id)),
-    listarActas: () => operar('actas', 'readonly', s => s.getAll()),
+    leerActa: async id => migrarActa(await operar('actas', 'readonly', s => s.get(id))),
+    listarActas: async () => (await operar('actas', 'readonly', s => s.getAll())).map(migrarActa),
     guardarFoto: (id, actaId, blob) => operar('fotos', 'readwrite', s => s.put({ id, actaId, blob })),
     fotosDeActa: actaId => operar('fotos', 'readonly', s => s.index('porActa').getAll(actaId)),
     borrarFoto: id => operar('fotos', 'readwrite', s => s.delete(id)),
@@ -1256,18 +1504,44 @@ function actaNueva(base = {}) {
   const ahora = new Date();
   return {
     id: nuevoId('acta'),
-    esquema: 1,
+    esquema: ESQUEMA,
     estado: 'borrador',               // 'borrador' | 'emitida'
     creada: ahora.toISOString(),
     modificada: ahora.toISOString(),
     emitida: null,
     fase: 1,
-    datos: { actaNum: '', tecnico: '', expediente: '', descripcion: '', fecha: fechaLocal(ahora), hora: horaLocal(ahora), ...base },
+    revision: 0,
+    revisiones: [{ rev: 0, fecha: null, motivo: 'Emisión inicial' }],
+    datos: {
+      actaNum: '', numAuto: true, tecnico: '', cargoTecnico: '', expediente: '', descripcion: '',
+      fecha: fechaLocal(ahora), hora: horaLocal(ahora), ...base,
+    },
     gps: null,                        // { lat, lng, acc, hora }
     sinGps: { activo: false, referencia: '', lat: '', lng: '' },
+    asistentes: [],                   // { id, nombre, empresa, cargo, firma } (el técnico va aparte)
+    observaciones: '',
+    indicaciones: [],                 // { id, texto, responsable, plazo }
     fotos: [],                        // { id, ancho, alto, comentario, hora, horaFuente, gps }
-    firma: [],                        // trazos: { refW, refH, puntos: [[x, y], …] }
+    firma: [],                        // firma del técnico: trazos { refW, refH, puntos: [[x, y], …] }
+    firmasAsistentes: {},             // id de asistente → { trazos, noFirma }
   };
+}
+
+// Pone al día un acta guardada con una versión anterior (v2.1: 6 fases, sin asistentes ni revisiones).
+function migrarActa(acta) {
+  if (!acta || acta.esquema >= ESQUEMA) return acta;
+  const faseAntigua = { 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 8 };
+  acta.fase = faseAntigua[acta.fase] || 1;
+  acta.revision = acta.revision || 0;
+  acta.revisiones = acta.revisiones || [{ rev: 0, fecha: acta.emitida || null, motivo: 'Emisión inicial' }];
+  acta.datos = { numAuto: false, cargoTecnico: '', ...acta.datos };
+  acta.asistentes = acta.asistentes || [];
+  acta.observaciones = acta.observaciones || '';
+  acta.indicaciones = acta.indicaciones || [];
+  acta.firmasAsistentes = acta.firmasAsistentes || {};
+  acta.firma = acta.firma || [];
+  acta.esquema = ESQUEMA;
+  return acta;
 }
 
 // ═══════════════════════════════════
@@ -1322,10 +1596,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.querySelector('.header-text p').textContent = `Acta de Visita de Campo · v${VERSION}`;
   $('photoMax').textContent = MAX_FOTOS;
   $('photoMaxSub').textContent = MAX_FOTOS;
+  $('observaciones').maxLength = MAX_OBSERVACIONES;
+  $('obsMax').textContent = MAX_OBSERVACIONES;
   avisarSiEsArchivo();
-  iniciarFirma();
+  iniciarFirmas();
   enlazarCampos();
   $('commentsContainer').addEventListener('input', alEscribirComentario);
+  $('asistentesLista').addEventListener('input', alEditarAsistente);
+  $('asistentesLista').addEventListener('change', alEditarAsistente);
+  $('indicacionesLista').addEventListener('input', alEditarIndicacion);
+  $('observaciones').addEventListener('input', alEscribirObservaciones);
+  $('firmasAsistentes').addEventListener('change', alMarcarNoFirma);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') guardarYa(); });
   window.addEventListener('pagehide', () => { guardarYa(); });
   registrarServiceWorker();
@@ -1354,7 +1635,7 @@ async function abrirActa(acta, { nueva = false } = {}) {
   detenerGPS();
   detenerGPSFotos();
   liberarFotos();
-  state.acta = acta;
+  state.acta = migrarActa(acta);
   state.persistida = !nueva;
   if (!nueva) {
     const fotos = await Almacen.fotosDeActa(acta.id).catch(() => []);
@@ -1382,7 +1663,10 @@ function pintarActa() {
   const bloqueado = soloLectura();
   document.querySelectorAll('.field-input').forEach(el => { el.disabled = bloqueado; });
   $('sinGpsCheck').disabled = bloqueado;
+  $('actaRev').value = state.acta.revision;
+  $('actaNum').readOnly = state.acta.revision > 0;   // una revisión conserva el número
   actualizarNumActa();
+  pintarAyudaNumero();
   pintarGPS();
   pintarSinGps();
   pintarFotos();
@@ -1393,17 +1677,20 @@ function pintarActa() {
 // ═══════════════════════════════════
 const FASES = {
   1: { validar: validarIdentificacion },
-  2: { alEntrar: entrarFotos, alSalir: detenerGPSFotos, validar: validarFotos },
-  3: { alEntrar: construirComentarios },
-  4: { alEntrar: entrarFirma, validar: validarFirma },
-  5: { alEntrar: construirRevision, validar: validarEmision },
-  6: { alEntrar: construirEmision },
+  2: { alEntrar: construirAsistentes, validar: validarAsistentes },
+  3: { alEntrar: entrarFotos, alSalir: detenerGPSFotos, validar: validarFotos },
+  4: { alEntrar: construirComentarios },
+  5: { alEntrar: construirAcuerdos, validar: validarAcuerdos },
+  6: { alEntrar: entrarFirmas, validar: validarFirmas },
+  7: { alEntrar: construirRevision, validar: validarEmision },
+  8: { alEntrar: construirEmision },
 };
-const ULTIMA_FASE = 6;
+const ULTIMA_FASE = 8;
+const PRIMERA_FASE_LECTURA = 7;   // un acta emitida solo muestra la revisión y la emisión
 
 function irAFase(n, { guardar = true } = {}) {
-  if (soloLectura() && n < 5) {
-    aviso('🔒', 'Acta emitida', 'Esta acta ya está emitida y no se puede modificar. Para corregirla, pulsa «Corregir»: se crea una copia editable.');
+  if (soloLectura() && n < PRIMERA_FASE_LECTURA) {
+    aviso('🔒', 'Acta emitida', 'Esta acta ya está emitida y no se puede modificar. Para corregirla, pulsa «Corregir»: se crea la revisión siguiente, editable.');
     return;
   }
   const anteriorFase = FASES[state.fase];
@@ -1413,7 +1700,7 @@ function irAFase(n, { guardar = true } = {}) {
   state.fase = n;
   if (guardar && !soloLectura() && state.acta.fase !== n) { state.acta.fase = n; guardarPronto(); }
   const fase = FASES[n];
-  if (fase.alEntrar) fase.alEntrar();   // la fase ya es visible: el lienzo de firma tiene tamaño
+  if (fase.alEntrar) fase.alEntrar();   // la fase ya es visible: los lienzos de firma tienen tamaño
   actualizarStepper();
   actualizarNavegacion();
   window.scrollTo(0, 0);
@@ -1439,7 +1726,7 @@ function actualizarStepper() {
 
 function actualizarNavegacion() {
   const atras = $('btnBack'), sig = $('btnNext');
-  const minimo = soloLectura() ? 5 : 1;
+  const minimo = soloLectura() ? PRIMERA_FASE_LECTURA : 1;
   atras.style.display = state.fase > minimo ? 'flex' : 'none';
   sig.style.display = state.fase === ULTIMA_FASE ? 'none' : 'flex';
   const emitir = state.fase === ULTIMA_FASE - 1 && !soloLectura();
@@ -1448,11 +1735,11 @@ function actualizarNavegacion() {
 }
 
 // ═══════════════════════════════════
-//  FASE 1 · IDENTIFICACIÓN Y UBICACIÓN
+//  FASE 1 · IDENTIFICACIÓN, NUMERACIÓN Y UBICACIÓN
 // ═══════════════════════════════════
 const CAMPOS = {   // clave en el acta → id del campo
-  actaNum: 'actaNum', tecnico: 'tecnico', expediente: 'expediente',
-  descripcion: 'descripcion', fecha: 'fechaVisita', hora: 'horaVisita',
+  actaNum: 'actaNum', tecnico: 'tecnico', expediente: 'expediente', descripcion: 'descripcion',
+  fecha: 'fechaVisita', hora: 'horaVisita', cargoTecnico: 'cargoTecnico',
 };
 const CAMPOS_SIN_GPS = { referencia: 'sinGpsRef', lat: 'sinGpsLat', lng: 'sinGpsLng' };
 
@@ -1460,8 +1747,15 @@ function enlazarCampos() {
   for (const [clave, id] of Object.entries(CAMPOS)) {
     $(id).addEventListener('input', () => {
       if (soloLectura()) return;
-      state.acta.datos[clave] = $(id).value;
-      if (clave === 'actaNum') actualizarNumActa();
+      const d = state.acta.datos;
+      d[clave] = $(id).value;
+      if (clave === 'actaNum') {                 // escrito a mano: deja de ser automático
+        d.numAuto = !d.actaNum.trim();
+        actualizarNumActa();
+        pintarAyudaNumero();
+        if (d.numAuto) programarNumero();
+      }
+      if (clave === 'expediente') programarNumero();
       guardarPronto();
     });
   }
@@ -1475,13 +1769,71 @@ function enlazarCampos() {
 }
 
 function actualizarNumActa() {
-  $('headerActaNum').textContent = (state.acta && state.acta.datos.actaNum.trim()) || 'Nueva Acta';
+  const a = state.acta;
+  const num = a && a.datos.actaNum.trim();
+  $('headerActaNum').textContent = num ? `${num}${a.revision ? ` · Rev. ${a.revision}` : ''}` : 'Nueva Acta';
+}
+
+// ── Numeración automática: <expediente>-AV-<nn>, correlativa por expediente en este teléfono ──
+let temporizadorNumero = null;
+function programarNumero() {
+  clearTimeout(temporizadorNumero);
+  temporizadorNumero = setTimeout(proponerNumero, 300);
+}
+
+async function siguienteNumero(expediente, idExcluido) {
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén: empieza en 01 */ }
+  const patron = new RegExp(`^${escaparRegex(expediente)}-AV-(\\d+)$`, 'i');
+  let maximo = 0;
+  for (const a of actas) {
+    if (a.id === idExcluido) continue;
+    const m = String(a.datos.actaNum || '').trim().match(patron);
+    if (m) maximo = Math.max(maximo, Number(m[1]));
+  }
+  const orden = maximo + 1;
+  return { numero: `${expediente}-AV-${dos(orden)}`, orden };
+}
+
+async function proponerNumero() {
+  const acta = state.acta;
+  if (!acta || soloLectura() || acta.revision > 0 || !acta.datos.numAuto) return;
+  const expediente = acta.datos.expediente.trim();
+  if (!expediente) {
+    acta.datos.actaNum = '';
+    $('actaNum').value = '';
+    actualizarNumActa();
+    pintarAyudaNumero();
+    return;
+  }
+  const { numero, orden } = await siguienteNumero(expediente, acta.id);
+  // Si mientras tanto se cambió de acta, de expediente o se escribió el número a mano, no se toca.
+  if (state.acta !== acta || !acta.datos.numAuto || acta.datos.expediente.trim() !== expediente) return;
+  acta.datos.actaNum = numero;
+  acta.ordenAuto = orden;
+  $('actaNum').value = numero;
+  actualizarNumActa();
+  pintarAyudaNumero();
+  guardarPronto();
+}
+
+function pintarAyudaNumero() {
+  const a = state.acta, d = a.datos;
+  let texto = '';
+  if (soloLectura()) texto = '';
+  else if (a.revision > 0) texto = `Revisión ${a.revision} de un acta emitida: conserva el número.`;
+  else if (d.numAuto && d.actaNum) {
+    texto = a.ordenAuto ? `Automático: ${a.ordenAuto}.ª acta de este expediente en el teléfono. Se puede editar.` : 'Automático. Se puede editar.';
+  }
+  else if (d.numAuto) texto = 'Se genera al indicar el expediente.';
+  else texto = 'Número escrito a mano.';
+  $('numAyuda').textContent = texto;
 }
 
 function validarIdentificacion() {
   const d = state.acta.datos;
   const obligatorios = [
-    ['actaNum', 'Introduce el número de acta para continuar.'],
+    ['actaNum', 'Introduce el número de acta (se genera solo al indicar el expediente).'],
     ['tecnico', 'Introduce el nombre del técnico.'],
     ['expediente', 'Introduce el expediente del trabajo.'],
     ['fecha', 'Selecciona la fecha de la visita.'],
@@ -1647,7 +1999,103 @@ function cambiarSinGps(activo) {
 }
 
 // ═══════════════════════════════════
-//  FASE 2 · FOTOS
+//  FASE 2 · ASISTENTES
+// ═══════════════════════════════════
+let sugeridos = [];
+
+function construirAsistentes() {
+  $('tecnicoNombreAsist').textContent = state.acta.datos.tecnico.trim() || '—';
+  $('cargoTecnico').value = state.acta.datos.cargoTecnico || '';
+  pintarAsistentes();
+  pintarSugeridos();
+}
+
+function pintarAsistentes() {
+  $('asistentesLista').innerHTML = state.acta.asistentes.map((a, i) => `
+    <div class="asistente-card" data-asistente="${i}">
+      <div class="asistente-cabecera">
+        <span>Asistente ${i + 2}</span>
+        <button class="quitar-btn" onclick="quitarAsistente(${i})" aria-label="Quitar asistente ${i + 2}">✕</button>
+      </div>
+      <label class="field-label" for="asNombre${i}">Nombre y apellidos <span class="required">*</span></label>
+      <input type="text" class="field-input" id="asNombre${i}" data-campo="nombre" value="${esc(a.nombre)}" placeholder="Nombre y apellidos">
+      <div class="coord-row">
+        <div><label class="field-label" for="asEmpresa${i}">Empresa</label><input type="text" class="field-input" id="asEmpresa${i}" data-campo="empresa" value="${esc(a.empresa)}" placeholder="Empresa"></div>
+        <div><label class="field-label" for="asCargo${i}">Cargo</label><input type="text" class="field-input" id="asCargo${i}" data-campo="cargo" value="${esc(a.cargo)}" placeholder="Cargo"></div>
+      </div>
+      <label class="gps-sin asistente-firma"><input type="checkbox" data-campo="firma"${a.firma ? ' checked' : ''}> Firma el acta</label>
+    </div>`).join('');
+}
+
+function alEditarAsistente(e) {
+  const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-asistente]');
+  if (!campo || !tarjeta || soloLectura()) return;
+  const asistente = state.acta.asistentes[Number(tarjeta.dataset.asistente)];
+  asistente[campo] = campo === 'firma' ? e.target.checked : e.target.value;
+  guardarPronto();
+}
+
+function anadirAsistente(datos = {}) {
+  if (soloLectura()) return;
+  state.acta.asistentes.push({ id: nuevoId('asis'), nombre: '', empresa: '', cargo: '', firma: true, ...datos });
+  pintarAsistentes();
+  pintarSugeridos();
+  guardarPronto();
+  if (!datos.nombre) {
+    const ultimo = $(`asNombre${state.acta.asistentes.length - 1}`);
+    if (ultimo) ultimo.focus();
+  }
+}
+
+function quitarAsistente(indice) {
+  if (soloLectura()) return;
+  const [quitado] = state.acta.asistentes.splice(indice, 1);
+  if (quitado) delete state.acta.firmasAsistentes[quitado.id];
+  pintarAsistentes();
+  pintarSugeridos();
+  guardarPronto();
+}
+
+// Asistentes de otras actas del mismo expediente que aún no están en esta.
+async function pintarSugeridos() {
+  const acta = state.acta, expediente = acta.datos.expediente.trim().toLowerCase();
+  const clave = a => [a.nombre, a.empresa, a.cargo].map(v => String(v || '').trim().toLowerCase()).join('|');
+  let actas = [];
+  if (expediente) { try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ } }
+  if (state.acta !== acta) return;
+  const presentes = new Set(acta.asistentes.map(clave));
+  const vistos = new Set();
+  sugeridos = [];
+  for (const otra of actas) {
+    if (otra.id === acta.id || otra.datos.expediente.trim().toLowerCase() !== expediente) continue;
+    for (const a of otra.asistentes) {
+      const k = clave(a);
+      if (!a.nombre.trim() || presentes.has(k) || vistos.has(k)) continue;
+      vistos.add(k);
+      sugeridos.push({ nombre: a.nombre, empresa: a.empresa, cargo: a.cargo, firma: a.firma });
+    }
+  }
+  const caja = $('asistentesSugeridos');
+  caja.classList.toggle('hidden', !sugeridos.length || soloLectura());
+  caja.innerHTML = sugeridos.length
+    ? '<span>Añadir de visitas anteriores de este expediente:</span>' + sugeridos.map((s, i) =>
+      `<button onclick="anadirSugerido(${i})">+ ${esc(s.nombre)}${empresaCargo(s.empresa, s.cargo) ? ` · ${esc(empresaCargo(s.empresa, s.cargo))}` : ''}</button>`).join('')
+    : '';
+}
+
+function anadirSugerido(indice) {
+  const s = sugeridos[indice];
+  if (s) anadirAsistente({ ...s });
+}
+
+function validarAsistentes() {
+  const sinNombre = state.acta.asistentes.findIndex(a => !a.nombre.trim());
+  if (sinNombre >= 0) return aviso('👥', 'Falta un nombre', `Escribe el nombre del asistente ${sinNombre + 2} o quítalo.`);
+  return true;
+}
+
+// ═══════════════════════════════════
+//  FASE 3 · FOTOS
 // ═══════════════════════════════════
 // Mientras se hacen fotos, el GPS del móvil se mantiene escuchando (si ya hay permiso)
 // para anotar la posición de cada foto.
@@ -1664,7 +2112,7 @@ async function iniciarGPSFotos() {
   try {
     if (navigator.permissions) concedido = (await navigator.permissions.query({ name: 'geolocation' })).state === 'granted';
   } catch (e) { /* sin API de permisos: se usa la pista anterior */ }
-  if (!concedido || state.fase !== 2 || gpsFotos.watchId !== null) return;
+  if (!concedido || state.fase !== 3 || gpsFotos.watchId !== null) return;
   gpsFotos.watchId = navigator.geolocation.watchPosition(pos => {
     gpsFotos.ultima = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy), t: Date.now() };
   }, () => {}, { enableHighAccuracy: true, maximumAge: 30000 });
@@ -1820,7 +2268,7 @@ async function quitarFoto(indice) {
 // «20:22 · 📍 ±8 m» (pantalla) o «20:22 · 37.389210, -5.984460 (±8 m)» (PDF)
 function textoMetaFoto(foto, paraPDF) {
   const [dia, hora] = String(foto.hora || '').split(' ');
-  const cuando = dia && dia !== state.acta.datos.fecha ? `${dia} ${hora}` : (hora || '');
+  const cuando = dia && dia !== state.acta.datos.fecha ? `${fechaES(dia)} ${hora}` : (hora || '');
   const g = foto.gps;
   const precision = g && g.acc ? ` (±${g.acc} m)` : '';
   if (paraPDF) {
@@ -1851,7 +2299,7 @@ function validarFotos() {
 }
 
 // ═══════════════════════════════════
-//  FASE 3 · COMENTARIOS
+//  FASE 4 · NOTAS DE LAS FOTOS
 // ═══════════════════════════════════
 function construirComentarios() {
   const fotos = state.acta.fotos;
@@ -1880,96 +2328,251 @@ function alEscribirComentario(e) {
 }
 
 // ═══════════════════════════════════
-//  FASE 4 · FIRMA
+//  FASE 5 · OBSERVACIONES E INDICACIONES
 // ═══════════════════════════════════
-const lienzoFirma = { el: null, ctx: null, ancho: 0, alto: 0, trazo: null };
+function construirAcuerdos() {
+  $('observaciones').value = state.acta.observaciones;
+  $('obsCount').textContent = state.acta.observaciones.length;
+  $('responsablesLista').innerHTML = responsablesPosibles().map(r => `<option value="${esc(r)}"></option>`).join('');
+  pintarIndicaciones();
+}
+
+// Sugerencias para «Responsable»: el técnico y cada asistente («Empresa · cargo»).
+function responsablesPosibles() {
+  const lista = [empresaCargo(EMPRESA, state.acta.datos.cargoTecnico)];
+  for (const a of state.acta.asistentes) lista.push(empresaCargo(a.empresa, a.cargo) || a.nombre.trim());
+  return [...new Set(lista.filter(Boolean))];
+}
+
+function pintarIndicaciones() {
+  const lista = state.acta.indicaciones;
+  $('indCount').textContent = lista.length;
+  $('indicacionesLista').innerHTML = lista.map((ind, i) => `
+    <div class="indicacion-card" data-indicacion="${i}">
+      <div class="asistente-cabecera">
+        <span class="ind-num">${i + 1}</span>
+        <button class="quitar-btn" onclick="quitarIndicacion(${i})" aria-label="Quitar indicación ${i + 1}">✕</button>
+      </div>
+      <label class="field-label" for="indTexto${i}">Indicación <span class="required">*</span></label>
+      <textarea class="field-input ind-textarea" id="indTexto${i}" data-campo="texto" maxlength="${MAX_INDICACION}" placeholder="Qué hay que hacer">${esc(ind.texto)}</textarea>
+      <div class="ind-row">
+        <div><label class="field-label" for="indResp${i}">Responsable</label><input type="text" class="field-input" id="indResp${i}" data-campo="responsable" list="responsablesLista" value="${esc(ind.responsable)}" placeholder="Empresa · cargo"></div>
+        <div><label class="field-label" for="indPlazo${i}">Plazo</label><input type="date" class="field-input" id="indPlazo${i}" data-campo="plazo" value="${esc(ind.plazo)}"></div>
+      </div>
+    </div>`).join('');
+}
+
+function alEditarIndicacion(e) {
+  const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-indicacion]');
+  if (!campo || !tarjeta || soloLectura()) return;
+  state.acta.indicaciones[Number(tarjeta.dataset.indicacion)][campo] = e.target.value;
+  guardarPronto();
+}
+
+function alEscribirObservaciones() {
+  if (soloLectura()) return;
+  state.acta.observaciones = $('observaciones').value;
+  $('obsCount').textContent = state.acta.observaciones.length;
+  guardarPronto();
+}
+
+function anadirIndicacion() {
+  if (soloLectura()) return;
+  state.acta.indicaciones.push({ id: nuevoId('ind'), texto: '', responsable: '', plazo: '' });
+  pintarIndicaciones();
+  guardarPronto();
+  const nueva = $(`indTexto${state.acta.indicaciones.length - 1}`);
+  if (nueva) nueva.focus();
+}
+
+function quitarIndicacion(indice) {
+  if (soloLectura()) return;
+  state.acta.indicaciones.splice(indice, 1);
+  pintarIndicaciones();
+  guardarPronto();
+}
+
+function validarAcuerdos() {
+  const vacia = state.acta.indicaciones.findIndex(ind => !ind.texto.trim());
+  if (vacia >= 0) return aviso('📝', 'Indicación vacía', `Escribe la indicación ${vacia + 1} o quítala.`);
+  return true;
+}
+
+// ═══════════════════════════════════
+//  FASE 6 · FIRMAS
+//  Cada recuadro guarda sus trazos (vectoriales) y los redibuja al cambiar de tamaño.
+// ═══════════════════════════════════
 const GROSOR_FIRMA = 2.5;
 
-function iniciarFirma() {
-  const el = lienzoFirma.el = $('sigCanvas');
-  lienzoFirma.ctx = el.getContext('2d');
-  // Se reajusta cuando el lienzo cambia de tamaño: al mostrarse la fase o al girar el móvil.
-  if ('ResizeObserver' in window) new ResizeObserver(() => ajustarLienzo()).observe(el);
-  window.addEventListener('resize', () => ajustarLienzo());
-  el.addEventListener('pointerdown', empezarTrazo);
-  el.addEventListener('pointermove', continuarTrazo);
-  el.addEventListener('pointerup', terminarTrazo);
-  el.addEventListener('pointercancel', terminarTrazo);
+class PadFirma {
+  constructor(lienzo, obtenerTrazos, bloqueado = () => false) {
+    this.el = lienzo;
+    this.ctx = lienzo.getContext('2d');
+    this.obtenerTrazos = obtenerTrazos;
+    this.bloqueado = bloqueado;
+    this.ancho = 0;
+    this.alto = 0;
+    this.trazo = null;
+    this.observador = 'ResizeObserver' in window ? new ResizeObserver(() => this.ajustar()) : null;
+    if (this.observador) this.observador.observe(lienzo);
+    lienzo.addEventListener('pointerdown', e => this.empezar(e));
+    lienzo.addEventListener('pointermove', e => this.continuar(e));
+    lienzo.addEventListener('pointerup', () => this.terminar());
+    lienzo.addEventListener('pointercancel', () => this.terminar());
+  }
+
+  ajustar() {
+    const caja = this.el.getBoundingClientRect();
+    if (!caja.width || !caja.height) return;          // fase oculta: se ajustará al mostrarse
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.round(caja.width * dpr), h = Math.round(caja.height * dpr);
+    if (this.el.width !== w || this.el.height !== h) {
+      this.el.width = w;
+      this.el.height = h;
+      this.trazo = null;     // si se gira a mitad de un trazo, el siguiente empieza en el marco nuevo
+    }
+    this.ancho = caja.width;
+    this.alto = caja.height;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.redibujar();
+  }
+
+  punto(evento) {
+    const caja = this.el.getBoundingClientRect();
+    return [evento.clientX - caja.left, evento.clientY - caja.top];
+  }
+
+  empezar(e) {
+    if (soloLectura() || this.bloqueado()) return;
+    e.preventDefault();
+    if (!this.ancho) this.ajustar();
+    if (this.el.setPointerCapture) this.el.setPointerCapture(e.pointerId);
+    this.trazo = { refW: this.ancho, refH: this.alto, puntos: [this.punto(e)] };
+    this.obtenerTrazos().push(this.trazo);
+    this.redibujar();
+  }
+
+  continuar(e) {
+    const trazo = this.trazo;
+    if (!trazo) return;
+    e.preventDefault();
+    const eventos = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
+    estiloTrazo(this.ctx, GROSOR_FIRMA);
+    this.ctx.beginPath();
+    this.ctx.moveTo(...trazo.puntos[trazo.puntos.length - 1]);
+    for (const ev of eventos) {
+      const p = this.punto(ev);
+      trazo.puntos.push(p);
+      this.ctx.lineTo(...p);
+    }
+    this.ctx.stroke();
+  }
+
+  terminar() {
+    if (!this.trazo) return;
+    this.trazo = null;
+    guardarPronto();
+  }
+
+  redibujar() {
+    if (!this.ancho || !state.acta) return;
+    this.ctx.clearRect(0, 0, this.ancho, this.alto);
+    estiloTrazo(this.ctx, GROSOR_FIRMA);
+    dibujarTrazos(this.ctx, trazosEnMarco(this.obtenerTrazos(), this.ancho, this.alto));
+  }
+
+  destruir() { if (this.observador) this.observador.disconnect(); }
 }
 
-function entrarFirma() {
-  ajustarLienzo();
+let padTecnico = null;
+let padsAsistentes = [];
+
+function iniciarFirmas() {
+  padTecnico = new PadFirma($('sigCanvas'), () => state.acta.firma);
+  window.addEventListener('resize', () => { padTecnico.ajustar(); padsAsistentes.forEach(p => p.ajustar()); });
+}
+
+function datosFirma(id) {
+  const firmas = state.acta.firmasAsistentes;
+  return firmas[id] || (firmas[id] = { trazos: [], noFirma: false });
+}
+
+function entrarFirmas() {
   const d = state.acta.datos;
+  padTecnico.ajustar();
   $('sigNameDisplay').textContent = d.tecnico.trim() || '—';
-  $('sigDateDisplay').textContent = `${d.fecha} ${d.hora}`;
+  $('sigDateDisplay').textContent = `${empresaCargo(EMPRESA, d.cargoTecnico)} · ${fechaES(d.fecha)} ${d.hora}`;
+  padsAsistentes.forEach(p => p.destruir());
+  padsAsistentes = [];
+  const firmantes = state.acta.asistentes.filter(a => a.firma);
+  const sinFirma = state.acta.asistentes.filter(a => !a.firma);
+  const contenedor = $('firmasAsistentes');
+  contenedor.innerHTML = firmantes.map(a => {
+    const f = datosFirma(a.id);
+    return `
+    <div class="signature-wrapper firma-asistente${f.noFirma ? ' no-firma-activa' : ''}" data-asistente-id="${esc(a.id)}">
+      <div class="signature-header">
+        <span>${esc(a.nombre.trim() || 'Asistente')}<small>${esc(empresaCargo(a.empresa, a.cargo))}</small></span>
+        <button class="clear-sig-btn" onclick="borrarFirmaAsistente('${esc(a.id)}')">Borrar</button>
+      </div>
+      <canvas class="firma-lienzo"></canvas>
+      <label class="no-firma"><input type="checkbox" data-no-firma="${esc(a.id)}"${f.noFirma ? ' checked' : ''}> No firma (constará «No firma» en el acta)</label>
+    </div>`;
+  }).join('') + sinFirma.map(a => `
+    <div class="no-firma-card">
+      <span><strong>${esc(a.nombre.trim() || 'Asistente')}</strong><br><small>${esc(empresaCargo(a.empresa, a.cargo))}</small></span>
+      <span class="status-badge badge-gris">No firma</span>
+    </div>`).join('');
+  contenedor.querySelectorAll('.firma-asistente').forEach(div => {
+    const id = div.dataset.asistenteId;
+    const pad = new PadFirma(div.querySelector('canvas'), () => datosFirma(id).trazos, () => datosFirma(id).noFirma);
+    padsAsistentes.push(pad);
+    pad.ajustar();
+  });
 }
 
-function ajustarLienzo() {
-  const { el, ctx } = lienzoFirma;
-  const caja = el.getBoundingClientRect();
-  if (!caja.width || !caja.height) return;            // fase oculta: se ajustará al mostrarse
-  const dpr = window.devicePixelRatio || 1;
-  const w = Math.round(caja.width * dpr), h = Math.round(caja.height * dpr);
-  if (el.width !== w || el.height !== h) {
-    el.width = w;
-    el.height = h;
-    lienzoFirma.trazo = null;      // si se gira a mitad de un trazo, el siguiente empieza en el marco nuevo
-  }
-  lienzoFirma.ancho = caja.width;
-  lienzoFirma.alto = caja.height;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  redibujarFirma();
-}
-
-function puntoDe(evento) {
-  const caja = lienzoFirma.el.getBoundingClientRect();
-  return [evento.clientX - caja.left, evento.clientY - caja.top];
-}
-
-function empezarTrazo(e) {
-  if (soloLectura()) return;
-  e.preventDefault();
-  if (!lienzoFirma.ancho) ajustarLienzo();
-  if (lienzoFirma.el.setPointerCapture) lienzoFirma.el.setPointerCapture(e.pointerId);
-  lienzoFirma.trazo = { refW: lienzoFirma.ancho, refH: lienzoFirma.alto, puntos: [puntoDe(e)] };
-  state.acta.firma.push(lienzoFirma.trazo);
-  redibujarFirma();
-}
-
-function continuarTrazo(e) {
-  const trazo = lienzoFirma.trazo;
-  if (!trazo) return;
-  e.preventDefault();
-  const eventos = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
-  const { ctx } = lienzoFirma;
-  estiloTrazo(ctx, GROSOR_FIRMA);
-  ctx.beginPath();
-  ctx.moveTo(...trazo.puntos[trazo.puntos.length - 1]);
-  for (const ev of eventos) {
-    const p = puntoDe(ev);
-    trazo.puntos.push(p);
-    ctx.lineTo(...p);
-  }
-  ctx.stroke();
-}
-
-function terminarTrazo() {
-  if (!lienzoFirma.trazo) return;
-  lienzoFirma.trazo = null;
+function alMarcarNoFirma(e) {
+  const id = e.target.dataset.noFirma;
+  if (!id || soloLectura()) return;
+  const f = datosFirma(id);
+  f.noFirma = e.target.checked;
+  if (f.noFirma) f.trazos = [];
+  e.target.closest('.firma-asistente').classList.toggle('no-firma-activa', f.noFirma);
+  padsAsistentes.forEach(p => p.redibujar());
   guardarPronto();
 }
 
 function borrarFirma() {
   if (soloLectura()) return;
   state.acta.firma = [];
-  lienzoFirma.trazo = null;
-  redibujarFirma();
+  padTecnico.trazo = null;
+  padTecnico.redibujar();
   guardarPronto();
 }
 
-function validarFirma() {
-  const puntos = state.acta.firma.reduce((n, t) => n + t.puntos.length, 0);
-  return puntos >= 5 || aviso('✍️', 'Firma requerida', 'Por favor, firma en el recuadro para continuar.');
+function borrarFirmaAsistente(id) {
+  if (soloLectura()) return;
+  datosFirma(id).trazos = [];
+  padsAsistentes.forEach(p => { p.trazo = null; p.redibujar(); });
+  guardarPronto();
+}
+
+// ¿Ha firmado este asistente? (marcado para firmar, sin «No firma» y con trazo suficiente)
+function asistenteFirmo(a) {
+  const f = state.acta.firmasAsistentes[a.id];
+  return Boolean(a.firma && f && !f.noFirma && puntosDe(f.trazos) >= 5);
+}
+
+function validarFirmas() {
+  if (puntosDe(state.acta.firma) < 5) return aviso('✍️', 'Firma requerida', 'La firma del técnico es obligatoria: firma en el primer recuadro.');
+  const pendientes = state.acta.asistentes.filter(a => a.firma && !asistenteFirmo(a) && !datosFirma(a.id).noFirma);
+  if (pendientes.length) {
+    const nombres = pendientes.map(a => a.nombre.trim() || 'Asistente').join(', ');
+    if (!confirm(`Faltan las firmas de: ${nombres}.\n¿Continuar? En el acta constará «No firma».`)) return false;
+    pendientes.forEach(a => { datosFirma(a.id).noFirma = true; });
+    guardarPronto();
+  }
+  return true;
 }
 
 function estiloTrazo(ctx, grosor) {
@@ -1980,8 +2583,8 @@ function estiloTrazo(ctx, grosor) {
 }
 
 // Trazos escalados (sin deformar) a un marco de ancho × alto.
-function trazosEnMarco(ancho, alto) {
-  return state.acta.firma.filter(t => t.puntos.length).map(t => {
+function trazosEnMarco(trazos, ancho, alto) {
+  return (trazos || []).filter(t => t.puntos.length).map(t => {
     const k = Math.min(ancho / t.refW, alto / t.refH);
     return t.puntos.map(([x, y]) => [x * k, y * k]);
   });
@@ -1997,19 +2600,11 @@ function dibujarTrazos(ctx, trazos, k = 1, dx = 0, dy = 0) {
   }
 }
 
-function redibujarFirma() {
-  const { ctx, ancho, alto } = lienzoFirma;
-  if (!ctx || !ancho || !state.acta) return;
-  ctx.clearRect(0, 0, ancho, alto);
-  estiloTrazo(ctx, GROSOR_FIRMA);
-  dibujarTrazos(ctx, trazosEnMarco(ancho, alto));
-}
-
-// Imagen JPEG de la firma, recortada a su contenido, en proporción 2,5 : 1 (recuadro de 70 × 28 mm del PDF).
-function firmaComoImagen() {
-  const base = state.acta.firma.find(t => t.puntos.length);
+// Imagen JPEG de una firma, recortada a su contenido, en proporción 2,5 : 1 (recuadro de 70 × 28 mm del PDF).
+function firmaComoImagen(trazosFirma) {
+  const base = (trazosFirma || []).find(t => t.puntos.length);
   if (!base) return null;
-  const trazos = trazosEnMarco(base.refW, base.refH);
+  const trazos = trazosEnMarco(trazosFirma, base.refW, base.refH);
   const xs = trazos.flat().map(p => p[0]), ys = trazos.flat().map(p => p[1]);
   const margen = 8;
   const x0 = Math.min(...xs) - margen, y0 = Math.min(...ys) - margen;
@@ -2027,34 +2622,61 @@ function firmaComoImagen() {
   return lienzo.toDataURL('image/jpeg', 0.92);
 }
 
+// Técnico y asistentes, en orden, con su firma (imagen JPEG o null si no firma).
+function firmantesDelActa() {
+  const acta = state.acta, d = acta.datos;
+  return [
+    { nombre: d.tecnico.trim(), empresa: EMPRESA, cargo: d.cargoTecnico.trim() || 'Técnico', imagen: firmaComoImagen(acta.firma) },
+    ...acta.asistentes.map(a => ({
+      nombre: a.nombre.trim(), empresa: a.empresa.trim(), cargo: a.cargo.trim(),
+      imagen: asistenteFirmo(a) ? firmaComoImagen(state.acta.firmasAsistentes[a.id].trazos) : null,
+    })),
+  ];
+}
+
 // ═══════════════════════════════════
-//  FASE 5 · REVISIÓN (se construye al entrar)
+//  FASE 7 · REVISIÓN (se construye al entrar)
 // ═══════════════════════════════════
 function validarEmision() {   // comprobación final antes de emitir: lleva a la fase que falte
-  for (const [fase, validar] of [[1, validarIdentificacion], [2, validarFotos], [4, validarFirma]]) {
-    if (!validar()) { irAFase(fase); return false; }
+  const comprobaciones = [[1, validarIdentificacion], [2, validarAsistentes], [3, validarFotos], [5, validarAcuerdos], [6, validarFirmas]];
+  for (const [fase, validar] of comprobaciones) {
+    if (!validar()) { if (state.fase !== fase) irAFase(fase); return false; }
   }
   return true;
 }
 
 function construirRevision() {
-  const d = recogerDatos();
+  const acta = state.acta, d = recogerDatos();
   const campo = (etiqueta, valor) => `
     <div class="review-field">
       <div class="review-field-label">${esc(etiqueta)}</div>
       <div class="review-field-val">${esc(valor)}</div>
     </div>`;
   $('reviewGeneral').innerHTML = [
-    campo('Nº de Acta', d.actaNum),
+    campo('Nº de Acta', `${d.actaNum} · Rev. ${acta.revision}`),
     campo('Técnico', d.tecnico),
     campo('Expediente', d.expediente),
-    campo('Descripción', d.descripcion || '—'),
-    campo('Fecha', d.fecha),
+    campo('Objeto', d.descripcion || '—'),
+    campo('Fecha', fechaES(d.fecha)),
     campo('Hora', d.hora || '—'),
-    campo('Localización GPS', textoUbicacion(state.acta, false)),
+    campo('Localización GPS', textoUbicacion(acta, false)),
   ].join('');
 
-  const fotos = state.acta.fotos;
+  const firmantes = firmantesDelActa();
+  $('reviewAsistCount').textContent = firmantes.length;
+  $('reviewAsistentes').innerHTML = firmantes.map((f, i) => campo(
+    i === 0 ? 'Técnico' : `Asistente ${i + 1}`,
+    `${f.nombre || '—'}${empresaCargo(f.empresa, f.cargo) ? ` · ${empresaCargo(f.empresa, f.cargo)}` : ''}`)).join('');
+
+  const indicaciones = acta.indicaciones.map((ind, i) => `<li><strong>${i + 1}.</strong> ${esc(ind.texto.trim())}
+      <span class="review-ind-meta">${esc(ind.responsable.trim() || 'Sin responsable')} · ${ind.plazo ? `Plazo ${esc(fechaES(ind.plazo))}` : 'Sin plazo'}</span></li>`).join('');
+  $('reviewAcuerdos').innerHTML = `
+    <div class="review-photo-num">OBSERVACIONES</div>
+    <div class="review-photo-comment" style="font-style:normal;">${esc(acta.observaciones.trim()) || 'Sin observaciones.'}</div>
+    <div class="review-photo-num" style="margin-top:10px;">INDICACIONES (${acta.indicaciones.length})</div>
+    ${indicaciones ? `<ol class="review-lista">${indicaciones}</ol>` : '<div class="review-photo-comment" style="font-style:normal;">Sin indicaciones.</div>'}`;
+
+  const fotos = acta.fotos;
   $('reviewPhotoCount').textContent = fotos.length;
   $('reviewPhotos').innerHTML = fotos.map((f, i) => `
     <div class="review-photo-row">
@@ -2065,35 +2687,36 @@ function construirRevision() {
       </div>
     </div>`).join('');
 
-  const imagenFirma = firmaComoImagen();
-  $('reviewFirma').innerHTML = imagenFirma
-    ? `<div style="display:flex;align-items:center;gap:12px;">
-        <img class="sig-preview-small" src="${imagenFirma}" alt="Firma">
-        <div style="font-size:12px;color:var(--gris);">Firmado por <strong>${esc(d.tecnico)}</strong><br>${esc(d.fecha)} ${esc(d.hora)}</div>
-       </div>`
-    : `<div class="badge-err" style="padding:8px 12px;border-radius:8px;font-size:12px;">Sin firma</div>`;
+  $('reviewFirma').innerHTML = `<div class="review-firmas">${firmantes.map(f => `
+    <div class="review-firma-item">
+      ${f.imagen ? `<img src="${f.imagen}" alt="Firma de ${esc(f.nombre)}">` : '<div class="review-sin-firma">NO FIRMA</div>'}
+      <div><strong>${esc(f.nombre || '—')}</strong></div>
+      <div>${esc(empresaCargo(f.empresa, f.cargo))}</div>
+    </div>`).join('')}</div>`;
 }
 
 // ═══════════════════════════════════
-//  FASE 6 · EMISIÓN
+//  FASE 8 · EMISIÓN
 // ═══════════════════════════════════
 function construirEmision() {
-  const d = recogerDatos(), emitida = soloLectura();
-  $('emitActaTitle').textContent = `Acta ${d.actaNum}`;
+  const acta = state.acta, d = recogerDatos(), emitida = soloLectura();
+  $('emitActaTitle').textContent = `Acta ${d.actaNum}${acta.revision ? ` · Rev. ${acta.revision}` : ''}`;
   $('emitActaSub').innerHTML =
-    `<strong>${esc(d.tecnico)}</strong> · ${esc(d.expediente)}<br>${esc(d.fecha)} · ${state.acta.fotos.length} foto(s)<br>
-    <span style="color:var(--verde);font-weight:700;">✅ ${emitida ? `Emitida el ${esc(fechaHoraCorta(state.acta.emitida))}` : 'Lista para emitir'}</span>`;
+    `<strong>${esc(d.tecnico)}</strong> · ${esc(d.expediente)}<br>${esc(fechaES(d.fecha))} · ${acta.fotos.length} foto(s)<br>
+    <span style="color:var(--verde);font-weight:700;">✅ ${emitida ? `Emitida el ${esc(fechaHoraES(acta.emitida))}` : 'Lista para emitir'}</span>`;
+  const sustituida = acta.sustituidaPor
+    ? `<br>⚠️ <strong>Sustituida por la Rev. ${esc(acta.sustituidaRev)}</strong>: usa la última revisión.` : '';
   $('emitNota').innerHTML = emitida
-    ? '🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a descargar o compartir el PDF. Para corregirla, pulsa «Corregir»: se crea una copia editable que habrá que volver a firmar.'
+    ? `🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a descargar o compartir el PDF. Para corregirla, pulsa «Corregir»: se crea la Rev. ${acta.revision + 1}, editable, que habrá que volver a firmar.${sustituida}`
     : 'ℹ️ Al descargar o compartir el PDF, el acta queda <strong>emitida</strong> y ya no se podrá modificar.';
-  $('btnCorregir').classList.toggle('hidden', !emitida);
+  $('btnCorregir').classList.toggle('hidden', !emitida || Boolean(acta.sustituidaPor));
 }
 
 function recogerDatos() {
   const d = state.acta.datos, limpio = v => String(v || '').trim();
   return {
-    actaNum: limpio(d.actaNum), tecnico: limpio(d.tecnico), expediente: limpio(d.expediente),
-    descripcion: limpio(d.descripcion), fecha: d.fecha || '', hora: d.hora || '',
+    actaNum: limpio(d.actaNum), tecnico: limpio(d.tecnico), cargoTecnico: limpio(d.cargoTecnico),
+    expediente: limpio(d.expediente), descripcion: limpio(d.descripcion), fecha: d.fecha || '', hora: d.hora || '',
   };
 }
 
@@ -2102,6 +2725,7 @@ function recogerDatos() {
 // ═══════════════════════════════════
 const PDF = {
   W: 210, H: 297, M: 15,          // A4 vertical y margen (mm)
+  SUPERIOR: 40,                   // inicio del contenido bajo la cabecera, en las páginas 2 y siguientes
   LIMITE: 297 - 12 - 4,           // límite inferior del contenido: pie de 12 mm y 4 mm de aire
   ROJO: [204, 34, 34], NEGRO: [26, 26, 26], GRIS: [107, 107, 107], BLANCO: [255, 255, 255],
 };
@@ -2110,53 +2734,83 @@ const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de text
 // La fuente del PDF no tiene emojis: se retiran para que no salgan como cajas.
 const textoPDF = t => String(t ?? '').replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').trim();
 
-async function crearPDF() {
+async function crearPDF(emision) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
   pdf.setLineHeightFactor(INTERLINEADO);
   const fuente = pdf.getFontList().ActaSans ? 'ActaSans' : 'helvetica';
-  const { W, H, M, LIMITE } = PDF;
-  const d = recogerDatos();
+  const { W, H, M, SUPERIOR, LIMITE } = PDF;
+  const acta = state.acta, d = recogerDatos();
+  const anchoUtil = W - 2 * M;
   let y = M;
 
   const letra = (estilo, pt, color) => { pdf.setFont(fuente, estilo); pdf.setFontSize(pt); pdf.setTextColor(...color); };
-  const asegurar = alto => { if (y + alto > LIMITE) { pdf.addPage(); y = M; } };
+  const nuevaPagina = () => { pdf.addPage(); y = SUPERIOR; };
+  const asegurar = alto => { if (y + alto > LIMITE) nuevaPagina(); };
   const banda = (titulo, altoSiguiente) => {      // título de sección; no se deja huérfano al pie
-    asegurar(12 + altoSiguiente);
+    asegurar(10 + altoSiguiente);
     pdf.setFillColor(...PDF.ROJO);
-    pdf.rect(M, y, W - 2 * M, 7, 'F');
+    pdf.rect(M, y, anchoUtil, 7, 'F');
     letra('bold', 9, PDF.BLANCO);
     pdf.text(titulo, M + 3, y + 5);
-    y += 12;
+    y += 10;
   };
-
-  // ── Cabecera ──
-  pdf.setFillColor(...PDF.NEGRO);
-  pdf.rect(0, 0, W, 28, 'F');
-  pdf.setFillColor(...PDF.ROJO);
-  pdf.rect(0, 28, W, 4, 'F');
-  letra('bold', 14, PDF.ROJO);
-  pdf.text('TEAMBIMCIVIL', M, 13);
-  letra('bold', 8, [200, 200, 200]);
-  pdf.text('ENGINEERING, TRAINING & CONSULTANCY', M, 20);
-  letra('bold', 10, PDF.BLANCO);
-  pdf.text(textoPDF(`ACTA ${d.actaNum}`), W - M, 18, { align: 'right' });
+  const parrafo = (texto, pt = 9) => {            // texto corrido que salta de página entre líneas
+    letra('normal', pt, PDF.NEGRO);
+    for (const linea of pdf.splitTextToSize(textoPDF(texto), anchoUtil - 2)) {
+      asegurar(altoLinea(pt));
+      pdf.text(linea, M + 1, y + altoLinea(pt) * 0.8);
+      y += altoLinea(pt);
+    }
+    y += 4;
+  };
+  // Tabla con cabecera gris; las filas saltan de línea y de página (repitiendo la cabecera).
+  const tabla = (columnas, filas) => {
+    const pad = 1.6, pt = 8.5, lh = altoLinea(pt);
+    const cabecera = () => {
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(M, y, anchoUtil, 6.5, 'F');
+      pdf.setDrawColor(217, 217, 217);
+      pdf.setLineWidth(0.25);
+      pdf.rect(M, y, anchoUtil, 6.5);
+      letra('bold', 7.5, [79, 79, 79]);
+      let x = M;
+      for (const c of columnas) { pdf.text(c.titulo.toUpperCase(), x + pad, y + 4.4); x += c.ancho; }
+      y += 6.5;
+    };
+    asegurar(6.5 + 6.5);
+    cabecera();
+    for (const fila of filas) {
+      letra('normal', pt, PDF.NEGRO);
+      const celdas = fila.map((texto, i) => pdf.splitTextToSize(textoPDF(texto) || '—', columnas[i].ancho - 2 * pad));
+      const alto = Math.max(...celdas.map(c => c.length)) * lh + 2.6;
+      if (y + alto > LIMITE) { nuevaPagina(); cabecera(); letra('normal', pt, PDF.NEGRO); }
+      let x = M;
+      celdas.forEach((lineas, i) => { pdf.text(lineas, x + pad, y + 4); x += columnas[i].ancho; });
+      pdf.setDrawColor(225, 225, 225);
+      pdf.setLineWidth(0.25);
+      pdf.line(M, y + alto, M + anchoUtil, y + alto);
+      y += alto;
+    }
+    y += 5;
+  };
 
   // ── Título ──
   y = 42;
   letra('bold', 16, PDF.NEGRO);
   pdf.text('ACTA DE VISITA DE CAMPO', M, y);
-  y += 8;
+  y += 7;
 
-  // ── Datos generales (los valores largos saltan de línea) ──
+  // ── 1 · Datos generales (los valores largos saltan de línea) ──
+  banda('1 · DATOS GENERALES', 16);
+  y += 4;
   const filas = [
-    ['Nº de Acta', d.actaNum],
+    ['Nº de acta', `${d.actaNum} · Rev. ${acta.revision}`],
     ['Técnico', d.tecnico],
     ['Expediente', d.expediente],
-    ['Descripción', d.descripcion || '—'],
-    ['Fecha', d.fecha],
-    ['Hora', d.hora || '—'],
-    ['Localización GPS', textoUbicacion(state.acta, true)],
+    ['Objeto', d.descripcion || '—'],
+    ['Fecha y hora', `${fechaES(d.fecha)}${d.hora ? ` · ${d.hora}` : ''}`],
+    ['Localización GPS', textoUbicacion(acta, true)],
   ];
   const xValor = M + 50, anchoValor = W - M - xValor - 2;
   filas.forEach(([etiqueta, valor], i) => {
@@ -2164,21 +2818,40 @@ async function crearPDF() {
     const lineas = pdf.splitTextToSize(textoPDF(valor) || '—', anchoValor);
     const alto = 8 + (lineas.length - 1) * altoLinea(9);
     asegurar(alto);
-    if (i % 2 === 0) { pdf.setFillColor(250, 250, 250); pdf.rect(M, y - 4, W - 2 * M, alto, 'F'); }
+    if (i % 2 === 0) { pdf.setFillColor(250, 250, 250); pdf.rect(M, y - 4, anchoUtil, alto, 'F'); }
     letra('bold', 8, PDF.GRIS);
     pdf.text(etiqueta.toUpperCase(), M + 2, y + 1);
     letra('normal', 9, PDF.NEGRO);
     pdf.text(lineas, xValor, y + 1);
     y += alto;
   });
-  y += 6;
+  y += 2;
 
-  // ── Fotografías: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
-  const fotos = state.acta.fotos;
+  // ── 2 · Asistentes ──
+  const firmantes = firmantesDelActa();
+  banda('2 · ASISTENTES', 13);
+  tabla([{ titulo: 'Nombre', ancho: 62 }, { titulo: 'Empresa', ancho: 45 }, { titulo: 'Cargo', ancho: 55 }, { titulo: 'Firma', ancho: 18 }],
+    firmantes.map(f => [f.nombre || '—', f.empresa || '—', f.cargo || '—', f.imagen ? 'Sí' : 'No']));
+
+  // ── 3 · Observaciones generales ──
+  banda('3 · OBSERVACIONES GENERALES', 8);
+  parrafo(acta.observaciones.trim() || 'Sin observaciones.');
+
+  // ── 4 · Indicaciones ──
+  banda('4 · INDICACIONES', 13);
+  if (acta.indicaciones.length) {
+    tabla([{ titulo: 'Nº', ancho: 10 }, { titulo: 'Indicación', ancho: 95 }, { titulo: 'Responsable', ancho: 47 }, { titulo: 'Plazo', ancho: 28 }],
+      acta.indicaciones.map((ind, i) => [String(i + 1), ind.texto, ind.responsable || '—', ind.plazo ? fechaES(ind.plazo) : '—']));
+  } else {
+    parrafo('Sin indicaciones.');
+  }
+
+  // ── 5 · Reportaje fotográfico: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
+  const fotos = acta.fotos;
   if (fotos.length) {
     const imagenes = await Promise.all(fotos.map(async f => new Uint8Array(await state.blobs.get(f.id).arrayBuffer())));
     const hueco = 6;
-    const anchoCelda = (W - 2 * M - hueco) / 2;
+    const anchoCelda = (anchoUtil - hueco) / 2;
     const altoCaja = anchoCelda * 0.75;
     const ptMeta = 7, ptPie = 7.5;
     const altoMeta = 4.5, altoPie = altoLinea(ptPie);
@@ -2194,7 +2867,7 @@ async function crearPDF() {
       filasFotos.push({ celdas, alto: altoCaja + altoMeta + altoPie + (lineasPie - 1) * altoPie + 7 });
     }
 
-    banda(`FOTOGRAFÍAS DE CAMPO (${fotos.length})`, filasFotos[0].alto);
+    banda(`5 · REPORTAJE FOTOGRÁFICO (${fotos.length})`, filasFotos[0].alto);
     for (const fila of filasFotos) {
       asegurar(fila.alto);
       fila.celdas.forEach(({ foto, imagen, numero, meta, pie }, j) => {
@@ -2221,34 +2894,79 @@ async function crearPDF() {
     }
   }
 
-  // ── Firma ──
+  // ── 6 · Firmas: rejilla de 2 columnas ──
+  const anchoFirma = 70, altoFirma = 28, altoFirmante = altoFirma + 12;
+  const anchoColumna = (anchoUtil - 6) / 2;
   y += 2;
-  banda('FIRMA DEL TÉCNICO', 28 + 12);
-  const imagenFirma = firmaComoImagen();
-  if (imagenFirma) {
-    const anchoFirma = 70, altoFirma = 28;
-    pdf.addImage(imagenFirma, 'JPEG', M, y, anchoFirma, altoFirma);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.rect(M, y, anchoFirma, altoFirma);
-    letra('normal', 8, PDF.GRIS);
-    pdf.text(textoPDF(d.tecnico), M, y + altoFirma + 5);
-    pdf.text(`${d.fecha} ${d.hora}`, M, y + altoFirma + 10);
+  banda('6 · FIRMAS', altoFirmante);
+  for (let i = 0; i < firmantes.length; i += 2) {
+    asegurar(altoFirmante + 4);
+    firmantes.slice(i, i + 2).forEach((f, j) => {
+      const x = M + j * (anchoColumna + 6);
+      if (f.imagen) {
+        pdf.addImage(f.imagen, 'JPEG', x, y, anchoFirma, altoFirma);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.3);
+        pdf.rect(x, y, anchoFirma, altoFirma);
+      } else {
+        pdf.setDrawColor(168, 168, 168);
+        pdf.setLineWidth(0.3);
+        pdf.setLineDashPattern([1.2, 1], 0);
+        pdf.rect(x, y, anchoFirma, altoFirma);
+        pdf.setLineDashPattern([], 0);
+        letra('bold', 9, PDF.GRIS);
+        pdf.text('NO FIRMA', x + anchoFirma / 2, y + altoFirma / 2 + 1.5, { align: 'center' });
+      }
+      letra('bold', 8.5, PDF.NEGRO);
+      pdf.text(pdf.splitTextToSize(textoPDF(f.nombre) || '—', anchoColumna)[0], x, y + altoFirma + 4.5);
+      letra('normal', 7.5, PDF.GRIS);
+      const sub = textoPDF(empresaCargo(f.empresa, f.cargo));
+      if (sub) pdf.text(pdf.splitTextToSize(sub, anchoColumna)[0], x, y + altoFirma + 8.6);
+    });
+    y += altoFirmante + 4;
   }
 
-  // ── Pie en todas las páginas ──
+  // ── 7 · Control de revisiones ──
+  y += 2;
+  banda('7 · CONTROL DE REVISIONES', 13);
+  tabla([{ titulo: 'Rev.', ancho: 14 }, { titulo: 'Fecha', ancho: 28 }, { titulo: 'Motivo', ancho: 138 }],
+    acta.revisiones.map(r => [String(r.rev), fechaES(fechaLocal(new Date(r.rev === acta.revision ? emision : (r.fecha || emision)))), r.motivo]));
+
+  // ── Cabecera con bloque de control y pie, en todas las páginas ──
   const paginas = pdf.getNumberOfPages();
+  const formato = FORMATO_SGC.codigo ? `Formato ${FORMATO_SGC.codigo} · Rev. ${FORMATO_SGC.revision}` : 'Acta de visita de campo';
+  const anchoControl = 87, xControl = W - M - anchoControl;
   for (let p = 1; p <= paginas; p++) {
     pdf.setPage(p);
+    pdf.setFillColor(...PDF.NEGRO);
+    pdf.rect(0, 0, W, 28, 'F');
+    pdf.setFillColor(...PDF.ROJO);
+    pdf.rect(0, 28, W, 4, 'F');
+    letra('bold', 14, PDF.ROJO);
+    pdf.text('TEAMBIMCIVIL', M, 13);
+    letra('bold', 8, [200, 200, 200]);
+    pdf.text('ENGINEERING, TRAINING & CONSULTANCY', M, 20);
+    pdf.setDrawColor(90, 90, 90);
+    pdf.setLineWidth(0.3);
+    pdf.rect(xControl, 6, anchoControl, 16);
+    pdf.line(xControl, 13.5, xControl + anchoControl, 13.5);
+    pdf.line(xControl + anchoControl / 2, 13.5, xControl + anchoControl / 2, 22);
+    letra('bold', 10, PDF.BLANCO);
+    pdf.text(pdf.splitTextToSize(textoPDF(`Nº ${d.actaNum} · Rev. ${acta.revision}`), anchoControl - 4)[0], xControl + 2, 11.6);
+    letra('normal', 6.8, [200, 200, 200]);
+    pdf.text(pdf.splitTextToSize(formato, anchoControl / 2 - 3)[0], xControl + 2, 19);
+    pdf.text(`Emitida ${fechaES(fechaLocal(new Date(emision)))} · Pág. ${p} de ${paginas}`, xControl + anchoControl / 2 + 2, 19);
+
     pdf.setFillColor(...PDF.NEGRO);
     pdf.rect(0, H - 12, W, 12, 'F');
     letra('normal', 7, [150, 150, 150]);
     pdf.text('TeamBIMCivil · Engineering, Training & Consultancy', M, H - 5);
     pdf.text(`Pág. ${p} / ${paginas}`, W - M, H - 5, { align: 'right' });
     pdf.setTextColor(...PDF.ROJO);
-    pdf.text(textoPDF(`Acta ${d.actaNum}`), W / 2, H - 5, { align: 'center' });
+    pdf.text(textoPDF(`Acta ${d.actaNum} · Rev. ${acta.revision}`), W / 2, H - 5, { align: 'center' });
   }
 
-  const nombre = `Acta_${d.actaNum.replace(/[^a-zA-Z0-9-]/g, '_')}_${d.fecha}.pdf`;
+  const nombre = `Acta_${d.actaNum.replace(/[^a-zA-Z0-9-]/g, '_')}${acta.revision ? `_Rev${acta.revision}` : ''}_${d.fecha}.pdf`;
   return { pdf, nombre };
 }
 
@@ -2259,15 +2977,18 @@ async function descargarPDF() {
   capa.classList.add('open');
   await esperar(60);                 // deja que se pinte el aviso «Generando…»
   try {
-    const { pdf, nombre } = await crearPDF();
+    const acta = state.acta;
+    const emision = soloLectura() ? acta.emitida : new Date().toISOString();
+    const { pdf, nombre } = await crearPDF(emision);
     pdf.save(nombre);
     if (!soloLectura()) {
-      const ahora = new Date().toISOString();
-      state.acta.estado = 'emitida';
-      state.acta.emitida = ahora;
-      state.acta.modificada = ahora;
+      acta.estado = 'emitida';
+      acta.emitida = emision;
+      acta.modificada = emision;
+      acta.revisiones[acta.revisiones.length - 1].fecha = emision;
       state.persistida = true;
       await guardarYa();
+      if (acta.corrigeA) await marcarSustituida(acta);
       pintarActa();
       construirEmision();
       actualizarNavegacion();
@@ -2281,15 +3002,26 @@ async function descargarPDF() {
   }
 }
 
+// Al emitir una revisión, la anterior queda marcada como sustituida.
+async function marcarSustituida(revision) {
+  try {
+    const anterior = await Almacen.leerActa(revision.corrigeA);
+    if (!anterior) return;
+    anterior.sustituidaPor = revision.id;
+    anterior.sustituidaRev = revision.revision;
+    await Almacen.guardarActa(anterior);
+  } catch (e) { /* si no se puede marcar, la revisión sigue siendo válida */ }
+}
+
 // ═══════════════════════════════════
 //  WHATSAPP (igual que la v1; se mejorará en el bloque D)
 // ═══════════════════════════════════
 async function enviarWhatsApp() {
   if (!(await descargarPDF())) return;
   setTimeout(() => {
-    const d = recogerDatos();
-    const ubicacion = state.acta.gps ? `${state.acta.gps.lat}, ${state.acta.gps.lng}` : (textoUbicacion(state.acta, false) || 'N/D');
-    const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${d.fecha}\n📍 GPS: ${ubicacion}\n\n[Adjunta el PDF descargado]`);
+    const d = recogerDatos(), acta = state.acta;
+    const ubicacion = acta.gps ? `${acta.gps.lat}, ${acta.gps.lng}` : (textoUbicacion(acta, false) || 'N/D');
+    const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}${acta.revision ? ` (Rev. ${acta.revision})` : ''}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${fechaES(d.fecha)}\n📍 GPS: ${ubicacion}\n\n[Adjunta el PDF descargado]`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }, 800);
 }
@@ -2311,19 +3043,20 @@ async function abrirMisActas() {
 function cerrarMisActas() { $('panelActas').classList.remove('open'); }
 
 function tarjetaActa(a) {
-  const emitida = a.estado === 'emitida';
+  const emitida = a.estado === 'emitida', sustituida = Boolean(a.sustituidaPor);
   const actual = state.acta && a.id === state.acta.id;
+  const estado = sustituida ? ['badge-gris', `Sustituida (Rev. ${a.sustituidaRev})`] : emitida ? ['badge-ok', 'Emitida'] : ['badge-warn', 'Borrador'];
   return `
     <div class="acta-card${actual ? ' actual' : ''}" data-acta="${esc(a.id)}">
       <div class="acta-card-top">
-        <div class="acta-card-num">${esc(a.datos.actaNum.trim() || 'Sin número')}</div>
-        <span class="status-badge ${emitida ? 'badge-ok' : 'badge-warn'}">${emitida ? 'Emitida' : 'Borrador'}</span>
+        <div class="acta-card-num">${esc(a.datos.actaNum.trim() || 'Sin número')}${a.revision ? ` · Rev. ${a.revision}` : ''}</div>
+        <span class="status-badge ${estado[0]}">${estado[1]}</span>
       </div>
-      <div class="acta-card-sub">${esc(a.datos.expediente.trim() || '—')} · ${esc(a.datos.fecha)} · ${a.fotos.length} foto(s)</div>
-      <div class="acta-card-sub">${emitida ? `Emitida ${esc(fechaHoraCorta(a.emitida))}` : `Modificada ${esc(fechaHoraCorta(a.modificada))}`}${actual ? ' · <strong>en pantalla</strong>' : ''}</div>
+      <div class="acta-card-sub">${esc(a.datos.expediente.trim() || '—')} · ${esc(fechaES(a.datos.fecha))} · ${a.fotos.length} foto(s)</div>
+      <div class="acta-card-sub">${emitida ? `Emitida ${esc(fechaHoraES(a.emitida))}` : `Modificada ${esc(fechaHoraES(a.modificada))}`}${actual ? ' · <strong>en pantalla</strong>' : ''}</div>
       <div class="acta-card-actions">
         <button onclick="abrirActaGuardada('${esc(a.id)}')">${emitida ? '👁 Ver' : '✏️ Abrir'}</button>
-        ${emitida ? `<button onclick="corregirActa('${esc(a.id)}')">📝 Corregir</button>` : ''}
+        ${emitida && !sustituida ? `<button onclick="corregirActa('${esc(a.id)}')">📝 Corregir</button>` : ''}
         <button onclick="nuevaVisita('${esc(a.id)}')">➕ Nueva visita</button>
         <button class="peligro" onclick="borrarActaGuardada('${esc(a.id)}')" aria-label="Borrar">🗑</button>
       </div>
@@ -2345,26 +3078,51 @@ async function nuevaActa() {
   cerrarMisActas();
 }
 
-// Nueva acta para otra visita al mismo expediente: copia técnico, expediente y descripción.
+// Nueva acta para otra visita al mismo expediente: copia técnico, expediente, objeto y asistentes (sin firmas).
 async function nuevaVisita(id) {
   await guardarYa();
   const origen = await Almacen.leerActa(id).catch(() => null);
   if (!origen) return;
-  const { tecnico, expediente, descripcion } = origen.datos;
-  await abrirActa(actaNueva({ tecnico, expediente, descripcion }), { nueva: true });
+  const { tecnico, cargoTecnico, expediente, descripcion } = origen.datos;
+  const nueva = actaNueva({ tecnico, cargoTecnico, expediente, descripcion });
+  nueva.asistentes = origen.asistentes.map(a => ({ ...a, id: nuevoId('asis') }));
+  await abrirActa(nueva, { nueva: true });
   guardarPronto();
+  await proponerNumero();
   cerrarMisActas();
 }
 
-// Copia completa (datos, ubicación, fotos y notas) de un acta emitida para corregirla. La firma no se copia.
+// Corregir un acta emitida: revisión siguiente con el mismo número, copia de todo menos las firmas.
 async function corregirActa(id) {
   await guardarYa();
-  const origen = await Almacen.leerActa(id).catch(() => null);
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ }
+  const origen = actas.find(a => a.id === id);
   if (!origen) return;
+  if (origen.sustituidaPor) {
+    return aviso('📝', 'Ya hay una revisión posterior', `Esta acta está sustituida por la Rev. ${origen.sustituidaRev}. Corrige la última revisión.`);
+  }
+  const enCurso = actas.find(a => a.corrigeA === id && a.estado === 'borrador');
+  if (enCurso) {
+    await abrirActa(enCurso);
+    cerrarMisActas();
+    return aviso('📝', 'Revisión en curso', `Ya estabas preparando la Rev. ${enCurso.revision} de esta acta: se abre para que la termines.`);
+  }
+  const motivo = await pedirTexto('Motivo de la revisión',
+    `Se creará la Rev. ${origen.revision + 1} del acta ${origen.datos.actaNum}. Indica qué se corrige:`,
+    'p. ej. Corrección del plazo de la indicación 2');
+  if (motivo === null) return;
+  if (!motivo.trim()) return aviso('📝', 'Motivo requerido', 'Indica el motivo de la revisión para poder crearla.');
+
   const copia = actaNueva();
-  copia.datos = { ...origen.datos };
+  copia.datos = { ...origen.datos, numAuto: false };
+  copia.revision = origen.revision + 1;
+  copia.revisiones = [...origen.revisiones.map(r => ({ ...r })), { rev: copia.revision, fecha: null, motivo: motivo.trim() }];
   copia.gps = origen.gps ? { ...origen.gps } : null;
   copia.sinGps = { ...origen.sinGps };
+  copia.asistentes = origen.asistentes.map(a => ({ ...a }));
+  copia.observaciones = origen.observaciones;
+  copia.indicaciones = origen.indicaciones.map(ind => ({ ...ind }));
   copia.corrigeA = origen.id;
   try {
     const imagenes = new Map((await Almacen.fotosDeActa(origen.id)).map(f => [f.id, f.blob]));
@@ -2377,16 +3135,16 @@ async function corregirActa(id) {
     }
     await Almacen.guardarActa(copia);
   } catch (e) {
-    return aviso('⚠️', 'No se pudo copiar', 'No se ha podido crear la copia del acta en el teléfono.');
+    return aviso('⚠️', 'No se pudo copiar', 'No se ha podido crear la revisión en el teléfono.');
   }
   await abrirActa(copia);
   cerrarMisActas();
-  aviso('📝', 'Copia para corregir', `Copia del acta ${origen.datos.actaNum}. Corrige lo necesario y vuelve a firmar antes de emitirla.`);
+  aviso('📝', `Rev. ${copia.revision} creada`, `Corrige lo necesario y vuelve a recoger las firmas antes de emitirla. Motivo: ${motivo.trim()}`);
 }
 
 async function borrarActaGuardada(id) {
   const acta = await Almacen.leerActa(id).catch(() => null);
-  const nombre = acta ? (acta.datos.actaNum.trim() || 'sin número') : '';
+  const nombre = acta ? `${acta.datos.actaNum.trim() || 'sin número'}${acta.revision ? ` (Rev. ${acta.revision})` : ''}` : '';
   if (!confirm(`¿Borrar el acta ${nombre} de este teléfono? No se puede deshacer.`)) return;
   await Almacen.borrarActa(id).catch(() => {});
   if (state.acta && state.acta.id === id) {
