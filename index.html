@@ -603,11 +603,6 @@
     color: white;
   }
   .btn-dark:active { background: #333; }
-  .btn-whatsapp {
-    background: #25D366;
-    color: white;
-  }
-  .btn-whatsapp:active { background: #1EAA52; }
 
   /* ── EMISIÓN ── */
   .emit-card {
@@ -989,6 +984,37 @@
   }
   .prompt-textarea:focus { outline: none; border-color: var(--rojo); }
   .prompt-actions { display: flex; gap: 10px; }
+  /* ── v2.3 · DISTRIBUCIÓN: COMPARTIR, COPIA DE SEGURIDAD, EXPORTAR E IMPORTAR ── */
+  .header-btn { position: relative; }
+  .header-btn.pendiente::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--rojo);
+    box-shadow: 0 0 0 2px #2A2A2A;
+  }
+  .emit-actions .btn:disabled { opacity: 0.55; cursor: progress; }
+  .emit-pdf-estado { margin-top: 12px; font-size: 12px; color: #4F4F4F; line-height: 1.5; min-height: 18px; }
+  .emit-pdf-estado.error { color: var(--rojo); }
+  .emit-ayuda { margin-top: 4px; font-size: 11.5px; color: var(--gris); line-height: 1.5; }
+  .copia-card {
+    background: white;
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 12px 14px;
+    margin-top: 10px;
+  }
+  .copia-card.al-dia { border-color: #B8DFC5; background: #F3FAF5; }
+  .copia-card.aviso { border-color: #F0D88A; background: #FFF8E5; }
+  .copia-titulo { font-size: 13px; font-weight: 800; color: var(--negro); }
+  .copia-estado { font-size: 12px; color: #4F4F4F; line-height: 1.5; margin-top: 4px; }
+  .copia-card.aviso .copia-estado { color: #7A5A00; }
+  .panel-enlace { width: 100%; margin-top: 14px; font-size: 13px; }
   .hidden { display: none !important; }
 
 </style>
@@ -1274,21 +1300,14 @@
     <div class="emit-title" id="emitActaTitle">Acta de Visita</div>
     <div class="emit-sub" id="emitActaSub">Generando resumen…</div>
     <div class="emit-actions">
-      <button class="btn btn-primary" onclick="descargarPDF()">
-        📥 Descargar Acta en PDF
-      </button>
-      <button class="btn btn-whatsapp" onclick="enviarWhatsApp()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Compartir por WhatsApp
-      </button>
+      <button class="btn btn-primary hidden" id="btnCompartir" onclick="compartirPDF()" disabled>📤 Compartir PDF</button>
+      <button class="btn btn-dark" id="btnDescargar" onclick="descargarPDF()" disabled>📥 Descargar PDF</button>
     </div>
+    <div class="emit-pdf-estado" id="emitPdfEstado" role="status" aria-live="polite"></div>
+    <div class="emit-ayuda" id="emitAyuda"></div>
   </div>
 
   <div class="emit-nota" id="emitNota"></div>
-
-  <div style="padding:12px; background:#F8F8F8; border-radius:10px; border:1px dashed var(--gris-medio); font-size:11.5px; color:var(--gris); line-height:1.6;">
-    ℹ️ <strong>Nota WhatsApp:</strong> Al pulsar "Compartir", el PDF se descargará automáticamente y se abrirá WhatsApp Web. Adjunta manualmente el archivo descargado en la conversación deseada.
-  </div>
 
   <div class="emit-extra">
     <button class="btn btn-dark hidden" id="btnCorregir" onclick="corregirActa(state.acta.id)">📝 Corregir (nueva revisión)</button>
@@ -1314,8 +1333,18 @@
       <button class="btn btn-primary" onclick="nuevaActa()">➕ Nueva acta</button>
       <button class="btn btn-dark hidden" id="btnInstalar" onclick="instalarApp()">📲 Instalar la app en el teléfono</button>
     </div>
+    <div class="copia-card" id="copiaCard">
+      <div class="copia-titulo">💾 Copia de seguridad</div>
+      <div class="copia-estado" id="copiaEstado"></div>
+      <div class="acta-card-actions">
+        <button onclick="hacerCopiaSeguridad()">💾 Hacer copia</button>
+        <button onclick="elegirImportacion()">📥 Importar</button>
+      </div>
+    </div>
     <div class="panel-note">Las actas se guardan solo en este teléfono. Las emitidas son de solo lectura.</div>
     <div id="listaActas"></div>
+    <button class="btn btn-secondary panel-enlace" onclick="compartirApp()">🔗 Compartir el enlace de la app</button>
+    <input type="file" id="importInput" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="importarActas(this)">
   </div>
 </div>
 
@@ -1346,28 +1375,31 @@
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner"></div>
-  <div class="loading-text">Generando el Acta en PDF…</div>
+  <div class="loading-text" id="loadingTexto">Preparando…</div>
 </div>
 
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.2
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.3
 //  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
-//    Las actas emitidas (PDF descargado) son de solo lectura; «Corregir»
-//    crea la revisión siguiente del mismo número (control ISO 9001).
+//    Las actas emitidas (PDF compartido o descargado) son de solo lectura;
+//    «Corregir» crea la revisión siguiente del mismo número (control ISO 9001).
 //  · Numeración automática por expediente, asistentes, observaciones,
 //    indicaciones y firmas de todos los asistentes.
 //  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto.
-//  · PDF con jsPDF local (lib/). Se instala y funciona sin cobertura (sw.js).
+//  · PDF con jsPDF local (lib/), preparado al entrar en Emisión y compartido
+//    con el menú del teléfono (Web Share). Se instala y funciona sin cobertura (sw.js).
+//  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '2.2';
+const VERSION = '2.3';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
 const EMPRESA = 'TEAMBIMCIVIL';
-// Código del formato en el sistema de gestión de calidad (ISO 9001). Vacío: el PDF no lo muestra.
-const FORMATO_SGC = { codigo: '', revision: '0' };
+// Formato del sistema de gestión de calidad (ISO 9001): su nombre es el título del PDF y figura en el
+// bloque de control de cada página. Si el formato llega a tener código y revisión, se añaden aquí.
+const FORMATO_SGC = { nombre: 'Acta de Visita de Inspección', codigo: '', revision: '' };
 const MAX_FOTOS = 50;
 const MAX_COMENTARIO = 1000;          // caracteres por comentario de foto
 const MAX_OBSERVACIONES = 3000;
@@ -1378,7 +1410,11 @@ const GPS_OBJETIVO_M = 10;            // con esta precisión la posición se fij
 const GPS_ESPERA_MS = 60000;          // búsqueda máxima de señal
 const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fotos durante 2 min
 const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
+const CLAVE_ULTIMA_COPIA = 'tbc-ultima-copia';
+const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios
 const ESQUEMA = 2;                    // versión del registro del acta en el teléfono
+const FORMATO_EXPORTACION = 'tbc-acta';   // identifica los acta.json exportados por la app
+const VERSION_EXPORTACION = 1;
 
 // ═══════════════════════════════════
 //  ESTADO
@@ -1443,6 +1479,36 @@ function cerrarPregunta(valor) {
   if (resolver) resolver(valor);
 }
 
+// Ejecuta una tarea larga con el aviso «Preparando…» a pantalla completa.
+async function conCarga(texto, tarea) {
+  $('loadingTexto').textContent = texto;
+  $('loadingOverlay').classList.add('open');
+  await esperar(40);                  // deja que se pinte el aviso
+  try {
+    return await tarea();
+  } finally {
+    $('loadingOverlay').classList.remove('open');
+  }
+}
+
+// Guarda un archivo generado por la app en la carpeta de descargas del teléfono o del PC.
+function descargarBlob(blob, nombre) {
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombre;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+const tamanoLegible = bytes => (bytes < 1048576
+  ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB`);
+// «425_2026.CON-AV-03» → «425_2026_CON-AV-03»: sin acentos ni caracteres que den problemas en nombres de archivo.
+const nombreSeguro = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-zA-Z0-9-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 80);
+
 // ═══════════════════════════════════
 //  ALMACÉN EN EL TELÉFONO (IndexedDB)
 //  · actas: un registro por acta (datos, GPS, asistentes, acuerdos, fotos sin imagen, firmas).
@@ -1493,6 +1559,23 @@ const Almacen = (() => {
           const cursor = e.target.result;
           if (cursor) { fotos.delete(cursor.primaryKey); cursor.continue(); }
         };
+        tx.oncomplete = () => resolver();
+        tx.onerror = tx.onabort = () => rechazar(tx.error);
+      });
+    },
+    // Guarda un acta importada con sus fotos en una sola operación (o todo o nada),
+    // sustituyendo las fotos que tuviera esa acta en el teléfono.
+    async reemplazarActa(acta, fotos) {
+      const base = await bd();
+      return new Promise((resolver, rechazar) => {
+        const tx = base.transaction(['actas', 'fotos'], 'readwrite');
+        const almacenFotos = tx.objectStore('fotos');
+        almacenFotos.index('porActa').openKeyCursor(IDBKeyRange.only(acta.id)).onsuccess = e => {
+          const cursor = e.target.result;
+          if (cursor) { almacenFotos.delete(cursor.primaryKey); cursor.continue(); return; }
+          for (const f of fotos) almacenFotos.put({ id: f.id, actaId: acta.id, blob: f.blob });
+        };
+        tx.objectStore('actas').put(acta);
         tx.oncomplete = () => resolver();
         tx.onerror = tx.onabort = () => rechazar(tx.error);
       });
@@ -1612,6 +1695,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   registrarServiceWorker();
   prepararInstalacion();
   await cargarActaInicial();
+  actualizarAvisoCopia();
 });
 
 function avisarSiEsArchivo() {
@@ -2266,9 +2350,9 @@ async function quitarFoto(indice) {
 }
 
 // «20:22 · 📍 ±8 m» (pantalla) o «20:22 · 37.389210, -5.984460 (±8 m)» (PDF)
-function textoMetaFoto(foto, paraPDF) {
+function textoMetaFoto(foto, paraPDF, acta = state.acta) {
   const [dia, hora] = String(foto.hora || '').split(' ');
-  const cuando = dia && dia !== state.acta.datos.fecha ? `${fechaES(dia)} ${hora}` : (hora || '');
+  const cuando = dia && dia !== acta.datos.fecha ? `${fechaES(dia)} ${hora}` : (hora || '');
   const g = foto.gps;
   const precision = g && g.acc ? ` (±${g.acc} m)` : '';
   if (paraPDF) {
@@ -2558,8 +2642,8 @@ function borrarFirmaAsistente(id) {
 }
 
 // ¿Ha firmado este asistente? (marcado para firmar, sin «No firma» y con trazo suficiente)
-function asistenteFirmo(a) {
-  const f = state.acta.firmasAsistentes[a.id];
+function asistenteFirmo(a, acta = state.acta) {
+  const f = acta.firmasAsistentes[a.id];
   return Boolean(a.firma && f && !f.noFirma && puntosDe(f.trazos) >= 5);
 }
 
@@ -2623,13 +2707,13 @@ function firmaComoImagen(trazosFirma) {
 }
 
 // Técnico y asistentes, en orden, con su firma (imagen JPEG o null si no firma).
-function firmantesDelActa() {
-  const acta = state.acta, d = acta.datos;
+function firmantesDelActa(acta = state.acta) {
+  const d = acta.datos;
   return [
     { nombre: d.tecnico.trim(), empresa: EMPRESA, cargo: d.cargoTecnico.trim() || 'Técnico', imagen: firmaComoImagen(acta.firma) },
     ...acta.asistentes.map(a => ({
       nombre: a.nombre.trim(), empresa: a.empresa.trim(), cargo: a.cargo.trim(),
-      imagen: asistenteFirmo(a) ? firmaComoImagen(state.acta.firmasAsistentes[a.id].trazos) : null,
+      imagen: asistenteFirmo(a, acta) ? firmaComoImagen(acta.firmasAsistentes[a.id].trazos) : null,
     })),
   ];
 }
@@ -2697,6 +2781,8 @@ function construirRevision() {
 
 // ═══════════════════════════════════
 //  FASE 8 · EMISIÓN
+//  El PDF se prepara al entrar: así «Compartir PDF» abre el menú del teléfono al instante
+//  (el navegador solo lo permite justo después de pulsar, no tras generar el PDF).
 // ═══════════════════════════════════
 function construirEmision() {
   const acta = state.acta, d = recogerDatos(), emitida = soloLectura();
@@ -2707,13 +2793,125 @@ function construirEmision() {
   const sustituida = acta.sustituidaPor
     ? `<br>⚠️ <strong>Sustituida por la Rev. ${esc(acta.sustituidaRev)}</strong>: usa la última revisión.` : '';
   $('emitNota').innerHTML = emitida
-    ? `🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a descargar o compartir el PDF. Para corregirla, pulsa «Corregir»: se crea la Rev. ${acta.revision + 1}, editable, que habrá que volver a firmar.${sustituida}`
-    : 'ℹ️ Al descargar o compartir el PDF, el acta queda <strong>emitida</strong> y ya no se podrá modificar.';
+    ? `🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a compartir o descargar el PDF. Para corregirla, pulsa «Corregir»: se crea la Rev. ${acta.revision + 1}, editable, que habrá que volver a firmar.${sustituida}`
+    : 'ℹ️ Al compartir o descargar el PDF, el acta queda <strong>emitida</strong> y ya no se podrá modificar.';
   $('btnCorregir').classList.toggle('hidden', !emitida || Boolean(acta.sustituidaPor));
+
+  const compartir = puedeCompartirArchivos();
+  $('btnCompartir').classList.toggle('hidden', !compartir);
+  $('btnDescargar').className = `btn ${compartir ? 'btn-dark' : 'btn-primary'}`;
+  $('emitAyuda').textContent = compartir
+    ? '«Compartir PDF» abre el menú del teléfono: WhatsApp, correo, Drive, Teams…'
+    : 'Este navegador no permite compartir archivos: descarga el PDF y adjúntalo desde la carpeta Descargas.';
+  const listo = pdfVigente();
+  if (listo) pintarEstadoPDF({ listo });
+  else prepararPDF().catch(() => {});   // el error se muestra en pantalla
 }
 
-function recogerDatos() {
-  const d = state.acta.datos, limpio = v => String(v || '').trim();
+// ¿Permite el navegador compartir un PDF con el menú del teléfono? (Android, iPhone, Windows…)
+function puedeCompartirArchivos() {
+  try {
+    return Boolean(navigator.canShare && navigator.canShare({ files: [new File(['%PDF-1.3'], 'acta.pdf', { type: 'application/pdf' })] }));
+  } catch (e) {
+    return false;
+  }
+}
+
+const pdfEmision = { clave: null, promesa: null, listo: null };
+
+// Lo que determina el contenido del PDF: todo el acta menos la fase en pantalla y la hora del último guardado.
+// En un borrador cuenta también el día, porque el PDF lleva la fecha de emisión.
+function clavePDF(acta) {
+  const { fase, modificada, ...contenido } = acta;
+  return JSON.stringify([acta.estado === 'emitida' ? acta.emitida : fechaLocal(), contenido]);
+}
+
+// PDF ya preparado del acta en pantalla, si sigue valiendo.
+function pdfVigente() {
+  return pdfEmision.listo && pdfEmision.clave === clavePDF(state.acta) ? pdfEmision.listo : null;
+}
+
+// Prepara el PDF del acta en pantalla (si ya se está preparando el mismo, devuelve esa tarea).
+function prepararPDF() {
+  const acta = state.acta, clave = clavePDF(acta);
+  if (pdfEmision.clave === clave && pdfEmision.promesa) return pdfEmision.promesa;
+  const emision = acta.estado === 'emitida' ? acta.emitida : new Date().toISOString();
+  const blobs = new Map(state.blobs);
+  const promesa = (async () => {
+    await esperar(30);                  // deja que se pinte «Preparando el PDF…»
+    const { pdf, nombre } = await crearPDF(acta, blobs, emision, (fotos, total) => {
+      if (pdfEmision.promesa === promesa) pintarEstadoPDF({ fotos, total });
+    });
+    return { blob: pdf.output('blob'), nombre, emision, paginas: pdf.getNumberOfPages() };
+  })();
+  Object.assign(pdfEmision, { clave, promesa, listo: null });
+  pintarEstadoPDF({ fotos: 0, total: acta.fotos.length });
+  promesa.then(listo => {
+    if (pdfEmision.promesa !== promesa) return;
+    pdfEmision.listo = listo;
+    pintarEstadoPDF({ listo });
+  }, error => {
+    if (pdfEmision.promesa !== promesa) return;
+    Object.assign(pdfEmision, { clave: null, promesa: null, listo: null });
+    pintarEstadoPDF({ error });
+  });
+  return promesa;
+}
+
+function pintarEstadoPDF({ fotos = 0, total = 0, listo = null, error = null }) {
+  const caja = $('emitPdfEstado');
+  const preparando = !listo && !error;
+  $('btnCompartir').disabled = preparando;
+  $('btnDescargar').disabled = preparando;
+  caja.classList.toggle('error', Boolean(error));
+  if (listo) caja.textContent = `PDF listo · ${listo.paginas} página(s) · ${tamanoLegible(listo.blob.size)}`;
+  else if (error) caja.textContent = '❌ No se ha podido preparar el PDF. Pulsa «Descargar PDF» para volver a intentarlo.';
+  else caja.textContent = total ? `⏳ Preparando el PDF… fotos ${fotos} de ${total}` : '⏳ Preparando el PDF…';
+}
+
+// Comparte el PDF con el menú del teléfono. El acta se emite al compartirlo (no si se cierra el menú).
+async function compartirPDF() {
+  if (!soloLectura() && !validarEmision()) return;
+  let listo = pdfVigente();
+  const alInstante = Boolean(listo);   // sin esperas: el navegador aún reconoce la pulsación
+  if (!listo) {
+    try { listo = await prepararPDF(); } catch (e) { return aviso('❌', 'Error al generar el PDF', e.message || 'Inténtalo de nuevo.'); }
+  }
+  const datos = {
+    files: [new File([listo.blob], listo.nombre, { type: 'application/pdf' })],
+    title: `Acta ${recogerDatos().actaNum} · Rev. ${state.acta.revision}`,
+    text: textoCompartir(),
+  };
+  if (!navigator.canShare || !navigator.canShare(datos)) {
+    descargarBlob(listo.blob, listo.nombre);
+    await emitirActa(listo.emision);
+    return aviso('📥', 'PDF descargado', 'Este navegador no permite compartir el archivo: adjúntalo desde la carpeta Descargas.');
+  }
+  try {
+    await navigator.share(datos);
+  } catch (e) {
+    if (e.name === 'AbortError') return;                       // se cerró el menú sin compartir
+    if (e.name === 'NotAllowedError' && !alInstante) return aviso('📤', 'PDF listo', 'Pulsa otra vez «Compartir PDF».');
+    return aviso('❌', 'No se ha podido compartir', 'Prueba con «Descargar PDF» y adjúntalo desde la carpeta Descargas.');
+  }
+  await emitirActa(listo.emision);
+}
+
+// Texto que acompaña al PDF (cuerpo del correo o mensaje de WhatsApp, si la app de destino lo admite).
+function textoCompartir(acta = state.acta) {
+  const d = recogerDatos(acta);
+  const objeto = d.descripcion.length > 140 ? `${d.descripcion.slice(0, 137)}…` : d.descripcion;
+  return [
+    `${FORMATO_SGC.nombre} ${d.actaNum} · Rev. ${acta.revision}`,
+    `Expediente: ${d.expediente}`,
+    objeto && `Objeto: ${objeto}`,
+    `Visita: ${fechaES(d.fecha)}${d.hora ? ` ${d.hora}` : ''} · Técnico: ${d.tecnico}`,
+    acta.indicaciones.length && `Indicaciones: ${acta.indicaciones.length}`,
+  ].filter(Boolean).join('\n');
+}
+
+function recogerDatos(acta = state.acta) {
+  const d = acta.datos, limpio = v => String(v || '').trim();
   return {
     actaNum: limpio(d.actaNum), tecnico: limpio(d.tecnico), cargoTecnico: limpio(d.cargoTecnico),
     expediente: limpio(d.expediente), descripcion: limpio(d.descripcion), fecha: d.fecha || '', hora: d.hora || '',
@@ -2734,13 +2932,15 @@ const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de text
 // La fuente del PDF no tiene emojis: se retiran para que no salgan como cajas.
 const textoPDF = t => String(t ?? '').replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').trim();
 
-async function crearPDF(emision) {
+// Genera el PDF de un acta. Recibe el acta y sus fotos (no lee la pantalla), así que no le afecta
+// que mientras tanto se abra otra acta. alProgresar(fotos, total) se llama según avanza el reportaje.
+async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
   pdf.setLineHeightFactor(INTERLINEADO);
   const fuente = pdf.getFontList().ActaSans ? 'ActaSans' : 'helvetica';
   const { W, H, M, SUPERIOR, LIMITE } = PDF;
-  const acta = state.acta, d = recogerDatos();
+  const d = recogerDatos(acta);
   const anchoUtil = W - 2 * M;
   let y = M;
 
@@ -2795,10 +2995,10 @@ async function crearPDF(emision) {
     y += 5;
   };
 
-  // ── Título ──
+  // ── Título: el nombre del formato del SGC ──
   y = 42;
   letra('bold', 16, PDF.NEGRO);
-  pdf.text('ACTA DE VISITA DE CAMPO', M, y);
+  pdf.text(FORMATO_SGC.nombre.toUpperCase(), M, y);
   y += 7;
 
   // ── 1 · Datos generales (los valores largos saltan de línea) ──
@@ -2828,7 +3028,7 @@ async function crearPDF(emision) {
   y += 2;
 
   // ── 2 · Asistentes ──
-  const firmantes = firmantesDelActa();
+  const firmantes = firmantesDelActa(acta);
   banda('2 · ASISTENTES', 13);
   tabla([{ titulo: 'Nombre', ancho: 62 }, { titulo: 'Empresa', ancho: 45 }, { titulo: 'Cargo', ancho: 55 }, { titulo: 'Firma', ancho: 18 }],
     firmantes.map(f => [f.nombre || '—', f.empresa || '—', f.cargo || '—', f.imagen ? 'Sí' : 'No']));
@@ -2849,7 +3049,7 @@ async function crearPDF(emision) {
   // ── 5 · Reportaje fotográfico: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
   const fotos = acta.fotos;
   if (fotos.length) {
-    const imagenes = await Promise.all(fotos.map(async f => new Uint8Array(await state.blobs.get(f.id).arrayBuffer())));
+    const imagenes = await Promise.all(fotos.map(async f => new Uint8Array(await blobs.get(f.id).arrayBuffer())));
     const hueco = 6;
     const anchoCelda = (anchoUtil - hueco) / 2;
     const altoCaja = anchoCelda * 0.75;
@@ -2860,7 +3060,7 @@ async function crearPDF(emision) {
     for (let i = 0; i < fotos.length; i += 2) {
       const celdas = fotos.slice(i, i + 2).map((foto, j) => ({
         foto, imagen: imagenes[i + j], numero: i + j + 1,
-        meta: textoPDF(textoMetaFoto(foto, true)),
+        meta: textoPDF(textoMetaFoto(foto, true, acta)),
         pie: pdf.splitTextToSize(textoPDF(foto.comentario) || '(Sin comentario)', anchoCelda),
       }));
       const lineasPie = Math.max(...celdas.map(c => c.pie.length));
@@ -2868,6 +3068,7 @@ async function crearPDF(emision) {
     }
 
     banda(`5 · REPORTAJE FOTOGRÁFICO (${fotos.length})`, filasFotos[0].alto);
+    let colocadas = 0;
     for (const fila of filasFotos) {
       asegurar(fila.alto);
       fila.celdas.forEach(({ foto, imagen, numero, meta, pie }, j) => {
@@ -2891,6 +3092,9 @@ async function crearPDF(emision) {
         pdf.text(pie, x, y + altoCaja + altoMeta + altoPie);
       });
       y += fila.alto;
+      colocadas += fila.celdas.length;
+      alProgresar(colocadas, fotos.length);
+      await esperar(0);                 // deja que la pantalla muestre el avance
     }
   }
 
@@ -2934,7 +3138,9 @@ async function crearPDF(emision) {
 
   // ── Cabecera con bloque de control y pie, en todas las páginas ──
   const paginas = pdf.getNumberOfPages();
-  const formato = FORMATO_SGC.codigo ? `Formato ${FORMATO_SGC.codigo} · Rev. ${FORMATO_SGC.revision}` : 'Acta de visita de campo';
+  const codigo = FORMATO_SGC.codigo.trim()
+    ? `${FORMATO_SGC.codigo.trim()}${FORMATO_SGC.revision.trim() ? ` Rev. ${FORMATO_SGC.revision.trim()}` : ''}` : '';
+  const formato = [FORMATO_SGC.nombre, codigo].filter(Boolean).join(' · ');
   const anchoControl = 87, xControl = W - M - anchoControl;
   for (let p = 1; p <= paginas; p++) {
     pdf.setPage(p);
@@ -2954,7 +3160,8 @@ async function crearPDF(emision) {
     letra('bold', 10, PDF.BLANCO);
     pdf.text(pdf.splitTextToSize(textoPDF(`Nº ${d.actaNum} · Rev. ${acta.revision}`), anchoControl - 4)[0], xControl + 2, 11.6);
     letra('normal', 6.8, [200, 200, 200]);
-    pdf.text(pdf.splitTextToSize(formato, anchoControl / 2 - 3)[0], xControl + 2, 19);
+    const lineasFormato = pdf.splitTextToSize(textoPDF(formato), anchoControl / 2 - 3).slice(0, 2);   // hasta 2 líneas
+    pdf.text(lineasFormato, xControl + 2, lineasFormato.length > 1 ? 17.3 : 19);
     pdf.text(`Emitida ${fechaES(fechaLocal(new Date(emision)))} · Pág. ${p} de ${paginas}`, xControl + anchoControl / 2 + 2, 19);
 
     pdf.setFillColor(...PDF.NEGRO);
@@ -2966,40 +3173,51 @@ async function crearPDF(emision) {
     pdf.text(textoPDF(`Acta ${d.actaNum} · Rev. ${acta.revision}`), W / 2, H - 5, { align: 'center' });
   }
 
-  const nombre = `Acta_${d.actaNum.replace(/[^a-zA-Z0-9-]/g, '_')}${acta.revision ? `_Rev${acta.revision}` : ''}_${d.fecha}.pdf`;
+  // Propiedades del documento, para encontrarlo en Drive, en Windows o en un gestor documental.
+  const info = t => textoPDF(t).replace(/[^\x20-\x7E -ÿ]/g, '');
+  pdf.setProperties({
+    title: info(`${FORMATO_SGC.nombre} ${d.actaNum} · Rev. ${acta.revision}`),
+    subject: info(`Expediente ${d.expediente} · Visita del ${fechaES(d.fecha)}${d.descripcion ? ` · ${d.descripcion}` : ''}`),
+    author: info(`${d.tecnico} · ${EMPRESA}`),
+    keywords: info([d.expediente, d.actaNum, 'acta de visita', EMPRESA].filter(Boolean).join(', ')),
+    creator: info(`Acta de Visita de Campo v${VERSION} · ${EMPRESA}`),
+  });
+
+  const nombre = `Acta_${nombreSeguro(d.actaNum)}${acta.revision ? `_Rev${acta.revision}` : ''}_${d.fecha}.pdf`;
   return { pdf, nombre };
 }
 
-// Descargar el PDF emite el acta: a partir de ahí queda en solo lectura.
+// Descargar el PDF también emite el acta: a partir de ahí queda en solo lectura.
 async function descargarPDF() {
   if (!soloLectura() && !validarEmision()) return false;
-  const capa = $('loadingOverlay');
-  capa.classList.add('open');
-  await esperar(60);                 // deja que se pinte el aviso «Generando…»
+  let listo;
   try {
-    const acta = state.acta;
-    const emision = soloLectura() ? acta.emitida : new Date().toISOString();
-    const { pdf, nombre } = await crearPDF(emision);
-    pdf.save(nombre);
-    if (!soloLectura()) {
-      acta.estado = 'emitida';
-      acta.emitida = emision;
-      acta.modificada = emision;
-      acta.revisiones[acta.revisiones.length - 1].fecha = emision;
-      state.persistida = true;
-      await guardarYa();
-      if (acta.corrigeA) await marcarSustituida(acta);
-      pintarActa();
-      construirEmision();
-      actualizarNavegacion();
-    }
-    return true;
+    listo = pdfVigente() || await prepararPDF();
   } catch (err) {
-    aviso('❌', 'Error al generar PDF', err.message || 'Inténtalo de nuevo.');
+    aviso('❌', 'Error al generar el PDF', err.message || 'Inténtalo de nuevo.');
     return false;
-  } finally {
-    capa.classList.remove('open');
   }
+  descargarBlob(listo.blob, listo.nombre);
+  await emitirActa(listo.emision);
+  return true;
+}
+
+// Emite el acta en pantalla con la fecha del PDF distribuido. Las actas ya emitidas no cambian.
+async function emitirActa(emision) {
+  if (soloLectura()) return;
+  const acta = state.acta;
+  acta.estado = 'emitida';
+  acta.emitida = emision;
+  acta.modificada = emision;
+  acta.revisiones[acta.revisiones.length - 1].fecha = emision;
+  state.persistida = true;
+  if (pdfEmision.listo && pdfEmision.listo.emision === emision) pdfEmision.clave = clavePDF(acta);   // es el mismo PDF
+  await guardarYa();
+  if (acta.corrigeA) await marcarSustituida(acta);
+  pintarActa();
+  construirEmision();
+  actualizarNavegacion();
+  actualizarAvisoCopia();
 }
 
 // Al emitir una revisión, la anterior queda marcada como sustituida.
@@ -3014,19 +3232,6 @@ async function marcarSustituida(revision) {
 }
 
 // ═══════════════════════════════════
-//  WHATSAPP (igual que la v1; se mejorará en el bloque D)
-// ═══════════════════════════════════
-async function enviarWhatsApp() {
-  if (!(await descargarPDF())) return;
-  setTimeout(() => {
-    const d = recogerDatos(), acta = state.acta;
-    const ubicacion = acta.gps ? `${acta.gps.lat}, ${acta.gps.lng}` : (textoUbicacion(acta, false) || 'N/D');
-    const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}${acta.revision ? ` (Rev. ${acta.revision})` : ''}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${fechaES(d.fecha)}\n📍 GPS: ${ubicacion}\n\n[Adjunta el PDF descargado]`);
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
-  }, 800);
-}
-
-// ═══════════════════════════════════
 //  MIS ACTAS
 // ═══════════════════════════════════
 async function abrirMisActas() {
@@ -3037,6 +3242,7 @@ async function abrirMisActas() {
   $('listaActas').innerHTML = actas.length
     ? actas.map(tarjetaActa).join('')
     : '<div class="panel-empty">Todavía no hay actas guardadas en este teléfono.</div>';
+  pintarEstadoCopia(actas);
   $('panelActas').classList.add('open');
 }
 
@@ -3058,6 +3264,7 @@ function tarjetaActa(a) {
         <button onclick="abrirActaGuardada('${esc(a.id)}')">${emitida ? '👁 Ver' : '✏️ Abrir'}</button>
         ${emitida && !sustituida ? `<button onclick="corregirActa('${esc(a.id)}')">📝 Corregir</button>` : ''}
         <button onclick="nuevaVisita('${esc(a.id)}')">➕ Nueva visita</button>
+        <button onclick="exportarActa('${esc(a.id)}')">📤 Exportar</button>
         <button class="peligro" onclick="borrarActaGuardada('${esc(a.id)}')" aria-label="Borrar">🗑</button>
       </div>
     </div>`;
@@ -3152,6 +3359,487 @@ async function borrarActaGuardada(id) {
     await abrirActa(actaNueva(), { nueva: true });
   }
   await abrirMisActas();
+}
+
+// ═══════════════════════════════════
+//  ZIP (sin librerías) para la copia de seguridad y la exportación de actas.
+//  Se escribe sin comprimir (las fotos JPEG ya lo están). También se leen ZIP comprimidos
+//  (p. ej. si se vuelve a comprimir la carpeta en Windows), comprobando el CRC de cada archivo.
+// ═══════════════════════════════════
+const Zip = (() => {
+  const UTF8 = 0x0800;                // los nombres de archivo van en UTF-8
+  const TABLA_CRC = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  function crc32(bytes) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = TABLA_CRC[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  class Escritor {
+    constructor() {
+      const d = new Date();
+      this.hora = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+      this.dia = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+      this.partes = [];
+      this.central = [];
+      this.posicion = 0;
+      this.total = 0;
+    }
+
+    // Añade un archivo. «parte» es lo que se escribe en el ZIP (p. ej. el Blob de la foto, para no duplicarla en memoria).
+    anadir(nombre, contenido, parte = null) {
+      const datos = typeof contenido === 'string' ? new TextEncoder().encode(contenido) : contenido;
+      const bytesNombre = new TextEncoder().encode(nombre);
+      const crc = crc32(datos);
+      const local = new DataView(new ArrayBuffer(30));
+      local.setUint32(0, 0x04034b50, true);
+      local.setUint16(4, 20, true);                 // versión necesaria 2.0; método 0 (sin comprimir)
+      local.setUint16(6, UTF8, true);
+      local.setUint16(10, this.hora, true);
+      local.setUint16(12, this.dia, true);
+      local.setUint32(14, crc, true);
+      local.setUint32(18, datos.length, true);
+      local.setUint32(22, datos.length, true);
+      local.setUint16(26, bytesNombre.length, true);
+      const cabecera = new DataView(new ArrayBuffer(46));
+      cabecera.setUint32(0, 0x02014b50, true);
+      cabecera.setUint16(4, 20, true);
+      cabecera.setUint16(6, 20, true);
+      cabecera.setUint16(8, UTF8, true);
+      cabecera.setUint16(12, this.hora, true);
+      cabecera.setUint16(14, this.dia, true);
+      cabecera.setUint32(16, crc, true);
+      cabecera.setUint32(20, datos.length, true);
+      cabecera.setUint32(24, datos.length, true);
+      cabecera.setUint16(28, bytesNombre.length, true);
+      cabecera.setUint32(42, this.posicion, true);
+      this.partes.push(local, bytesNombre, parte || datos);
+      this.central.push(cabecera, bytesNombre);
+      this.posicion += 30 + bytesNombre.length + datos.length;
+      this.total++;
+    }
+
+    blob() {
+      const tamano = this.central.reduce((n, p) => n + p.byteLength, 0);
+      const fin = new DataView(new ArrayBuffer(22));
+      fin.setUint32(0, 0x06054b50, true);
+      fin.setUint16(8, this.total, true);
+      fin.setUint16(10, this.total, true);
+      fin.setUint32(12, tamano, true);
+      fin.setUint32(16, this.posicion, true);
+      return new Blob([...this.partes, ...this.central, fin], { type: 'application/zip' });
+    }
+  }
+
+  // Abre un ZIP elegido por el usuario leyendo solo los trozos necesarios (no lo carga entero en memoria).
+  async function abrir(archivo) {
+    const tamano = archivo.size;
+    const cola = new DataView(await archivo.slice(Math.max(0, tamano - 22 - 65535), tamano).arrayBuffer());
+    let fin = -1;
+    for (let i = cola.byteLength - 22; i >= 0; i--) {
+      if (cola.getUint32(i, true) === 0x06054b50) { fin = i; break; }
+    }
+    if (fin < 0) throw new Error('El archivo no es un ZIP.');
+    const total = cola.getUint16(fin + 10, true);
+    const tamCentral = cola.getUint32(fin + 12, true), inicio = cola.getUint32(fin + 16, true);
+    if (inicio + tamCentral > tamano) throw new Error('El archivo ZIP está incompleto o dañado.');
+    const central = new DataView(await archivo.slice(inicio, inicio + tamCentral).arrayBuffer());
+    const entradas = [];
+    for (let i = 0, p = 0; i < total; i++) {
+      if (p + 46 > central.byteLength || central.getUint32(p, true) !== 0x02014b50) throw new Error('El archivo ZIP está dañado.');
+      const flags = central.getUint16(p + 8, true), largo = central.getUint16(p + 28, true);
+      const bytesNombre = new Uint8Array(central.buffer, p + 46, Math.min(largo, central.byteLength - p - 46));
+      const nombre = flags & UTF8 ? new TextDecoder().decode(bytesNombre) : Array.from(bytesNombre, b => String.fromCharCode(b)).join('');
+      entradas.push({
+        nombre: nombre.replace(/\\/g, '/'), flags, metodo: central.getUint16(p + 10, true),
+        crc: central.getUint32(p + 16, true), comprimido: central.getUint32(p + 20, true),
+        tamano: central.getUint32(p + 24, true), local: central.getUint32(p + 42, true),
+      });
+      p += 46 + largo + central.getUint16(p + 30, true) + central.getUint16(p + 32, true);
+    }
+
+    async function leer(entrada) {
+      if (!entrada) throw new Error('Falta un archivo dentro del ZIP.');
+      if (entrada.flags & 1) throw new Error('El ZIP está protegido con contraseña.');
+      const local = new DataView(await archivo.slice(entrada.local, entrada.local + 30).arrayBuffer());
+      if (local.byteLength < 30 || local.getUint32(0, true) !== 0x04034b50) throw new Error('El archivo ZIP está dañado.');
+      const inicioDatos = entrada.local + 30 + local.getUint16(26, true) + local.getUint16(28, true);
+      const trozo = archivo.slice(inicioDatos, inicioDatos + entrada.comprimido);
+      let datos;
+      if (entrada.metodo === 0) {
+        datos = new Uint8Array(await trozo.arrayBuffer());
+      } else if (entrada.metodo === 8 && typeof DecompressionStream === 'function') {
+        datos = new Uint8Array(await new Response(trozo.stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      } else {
+        throw new Error('El ZIP usa una compresión que la app no puede leer.');
+      }
+      if (datos.length !== entrada.tamano || crc32(datos) !== entrada.crc) throw new Error('El archivo ZIP está dañado.');
+      return datos;
+    }
+
+    return { entradas, leer, buscar: nombre => entradas.find(e => e.nombre === nombre) };
+  }
+
+  return { Escritor, abrir };
+})();
+
+// ═══════════════════════════════════
+//  COPIA DE SEGURIDAD, EXPORTAR E IMPORTAR
+//  ZIP con una carpeta por acta: acta.json (datos, asistentes, acuerdos y firmas) y fotos/.
+// ═══════════════════════════════════
+function leerUltimaCopia() {
+  try { return localStorage.getItem(CLAVE_ULTIMA_COPIA); } catch (e) { return null; }
+}
+
+function registrarCopia() {
+  try { localStorage.setItem(CLAVE_ULTIMA_COPIA, new Date().toISOString()); } catch (e) { /* sin almacenamiento local */ }
+}
+
+// Actas con cambios desde la última copia y si toca avisar (más de DIAS_AVISO_COPIA días sin copia).
+function estadoCopia(actas) {
+  const ultima = leerUltimaCopia();
+  const pendientes = actas.filter(a => !ultima || String(a.modificada) > ultima).length;
+  const desde = ultima || actas.reduce((min, a) => (!min || String(a.creada) < min ? String(a.creada) : min), null);
+  const dias = desde ? (Date.now() - Date.parse(desde)) / 86400000 : 0;
+  return { ultima, pendientes, total: actas.length, avisar: pendientes > 0 && dias >= DIAS_AVISO_COPIA };
+}
+
+function pintarEstadoCopia(actas) {
+  const e = estadoCopia(actas);
+  let texto;
+  if (!e.total) {
+    texto = 'Todavía no hay actas que copiar.';
+  } else if (!e.pendientes) {
+    texto = `✓ Al día. Última copia: ${fechaHoraES(e.ultima)}.`;
+  } else {
+    texto = e.ultima
+      ? `Última copia: ${fechaHoraES(e.ultima)}. ${e.pendientes} acta(s) con cambios desde entonces.`
+      : `Aún no se ha hecho ninguna copia de las ${e.total} acta(s) de este teléfono.`;
+    if (e.avisar) texto = `⚠️ ${texto} Haz una copia y guárdala fuera del teléfono.`;
+  }
+  $('copiaEstado').textContent = texto;
+  $('copiaCard').className = `copia-card${e.avisar ? ' aviso' : (e.total && !e.pendientes ? ' al-dia' : '')}`;
+  document.querySelector('.header-btn').classList.toggle('pendiente', e.avisar);
+}
+
+// Punto rojo en el botón de «Mis actas» cuando toca hacer copia.
+async function actualizarAvisoCopia() {
+  try { pintarEstadoCopia(await Almacen.listarActas()); } catch (e) { /* sin almacén */ }
+}
+
+// Carpeta de un acta dentro del ZIP: «425_2026_CON-AV-03_Rev0» (única dentro del archivo).
+function carpetaDeActa(acta, usadas) {
+  const base = `${nombreSeguro(acta.datos.actaNum) || 'sin-numero'}_Rev${acta.revision}`;
+  let nombre = base;
+  for (let n = 2; usadas.has(nombre.toLowerCase()); n++) nombre = `${base}_${n}`;
+  usadas.add(nombre.toLowerCase());
+  return nombre;
+}
+
+async function anadirActaAlZip(zip, acta, carpeta) {
+  const imagenes = new Map((await Almacen.fotosDeActa(acta.id)).map(f => [f.id, f.blob]));
+  const fotos = [];
+  for (const f of acta.fotos) {
+    const blob = imagenes.get(f.id);
+    if (!blob) continue;
+    const archivo = `fotos/${dos(fotos.length + 1)}.jpg`;
+    zip.anadir(`${carpeta}/${archivo}`, new Uint8Array(await blob.arrayBuffer()), blob);
+    fotos.push({ ...f, archivo });
+  }
+  zip.anadir(`${carpeta}/acta.json`, JSON.stringify({
+    formato: FORMATO_EXPORTACION, version: VERSION_EXPORTACION, app: VERSION,
+    exportada: new Date().toISOString(), acta: { ...acta, fotos },
+  }));
+}
+
+function textoLeeme(numero) {
+  return `﻿${[
+    `Actas de visita de ${EMPRESA}: ${numero} acta(s), exportadas el ${fechaHoraES(new Date().toISOString())} con la app v${VERSION}.`,
+    '',
+    'Cada carpeta es un acta: acta.json (datos, asistentes, acuerdos y firmas) y fotos/ (sus fotografías).',
+    'Para recuperarlas en un teléfono o en el PC: abre la app, pulsa Mis actas > Importar y elige este archivo .zip.',
+    'No modifiques los archivos: la app comprueba su contenido al importarlos.',
+    '',
+    `App: ${URL_OFICIAL}`,
+  ].join('\r\n')}\r\n`;
+}
+
+const ordenActas = (a, b) =>
+  String(a.datos.actaNum).localeCompare(String(b.datos.actaNum), 'es', { numeric: true }) || a.revision - b.revision;
+
+// Copia de seguridad de todas las actas del teléfono en un ZIP (se guarda en Descargas).
+async function hacerCopiaSeguridad() {
+  await guardarYa();
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ }
+  if (!actas.length) return aviso('💾', 'Sin actas', 'Todavía no hay actas guardadas en este teléfono.');
+  const ahora = new Date();
+  const nombre = `Copia_actas_TBC_${fechaLocal(ahora)}_${horaLocal(ahora).replace(':', '')}.zip`;
+  try {
+    await conCarga(`Preparando la copia de ${actas.length} acta(s)…`, async () => {
+      const zip = new Zip.Escritor(), usadas = new Set();
+      for (const acta of actas.sort(ordenActas)) await anadirActaAlZip(zip, acta, carpetaDeActa(acta, usadas));
+      zip.anadir('LEEME.txt', textoLeeme(actas.length));
+      descargarBlob(zip.blob(), nombre);
+    });
+  } catch (e) {
+    return aviso('❌', 'No se ha podido hacer la copia', e.message || 'Inténtalo de nuevo.');
+  }
+  registrarCopia();
+  await abrirMisActas();
+  aviso('💾', 'Copia guardada en Descargas', `Archivo «${nombre}». Para que sirva si se pierde el teléfono, guárdalo fuera de él: desde la app Archivos (Descargas), compártelo a Drive o por correo. Para recuperarlo: Mis actas → Importar.`);
+}
+
+// Exporta un acta en un ZIP para pasarla a otro teléfono o al PC.
+async function exportarActa(id) {
+  await guardarYa();
+  const acta = await Almacen.leerActa(id).catch(() => null);
+  if (!acta) return aviso('⚠️', 'Acta no encontrada', 'No se ha podido leer el acta.');
+  const carpeta = carpetaDeActa(acta, new Set());
+  const nombre = `Acta_${carpeta}.zip`;
+  try {
+    await conCarga('Preparando el archivo del acta…', async () => {
+      const zip = new Zip.Escritor();
+      await anadirActaAlZip(zip, acta, carpeta);
+      zip.anadir('LEEME.txt', textoLeeme(1));
+      descargarBlob(zip.blob(), nombre);
+    });
+  } catch (e) {
+    return aviso('❌', 'No se ha podido exportar', e.message || 'Inténtalo de nuevo.');
+  }
+  aviso('📤', 'Acta exportada a Descargas', `Archivo «${nombre}». Envíalo desde la app Archivos (Descargas) y, en el otro teléfono o en el PC, ábrelo con Mis actas → Importar.`);
+}
+
+function elegirImportacion() {
+  const entrada = $('importInput');
+  entrada.value = '';
+  entrada.click();
+}
+
+async function importarActas(entrada) {
+  const archivo = entrada.files && entrada.files[0];
+  entrada.value = '';
+  if (!archivo) return;
+  await guardarYa();
+  let r;
+  try {
+    r = await conCarga('Importando actas…', () => importarZip(archivo));
+  } catch (e) {
+    return aviso('⚠️', 'No se ha podido importar', e.message || 'El archivo no es válido.');
+  }
+  if (state.acta && r.ids.includes(state.acta.id)) {       // ha cambiado el acta en pantalla: se vuelve a abrir
+    const acta = await Almacen.leerActa(state.acta.id).catch(() => null);
+    if (acta) await abrirActa(acta);
+  }
+  await abrirMisActas();
+  const partes = [
+    r.nuevas && `${r.nuevas} acta(s) nueva(s)`,
+    r.actualizadas && `${r.actualizadas} actualizada(s)`,
+    r.iguales && `${r.iguales} ya estaba(n) en el teléfono`,
+    r.conservadas && `${r.conservadas} sin cambios: el teléfono tiene una versión más reciente o ya emitida`,
+    r.invalidas && `${r.invalidas} no válida(s), sin importar`,
+  ].filter(Boolean);
+  let mensaje = `${partes.join(' · ')}.`;
+  if (r.repetidos.length) mensaje += ` Atención, número repetido en actas distintas: ${r.repetidos.join(', ')}.`;
+  aviso(r.invalidas ? '⚠️' : '📥', 'Importación terminada', mensaje);
+}
+
+async function importarZip(archivo) {
+  const zip = await Zip.abrir(archivo);
+  const fichas = zip.entradas.filter(e => /(^|\/)acta\.json$/i.test(e.nombre) && !/(^|\/)__MACOSX\//i.test(e.nombre));
+  if (!fichas.length) throw new Error('El archivo no contiene actas exportadas desde la app.');
+  const porId = new Map((await Almacen.listarActas()).map(a => [a.id, a]));
+  const r = { nuevas: 0, actualizadas: 0, iguales: 0, conservadas: 0, invalidas: 0, ids: [], repetidos: [] };
+  const leidas = [];
+  for (const ficha of fichas) {
+    try {
+      const carpeta = ficha.nombre.slice(0, ficha.nombre.length - 'acta.json'.length);
+      const acta = actaDesdeArchivo(JSON.parse(new TextDecoder().decode(await zip.leer(ficha))));
+      const decision = decidirImportacion(porId.get(acta.id), acta);
+      if (decision === 'igual' || decision === 'conservar') {
+        r[decision === 'igual' ? 'iguales' : 'conservadas']++;
+        leidas.push(acta);
+        continue;
+      }
+      const fotos = [];
+      for (const f of acta.fotos) {
+        const datos = await zip.leer(zip.buscar(carpeta + f.archivo));
+        if (datos.length < 4 || datos[0] !== 0xFF || datos[1] !== 0xD8) throw new Error('Foto no válida.');
+        f.id = nuevoId('foto');
+        delete f.archivo;
+        fotos.push({ id: f.id, blob: new Blob([datos], { type: 'image/jpeg' }) });
+      }
+      await Almacen.reemplazarActa(acta, fotos);
+      porId.set(acta.id, acta);
+      leidas.push(acta);
+      r[decision === 'nueva' ? 'nuevas' : 'actualizadas']++;
+      r.ids.push(acta.id);
+    } catch (e) {
+      r.invalidas++;
+    }
+  }
+  r.ids.push(...await marcarSustituidasImportadas(leidas, porId));
+  r.repetidos = numerosRepetidos([...porId.values()], new Set(leidas.map(a => a.id)));
+  return r;
+}
+
+// Un acta que ya está en el teléfono: nunca se sobrescribe una emitida; entre borradores, gana el más reciente.
+function decidirImportacion(local, importada) {
+  if (!local) return 'nueva';
+  if (local.estado === 'emitida') return importada.estado === 'emitida' ? 'igual' : 'conservar';
+  if (importada.estado === 'emitida') return 'actualizar';
+  if (importada.modificada === local.modificada) return 'igual';
+  return importada.modificada > local.modificada ? 'actualizar' : 'conservar';
+}
+
+// Una revisión emitida que llega importada marca como «Sustituida» el acta que corrige, si está en el teléfono.
+async function marcarSustituidasImportadas(actas, porId) {
+  const marcadas = [];
+  for (const revision of actas) {
+    const anterior = revision.estado === 'emitida' && revision.corrigeA ? porId.get(revision.corrigeA) : null;
+    if (!anterior || (anterior.sustituidaPor && anterior.sustituidaRev >= revision.revision)) continue;
+    anterior.sustituidaPor = revision.id;
+    anterior.sustituidaRev = revision.revision;
+    try {
+      await Almacen.guardarActa(anterior);
+      marcadas.push(anterior.id);
+    } catch (e) { /* la revisión importada sigue siendo válida */ }
+  }
+  return marcadas;
+}
+
+// Números de acta (con su revisión) que aparecen en actas distintas, si afectan a alguna importada.
+function numerosRepetidos(actas, importadas) {
+  const grupos = new Map();
+  for (const a of actas) {
+    const num = String(a.datos.actaNum || '').trim();
+    if (!num) continue;
+    const clave = `${num.toLowerCase()}|${a.revision}`;
+    if (!grupos.has(clave)) grupos.set(clave, { texto: `${num}${a.revision ? ` Rev. ${a.revision}` : ''}`, ids: [] });
+    grupos.get(clave).ids.push(a.id);
+  }
+  return [...grupos.values()].filter(g => g.ids.length > 1 && g.ids.some(id => importadas.has(id))).map(g => g.texto);
+}
+
+// Valida y normaliza un acta leída de un archivo, que no es de fiar: solo se copian los campos
+// conocidos, con su tipo y longitud. Las fotos conservan su «archivo» dentro del ZIP.
+function actaDesdeArchivo(contenido) {
+  if (!contenido || contenido.formato !== FORMATO_EXPORTACION || !contenido.acta || typeof contenido.acta !== 'object') {
+    throw new Error('No es un acta exportada desde la app.');
+  }
+  const o = contenido.acta;
+  if ((Number(o.esquema) || 0) > ESQUEMA) throw new Error('El acta es de una versión más nueva de la app.');
+  const texto = (v, max = 500) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const ident = v => (typeof v === 'string' && /^[\w.-]{1,80}$/.test(v) ? v : null);
+  const iso = v => (typeof v === 'string' && v.length <= 40 && !Number.isNaN(Date.parse(v)) ? v : null);
+  const dia = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '');
+  const entero = (v, min, max, defecto = null) => (Number.isInteger(v) && v >= min && v <= max ? v : defecto);
+  const objeto = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
+  const objetos = (v, max) => (Array.isArray(v) ? v.slice(0, max).map(objeto).filter(Boolean) : []);
+  const coordenada = (v, limite) => {
+    const n = (typeof v === 'string' && v.trim()) || typeof v === 'number' ? Number(v) : NaN;
+    return Number.isFinite(n) && Math.abs(n) <= limite ? n.toFixed(6) : null;
+  };
+  const trazos = v => objetos(v, 500)
+    .filter(t => Number(t.refW) > 0 && Number(t.refH) > 0 && Array.isArray(t.puntos))
+    .map(t => ({
+      refW: Number(t.refW), refH: Number(t.refH),
+      puntos: t.puntos.slice(0, 5000).filter(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)).map(([x, y]) => [x, y]),
+    }))
+    .filter(t => t.puntos.length);
+
+  const acta = actaNueva();
+  acta.id = ident(o.id);
+  if (!acta.id) throw new Error('Acta sin identificador.');
+  acta.estado = o.estado === 'emitida' ? 'emitida' : 'borrador';
+  acta.emitida = acta.estado === 'emitida' ? iso(o.emitida) : null;
+  if (acta.estado === 'emitida' && !acta.emitida) throw new Error('Acta emitida sin fecha de emisión.');
+  acta.creada = iso(o.creada) || acta.creada;
+  acta.modificada = iso(o.modificada) || acta.emitida || acta.creada;
+  acta.fase = entero(o.fase, 1, ULTIMA_FASE, 1);
+  acta.revision = entero(o.revision, 0, 99, 0);
+  const revisiones = objetos(o.revisiones, 100).map(r => ({ rev: entero(r.rev, 0, 99, 0), fecha: iso(r.fecha), motivo: texto(r.motivo, 300) }));
+  if (revisiones.length) acta.revisiones = revisiones;
+  else acta.revisiones = [{ rev: acta.revision, fecha: acta.emitida, motivo: acta.revision ? 'Revisión' : 'Emisión inicial' }];
+
+  const d = objeto(o.datos) || {};
+  acta.datos = {
+    actaNum: texto(d.actaNum, 120), numAuto: false,       // el número ya está asignado: no se recalcula
+    tecnico: texto(d.tecnico), cargoTecnico: texto(d.cargoTecnico), expediente: texto(d.expediente),
+    descripcion: texto(d.descripcion, 2000), fecha: dia(d.fecha),
+    hora: typeof d.hora === 'string' && /^\d{2}:\d{2}$/.test(d.hora) ? d.hora : '',
+  };
+  const g = objeto(o.gps);
+  const lat = g && coordenada(g.lat, 90), lng = g && coordenada(g.lng, 180);
+  acta.gps = lat && lng ? { lat, lng, acc: Math.max(0, Math.round(Number(g.acc) || 0)), hora: iso(g.hora) } : null;
+  const s = objeto(o.sinGps) || {};
+  acta.sinGps = { activo: s.activo === true && !acta.gps, referencia: texto(s.referencia), lat: texto(s.lat, 30), lng: texto(s.lng, 30) };
+
+  const vistos = new Set();
+  acta.asistentes = objetos(o.asistentes, 100).map(a => {
+    let id = ident(a.id);
+    if (!id || vistos.has(id)) id = nuevoId('asis');
+    vistos.add(id);
+    return { id, nombre: texto(a.nombre), empresa: texto(a.empresa), cargo: texto(a.cargo), firma: a.firma === true };
+  });
+  acta.observaciones = texto(o.observaciones, MAX_OBSERVACIONES);
+  acta.indicaciones = objetos(o.indicaciones, 200).map(i => ({
+    id: ident(i.id) || nuevoId('ind'), texto: texto(i.texto, MAX_INDICACION), responsable: texto(i.responsable), plazo: dia(i.plazo),
+  }));
+  acta.fotos = objetos(o.fotos, MAX_FOTOS).map(f => {
+    const archivo = typeof f.archivo === 'string' && /^fotos\/[\w.-]{1,60}\.jpe?g$/i.test(f.archivo) ? f.archivo : null;
+    const ancho = entero(f.ancho, 1, 20000), alto = entero(f.alto, 1, 20000);
+    if (!archivo || !ancho || !alto) throw new Error('Foto sin archivo o sin tamaño.');
+    const gf = objeto(f.gps);
+    const glat = gf && coordenada(gf.lat, 90), glng = gf && coordenada(gf.lng, 180);
+    const acc = gf && typeof gf.acc === 'number' && Number.isFinite(gf.acc) ? Math.max(0, Math.round(gf.acc)) : null;
+    return {
+      id: '', archivo, ancho, alto, comentario: texto(f.comentario, MAX_COMENTARIO),
+      hora: typeof f.hora === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(f.hora) ? f.hora : '',
+      horaFuente: f.horaFuente === 'camara' ? 'camara' : 'movil',
+      gps: glat && glng ? { lat: glat, lng: glng, ...(acc !== null ? { acc } : {}), fuente: gf.fuente === 'camara' ? 'camara' : 'movil' } : null,
+    };
+  });
+  acta.firma = trazos(o.firma);
+  const firmas = objeto(o.firmasAsistentes) || {};
+  acta.firmasAsistentes = {};
+  for (const a of acta.asistentes) {
+    const f = Object.prototype.hasOwnProperty.call(firmas, a.id) ? objeto(firmas[a.id]) : null;
+    if (f) acta.firmasAsistentes[a.id] = { trazos: trazos(f.trazos), noFirma: f.noFirma === true };
+  }
+  const corrigeA = ident(o.corrigeA), sustituidaPor = ident(o.sustituidaPor);
+  const sustituidaRev = entero(o.sustituidaRev, 1, 99), ordenAuto = entero(o.ordenAuto, 1, 9999);
+  if (corrigeA) acta.corrigeA = corrigeA;
+  if (sustituidaPor && sustituidaRev) Object.assign(acta, { sustituidaPor, sustituidaRev });
+  if (ordenAuto) acta.ordenAuto = ordenAuto;
+  return acta;
+}
+
+// Comparte la dirección oficial de la app (nunca el archivo: así funcionan el GPS y la instalación).
+async function compartirApp() {
+  const datos = {
+    title: `Acta de Visita · ${EMPRESA}`,
+    text: `App de actas de visita de ${EMPRESA}. Ábrela siempre desde este enlace; en «Mis actas» se puede instalar en el teléfono.`,
+    url: URL_OFICIAL,
+  };
+  if (navigator.share) {
+    try {
+      await navigator.share(datos);
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(URL_OFICIAL);
+    aviso('🔗', 'Enlace copiado', `Pégalo en WhatsApp o en un correo: ${URL_OFICIAL}`);
+  } catch (e) {
+    aviso('🔗', 'Enlace de la app', `Compártelo copiándolo de aquí: ${URL_OFICIAL}`);
+  }
 }
 
 // ═══════════════════════════════════
