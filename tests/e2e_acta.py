@@ -1,4 +1,4 @@
-"""Prueba de extremo a extremo del flujo principal (fases 1 a 6 y PDF) en un móvil emulado (Pixel 7).
+"""Prueba de extremo a extremo del flujo principal (las 8 fases y el PDF) en un móvil emulado (Pixel 7).
 
 Requisitos (una vez):
     pip install playwright pypdf pillow
@@ -114,7 +114,7 @@ def main():
         # ── Fase 8: PDF ──
         pagina.click("#btnNext")
         with pagina.expect_download(timeout=30000) as descarga:
-            pagina.click("button.btn-primary:has-text('Descargar')")
+            pagina.click("#btnDescargar")
         ruta_pdf = SALIDA / "acta-prueba.pdf"
         descarga.value.save_as(str(ruta_pdf))
         _, imagenes = colocaciones_de_imagenes(ruta_pdf)

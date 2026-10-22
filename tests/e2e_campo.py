@@ -25,7 +25,7 @@ def emitir(contexto, pagina, ruta_pdf):
     pagina.click("#btnNext")
     pagina.click("#btnNext")
     with pagina.expect_download(timeout=120000) as descarga:
-        pagina.click("button.btn-primary:has-text('Descargar')")
+        pagina.click("#btnDescargar")
     descarga.value.save_as(str(ruta_pdf))
     pagina.wait_for_function("state.acta.estado === 'emitida'")
 

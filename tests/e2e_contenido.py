@@ -26,7 +26,7 @@ SECCIONES = ["1 · DATOS GENERALES", "2 · ASISTENTES", "3 · OBSERVACIONES GENE
 
 def descargar(pagina, ruta):
     with pagina.expect_download(timeout=60000) as descarga:
-        pagina.click("button.btn-primary:has-text('Descargar')")
+        pagina.click("#btnDescargar")
     descarga.value.save_as(str(ruta))
     return descarga.value.suggested_filename
 
