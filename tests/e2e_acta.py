@@ -43,11 +43,12 @@ def main():
         cabecera = pagina.evaluate("document.querySelector('.header-text p').textContent")
         r.comprobar("Versión visible en la cabecera", cabecera.endswith(f"v{pagina.evaluate('VERSION')}"), cabecera)
 
-        # ── Fase 1 → 2 ──
+        # ── Fase 1 → 2 (asistentes, sin ninguno) → 3 ──
         rellenar_identificacion(pagina)
         r.comprobar("Fase 1 validada con GPS", pagina.evaluate("state.fase") == 2)
+        pagina.click("#btnNext")
 
-        # ── Fase 2: orden de las fotos y GPS de cada foto ──
+        # ── Fase 3: orden de las fotos y GPS de cada foto ──
         pagina.wait_for_function("gpsFotos.ultima !== null", timeout=10000)
         pagina.set_input_files("#photoInput", [horizontal, vertical, cuadrada])
         esperar_fotos(pagina, 3)
@@ -57,16 +58,17 @@ def main():
         r.comprobar("Cada foto guarda la posición del móvil", fuentes == ["movil"] * 3, str(fuentes))
         pagina.click("#btnNext")
 
-        # ── Fase 3: comentarios ──
+        # ── Fase 4: notas de las fotos; fase 5 (acuerdos) sin datos ──
         areas = pagina.locator("textarea.comment-textarea")
         areas.nth(0).fill(COMENTARIO_LARGO)
         areas.nth(1).fill("Comentario inicial foto 2")
         areas.nth(2).fill(COMENTARIO_SIMBOLOS)
         pagina.click("#btnNext")
+        pagina.click("#btnNext")
 
-        # ── Fase 4: firma sin necesidad de girar ni redimensionar ──
+        # ── Fase 6: firma sin necesidad de girar ni redimensionar ──
         tam = pagina.evaluate("[sigCanvas.width, sigCanvas.height]")
-        r.comprobar("Lienzo de firma dimensionado al entrar en la fase 4", tam[0] > 0 and tam[1] > 0, f"{tam[0]}×{tam[1]} px")
+        r.comprobar("Lienzo de firma dimensionado al entrar en la fase de firmas", tam[0] > 0 and tam[1] > 0, f"{tam[0]}×{tam[1]} px")
         cdp = contexto.new_cdp_session(pagina)
         firmar(cdp, pagina)
         r.comprobar("El trazo táctil se dibuja", pagina.evaluate(LIENZO_CON_TINTA))
@@ -81,10 +83,10 @@ def main():
         pagina.screenshot(path=str(SALIDA / "fase4_firma.png"), full_page=True)
         n_errores = len(errores)
         pagina.click("#btnNext")
-        r.comprobar("Avanza a revisión sin errores JS", pagina.evaluate("state.fase") == 5 and len(errores) == n_errores,
+        r.comprobar("Avanza a revisión sin errores JS", pagina.evaluate("state.fase") == 7 and len(errores) == n_errores,
                     "; ".join(errores[n_errores:]))
 
-        # ── Fase 5: revisión construida al entrar ──
+        # ── Fase 7: revisión construida al entrar ──
         revision = pagina.evaluate("""({
             campos: document.querySelectorAll('#reviewGeneral .review-field').length,
             fotos: document.querySelectorAll('#reviewPhotos .review-photo-row').length,
@@ -99,17 +101,17 @@ def main():
         pagina.wait_for_timeout(400)
         pagina.screenshot(path=str(SALIDA / "fase5_revision.png"), full_page=True)
 
-        # Volver a la fase 3, corregir y regresar: la revisión debe reflejarlo
-        pagina.click("#btnBack")
-        pagina.click("#btnBack")
+        # Volver a las notas (fase 4), corregir y regresar: la revisión debe reflejarlo
+        for _ in range(3):
+            pagina.click("#btnBack")
         pagina.locator("textarea.comment-textarea").nth(1).fill("Comentario CORREGIDO foto 2")
-        pagina.click("#btnNext")
-        pagina.click("#btnNext")
+        for _ in range(3):
+            pagina.click("#btnNext")
         texto = pagina.evaluate("document.getElementById('reviewPhotos').innerText")
         r.comprobar("La revisión refleja los cambios hechos al volver atrás",
                     "CORREGIDO" in texto and "Comentario inicial" not in texto)
 
-        # ── Fase 6: PDF ──
+        # ── Fase 8: PDF ──
         pagina.click("#btnNext")
         with pagina.expect_download(timeout=30000) as descarga:
             pagina.click("button.btn-primary:has-text('Descargar')")

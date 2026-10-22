@@ -100,8 +100,35 @@ def desviacion_maxima(imagenes, ancho_min=900):
     return fotos, max((abs((w / h) / (pw / ph) - 1) for _, _, w, h, pw, ph, _, _ in fotos), default=0)
 
 
-def firmar(cdp, pagina, desplazamiento=0):
-    caja = pagina.locator("#sigCanvas").bounding_box()
+def abrir(contexto, errores, url=URL):
+    """Abre la app en una pestaña nueva y espera a que cargue el acta."""
+    pagina = contexto.new_page()
+    pagina.on("pageerror", lambda e: errores.append(str(e)))
+    pagina.goto(url)
+    pagina.wait_for_load_state("networkidle")
+    pagina.wait_for_function("typeof state !== 'undefined' && state.acta !== null")
+    return pagina
+
+
+def abrir_mis_actas(pagina):
+    """Abre «Mis actas» y espera a que la lista esté actualizada y visible."""
+    pagina.click("button.header-btn")
+    pagina.wait_for_selector("#panelActas.open")
+
+
+def avanzar_hasta(pagina, fase):
+    while pagina.evaluate("state.fase") < fase:
+        antes = pagina.evaluate("state.fase")
+        pagina.click("#btnNext")
+        if pagina.evaluate("state.fase") == antes:
+            raise AssertionError(f"No se pudo pasar de la fase {antes}: {cerrar_aviso(pagina)}")
+
+
+def firmar(cdp, pagina, desplazamiento=0, lienzo=None):
+    """Traza una firma con eventos táctiles reales sobre el lienzo indicado (por defecto, el del técnico)."""
+    lienzo = lienzo or pagina.locator("#sigCanvas")
+    lienzo.evaluate("el => el.scrollIntoView({ block: 'center' })")
+    caja = lienzo.bounding_box()
     x0, y0 = caja["x"] + 30 + desplazamiento, caja["y"] + 40
     puntos = [(x0 + i * 12, y0 + (25 if i % 2 else 0) + i * 2) for i in range(22)]
     cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": puntos[0][0], "y": puntos[0][1]}]})

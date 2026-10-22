@@ -11,24 +11,15 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (RAIZ, SALIDA, URL, Resultados, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
+from comun import (RAIZ, SALIDA, Resultados, abrir, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
                    contexto_movil, desviacion_maxima, esperar_fotos, firmar, rellenar_identificacion,
                    servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar, generar_con_exif  # noqa: E402
 
 
-def abrir(contexto, errores, url=URL):
-    pagina = contexto.new_page()
-    pagina.on("pageerror", lambda e: errores.append(str(e)))
-    pagina.goto(url)
-    pagina.wait_for_load_state("networkidle")
-    pagina.wait_for_function("typeof state !== 'undefined' && state.acta !== null")
-    return pagina
-
-
 def emitir(contexto, pagina, ruta_pdf):
-    """Desde la fase 2 o 3: avanza, firma, emite y guarda el PDF."""
-    while pagina.evaluate("state.fase") < 4:
+    """Desde cualquier fase anterior a las firmas: avanza, firma, emite y guarda el PDF."""
+    while pagina.evaluate("state.fase") < 6:
         pagina.click("#btnNext")
     firmar(contexto.new_cdp_session(pagina), pagina)
     pagina.click("#btnNext")
@@ -63,9 +54,10 @@ def main():
         pg = abrir(ctx, errores)
         r.comprobar("Un acta nueva sin datos no se guarda", pg.evaluate("state.persistida") is False)
         rellenar_identificacion(pg, acta="B-001")
+        pg.click("#btnNext")                       # asistentes → fotos
         pg.set_input_files("#photoInput", [horizontal, vertical])
         esperar_fotos(pg, 2)
-        pg.click("#btnNext")
+        pg.click("#btnNext")                       # fotos → notas
         pg.locator("textarea.comment-textarea").nth(0).fill("Comentario que debe sobrevivir a la recarga")
         pg.wait_for_timeout(900)
         r.comprobar("Indicador «Guardada en el teléfono»", "Guardada" in pg.text_content("#estadoGuardado"))
@@ -75,45 +67,48 @@ def main():
             comentario: state.acta.fotos[0].comentario, tecnico: document.getElementById('tecnico').value,
             imagenes: document.querySelectorAll('#commentsContainer img').length })""")
         r.comprobar("Tras recargar, el acta sigue donde estaba (fase, datos, GPS, fotos y notas)", restaurada == {
-            "fase": 3, "fotos": 2, "gps": True, "comentario": "Comentario que debe sobrevivir a la recarga",
+            "fase": 4, "fotos": 2, "gps": True, "comentario": "Comentario que debe sobrevivir a la recarga",
             "tecnico": "Blas González González", "imagenes": 2}, str(restaurada))
 
         # ── Emisión y solo lectura ──
         emitir(ctx, pg, SALIDA / "acta-B-001.pdf")
         r.comprobar("Descargar el PDF emite el acta", pg.evaluate("state.acta.estado") == "emitida")
         pg.click("#btnBack")
-        r.comprobar("El acta emitida se puede revisar (fase 5) pero no volver a editar",
-                    pg.evaluate("state.fase") == 5 and pg.evaluate("btnBack.style.display") == "none")
+        r.comprobar("El acta emitida se puede revisar (fase 7) pero no volver a editar",
+                    pg.evaluate("state.fase") == 7 and pg.evaluate("btnBack.style.display") == "none")
         pg.evaluate("irAFase(1)")
         aviso = cerrar_aviso(pg) or ""
         r.comprobar("Intentar editar un acta emitida avisa de que es de solo lectura",
-                    "emitida" in aviso.lower() and pg.evaluate("state.fase") == 5, aviso)
+                    "emitida" in aviso.lower() and pg.evaluate("state.fase") == 7, aviso)
         pg.reload()
         pg.wait_for_function("state.acta && state.acta.estado === 'emitida'")
         r.comprobar("Al reabrir la app, el acta emitida se muestra en solo lectura",
-                    pg.evaluate("state.fase") == 6 and pg.is_visible("#btnCorregir") and "Emitida" in pg.text_content("#estadoGuardado"))
+                    pg.evaluate("state.fase") == 8 and pg.is_visible("#btnCorregir") and "Emitida" in pg.text_content("#estadoGuardado"))
 
         # ── B2 · Mis actas: corregir, nueva visita y borrar ──
         n = contar_actas(pg)
         r.comprobar("Mis actas muestra el acta emitida", n == 1 and "Emitida" in pg.text_content(".acta-card"))
         pg.screenshot(path=str(SALIDA / "mis-actas.png"))
         pg.click(".acta-card button:has-text('Corregir')")
-        pg.wait_for_selector("#alertOverlay.open", timeout=10000)   # aviso «Copia para corregir»
+        pg.wait_for_selector("#promptOverlay.open", timeout=10000)  # motivo de la revisión
+        pg.fill("#promptTexto", "Corrección de prueba")
+        pg.click("#promptAceptar")
+        pg.wait_for_selector("#alertOverlay.open", timeout=10000)   # aviso «Rev. 1 creada»
         cerrar_aviso(pg)
         copia = pg.evaluate("""({ estado: state.acta.estado, fotos: state.acta.fotos.length, firma: state.acta.firma.length,
-            num: state.acta.datos.actaNum, fase: state.fase, origen: Boolean(state.acta.corrigeA),
+            num: state.acta.datos.actaNum, rev: state.acta.revision, fase: state.fase, origen: Boolean(state.acta.corrigeA),
             comentario: state.acta.fotos[0].comentario })""")
-        r.comprobar("«Corregir» crea una copia editable con fotos y notas, sin firma", copia == {
-            "estado": "borrador", "fotos": 2, "firma": 0, "num": "B-001", "fase": 1, "origen": True,
+        r.comprobar("«Corregir» crea la Rev. 1 editable con fotos y notas, sin firma", copia == {
+            "estado": "borrador", "fotos": 2, "firma": 0, "num": "B-001", "rev": 1, "fase": 1, "origen": True,
             "comentario": "Comentario que debe sobrevivir a la recarga"}, str(copia))
         r.comprobar("Mis actas: emitida + copia", contar_actas(pg) == 2)
         pg.click(".acta-card.actual button:has-text('Nueva visita')")
         pg.wait_for_timeout(700)
         visita = pg.evaluate("""({ num: state.acta.datos.actaNum, tecnico: state.acta.datos.tecnico,
             expediente: state.acta.datos.expediente, fotos: state.acta.fotos.length, gps: state.acta.gps })""")
-        r.comprobar("«Nueva visita» copia técnico y expediente (sin número, fotos ni GPS)", visita == {
-            "num": "", "tecnico": "Blas González González", "expediente": "425_2026.CON", "fotos": 0, "gps": None},
-            str(visita))
+        r.comprobar("«Nueva visita» copia técnico y expediente y numera sola (sin fotos ni GPS)", visita == {
+            "num": "425_2026.CON-AV-01", "tecnico": "Blas González González", "expediente": "425_2026.CON",
+            "fotos": 0, "gps": None}, str(visita))
         r.comprobar("Mis actas: 3 actas", contar_actas(pg) == 3)
         pg.once("dialog", lambda dialogo: dialogo.accept())
         pg.click(".acta-card.actual button.peligro")
@@ -164,6 +159,7 @@ def main():
         pg.fill("#sinGpsLng", "-5.98446")
         pg.click("#btnNext")
         r.comprobar("Con referencia y coordenadas válidas se avanza", pg.evaluate("state.fase") == 2)
+        pg.click("#btnNext")                       # asistentes → fotos
 
         # ── B7 · Hora y GPS de la propia foto (EXIF) ──
         pg.set_input_files("#photoInput", [foto_exif])
@@ -177,13 +173,14 @@ def main():
         texto = texto_pdf(SALIDA / "acta-sin-cobertura.pdf")
         r.comprobar("PDF: ubicación sin cobertura con referencia y coordenadas",
                     "Sin cobertura GPS · Ref.: PK 2+100, andén vía 1 · Coord. manuales: 37.389210, -5.984460" in texto)
-        r.comprobar("PDF: hora y GPS de la cámara bajo la foto", "2026-10-21 18:05 · 37.389210, -5.984460 (cámara)" in texto)
+        r.comprobar("PDF: hora y GPS de la cámara bajo la foto", "21/10/2026 18:05 · 37.389210, -5.984460 (cámara)" in texto)
         ctx.close()
 
         # ── B6 · Hasta 50 fotos, guardadas en el teléfono ──
         ctx = contexto_movil(p, navegador)
         pg = abrir(ctx, errores)
         rellenar_identificacion(pg, acta="B-50")
+        pg.click("#btnNext")
         pg.set_input_files("#photoInput", [horizontal, vertical, cuadrada] * 20)
         esperar_fotos(pg, 50, espera=240000)
         aviso = cerrar_aviso(pg) or ""
@@ -231,6 +228,7 @@ def main():
         r.comprobar("Sin conexión la app se abre desde la copia del teléfono",
                     pg.evaluate("Boolean(window.jspdf && new window.jspdf.jsPDF().getFontList().ActaSans)"))
         rellenar_identificacion(pg, acta="B-OFFLINE")
+        pg.click("#btnNext")
         pg.set_input_files("#photoInput", [cuadrada])
         esperar_fotos(pg, 1)
         emitir(ctx, pg, SALIDA / "acta-sin-conexion.pdf")
