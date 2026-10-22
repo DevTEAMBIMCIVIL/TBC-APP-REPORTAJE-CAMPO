@@ -1,0 +1,4 @@
+# Resultados de las pruebas automáticas
+tests/salida/
+__pycache__/
+*.pyc
