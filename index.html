@@ -2,10 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acta de Visita · TeamBIMCivil</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- Librerías locales (sin CDN): jsPDF 4.2.1 y fuente ActaSans para el PDF -->
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/fuentes-pdf.js"></script>
 <style>
   :root {
     --rojo: #CC2222;
@@ -401,6 +402,12 @@
   }
   .comment-textarea:focus { outline: none; }
   .comment-textarea::placeholder { color: #bbb; }
+  .comment-count {
+    font-size: 10px;
+    color: #AAA;
+    text-align: right;
+    padding: 0 12px 8px;
+  }
 
   /* ── FIRMA ── */
   .signature-wrapper {
@@ -505,6 +512,8 @@
     line-height: 1.5;
     padding-top: 2px;
     font-style: italic;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
   .review-photo-num {
     font-size: 10px;
@@ -697,17 +706,6 @@
   }
   .hidden { display: none !important; }
 
-  /* ── PDF TEMPLATE (off-screen) ── */
-  #pdfTemplate {
-    position: fixed;
-    left: -9999px;
-    top: 0;
-    width: 595px;
-    background: white;
-    font-family: 'Segoe UI', sans-serif;
-    padding: 0;
-    z-index: -1;
-  }
 </style>
 </head>
 <body>
@@ -768,7 +766,7 @@
 
   <div class="field-group">
     <div class="field-label">Nº de Acta <span class="required">*</span></div>
-    <input type="text" class="field-input" id="actaNum" placeholder="Ej. TBC-2026-0042" oninput="updateActaNum()">
+    <input type="text" class="field-input" id="actaNum" placeholder="Ej. TBC-2026-0042" oninput="actualizarNumActa()">
   </div>
 
   <div class="field-group">
@@ -802,7 +800,7 @@
       <div class="gps-warning">
         ⚠️ Asegúrate de tener la <strong>localización activada</strong> en tu dispositivo antes de obtener las coordenadas.
       </div>
-      <button class="gps-btn" onclick="getGPS()">
+      <button class="gps-btn" onclick="obtenerGPS()">
         📍 Obtener coordenadas GPS
       </button>
       <div class="gps-status" id="gpsStatus"></div>
@@ -821,10 +819,10 @@
 
   <div class="photos-grid" id="photosGrid"></div>
 
-  <button class="add-photo-btn" id="addPhotoBtn" onclick="triggerPhotoInput()">
+  <button class="add-photo-btn" id="addPhotoBtn" onclick="abrirSelectorFotos()">
     📷 Añadir foto
   </button>
-  <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handlePhotoAdd(this)">
+  <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none" onchange="anadirFotos(this)">
 </section>
 
 <!-- ═══════════════════════════════════════════
@@ -849,7 +847,7 @@
   <div class="signature-wrapper">
     <div class="signature-header">
       Firma digital del técnico
-      <button class="clear-sig-btn" onclick="clearSignature()">Borrar</button>
+      <button class="clear-sig-btn" onclick="borrarFirma()">Borrar</button>
     </div>
     <canvas id="sigCanvas"></canvas>
   </div>
@@ -901,10 +899,10 @@
     <div class="emit-title" id="emitActaTitle">Acta de Visita</div>
     <div class="emit-sub" id="emitActaSub">Generando resumen…</div>
     <div class="emit-actions">
-      <button class="btn btn-primary" onclick="generatePDF()">
+      <button class="btn btn-primary" onclick="descargarPDF()">
         📥 Descargar Acta en PDF
       </button>
-      <button class="btn btn-whatsapp" onclick="sendWhatsApp()">
+      <button class="btn btn-whatsapp" onclick="enviarWhatsApp()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Compartir por WhatsApp
       </button>
@@ -916,7 +914,7 @@
   </div>
 
   <div style="margin-top: 16px; text-align:center;">
-    <button class="btn btn-secondary" style="width:100%; color:#999; font-size:13px;" onclick="resetApp()">
+    <button class="btn btn-secondary" style="width:100%; color:#999; font-size:13px;" onclick="nuevaActa()">
       🔄 Nueva Acta
     </button>
   </div>
@@ -924,8 +922,8 @@
 
 <!-- NAV BAR -->
 <div class="nav-bar" id="navBar">
-  <button class="btn btn-secondary" id="btnBack" onclick="goBack()" style="display:none">← Atrás</button>
-  <button class="btn btn-primary" id="btnNext" onclick="goNext()">Siguiente →</button>
+  <button class="btn btn-secondary" id="btnBack" onclick="anterior()" style="display:none">← Atrás</button>
+  <button class="btn btn-primary" id="btnNext" onclick="siguiente()">Siguiente →</button>
 </div>
 
 <!-- ALERT MODAL -->
@@ -934,7 +932,7 @@
     <div class="alert-icon" id="alertIcon">⚠️</div>
     <div class="alert-title" id="alertTitle">Atención</div>
     <div class="alert-msg" id="alertMsg"></div>
-    <button class="alert-btn" onclick="closeAlert()">Entendido</button>
+    <button class="alert-btn" onclick="cerrarAviso()">Entendido</button>
   </div>
 </div>
 
@@ -944,125 +942,149 @@
   <div class="loading-text">Generando el Acta en PDF…</div>
 </div>
 
-<!-- PDF TEMPLATE (off-screen) -->
-<div id="pdfTemplate"></div>
-
 <script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.0
+//  · Navegación por fases: cada fase declara alEntrar() y validar().
+//  · Firma vectorial: se guardan los trazos y se redibujan al cambiar
+//    el tamaño del lienzo (al mostrarse la fase o al girar el móvil).
+//  · PDF con jsPDF local (lib/) y fuente ActaSans (lib/fuentes-pdf.js).
+// ═══════════════════════════════════════════════════════════════
+
+const VERSION = '2.0';
+const MAX_FOTOS = 10;
+const MAX_COMENTARIO = 1000;      // caracteres por comentario de foto
+const FOTO_ANCHO_MAX = 1200;      // px, como en la v1
+const FOTO_CALIDAD = 0.75;        // JPEG, como en la v1
+
 // ═══════════════════════════════════
-//  STATE
+//  ESTADO
 // ═══════════════════════════════════
 const state = {
-  currentPhase: 1,
-  gpsData: null,
-  photos: [],      // {dataUrl, comment}
-  signature: null, // base64 png
+  fase: 1,
+  gps: null,              // { lat, lng, acc }
+  fotos: [],              // { dataUrl, ancho, alto, comentario }
+  fotosEnProceso: 0,
+  firma: [],              // trazos: { refW, refH, puntos: [[x, y], …] } en px CSS del lienzo
 };
 
 // ═══════════════════════════════════
-//  INIT
+//  UTILIDADES
+// ═══════════════════════════════════
+const $ = id => document.getElementById(id);
+const dos = n => String(n).padStart(2, '0');
+const fechaLocal = (d = new Date()) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+const horaLocal = (d = new Date()) => `${dos(d.getHours())}:${dos(d.getMinutes())}`;
+const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ENTIDADES[c]);
+const esperar = ms => new Promise(resolver => setTimeout(resolver, ms));
+
+// Muestra el aviso modal y devuelve false (permite `return condición || aviso(…)`).
+function aviso(icono, titulo, mensaje) {
+  $('alertIcon').textContent = icono;
+  $('alertTitle').textContent = titulo;
+  $('alertMsg').textContent = mensaje;
+  $('alertOverlay').classList.add('open');
+  return false;
+}
+function cerrarAviso() { $('alertOverlay').classList.remove('open'); }
+
+// ═══════════════════════════════════
+//  INICIO
 // ═══════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // set today's date
-  const today = new Date();
-  document.getElementById('fechaVisita').value = today.toISOString().split('T')[0];
-  const hh = String(today.getHours()).padStart(2,'0');
-  const mm = String(today.getMinutes()).padStart(2,'0');
-  document.getElementById('horaVisita').value = `${hh}:${mm}`;
-
-  initSignatureCanvas();
-  updateStepper();
-  updateNavButtons();
+  document.querySelector('.header-text p').textContent = `Acta de Visita de Campo · v${VERSION}`;
+  ponerFechaHoraActual();
+  iniciarFirma();
+  $('commentsContainer').addEventListener('input', alEscribirComentario);
+  irAFase(1);
 });
 
-// ═══════════════════════════════════
-//  HEADER ACTA NUM
-// ═══════════════════════════════════
-function updateActaNum() {
-  const v = document.getElementById('actaNum').value.trim();
-  document.getElementById('headerActaNum').textContent = v || 'Nueva Acta';
+function ponerFechaHoraActual() {
+  const ahora = new Date();
+  $('fechaVisita').value = fechaLocal(ahora);   // fecha local (la v1 usaba UTC)
+  $('horaVisita').value = horaLocal(ahora);
+}
+
+function actualizarNumActa() {
+  $('headerActaNum').textContent = $('actaNum').value.trim() || 'Nueva Acta';
 }
 
 // ═══════════════════════════════════
-//  NAVIGATION
+//  NAVEGACIÓN ENTRE FASES
 // ═══════════════════════════════════
-function goNext() {
-  if (!validatePhase(state.currentPhase)) return;
-  if (state.currentPhase === 5) buildReviewPhase();
-  if (state.currentPhase === 6) return;
-  setPhase(state.currentPhase + 1);
-  if (state.currentPhase === 4) updateSigLabels();
-  if (state.currentPhase === 6) buildEmissionPhase();
-}
+const FASES = {
+  1: { validar: validarIdentificacion },
+  2: { alEntrar: pintarFotos, validar: validarFotos },
+  3: { alEntrar: construirComentarios },
+  4: { alEntrar: entrarFirma, validar: validarFirma },
+  5: { alEntrar: construirRevision },
+  6: { alEntrar: construirEmision },
+};
+const ULTIMA_FASE = 6;
 
-function goBack() {
-  if (state.currentPhase <= 1) return;
-  setPhase(state.currentPhase - 1);
-}
-
-function setPhase(n) {
-  document.getElementById(`phase${state.currentPhase}`).classList.remove('active');
-  state.currentPhase = n;
-  document.getElementById(`phase${n}`).classList.add('active');
-  updateStepper();
-  updateNavButtons();
+function irAFase(n) {
+  document.querySelectorAll('.phase-container')
+    .forEach(seccion => seccion.classList.toggle('active', seccion.id === `phase${n}`));
+  state.fase = n;
+  const fase = FASES[n];
+  if (fase.alEntrar) fase.alEntrar();   // la fase ya es visible: el lienzo de firma tiene tamaño
+  actualizarStepper();
+  actualizarNavegacion();
   window.scrollTo(0, 0);
 }
 
-function updateStepper() {
+function siguiente() {
+  const fase = FASES[state.fase];
+  if (fase.validar && !fase.validar()) return;
+  if (state.fase < ULTIMA_FASE) irAFase(state.fase + 1);
+}
+
+function anterior() {
+  if (state.fase > 1) irAFase(state.fase - 1);
+}
+
+function actualizarStepper() {
   document.querySelectorAll('.step-item').forEach(el => {
-    const s = parseInt(el.dataset.step);
-    el.classList.remove('active','done');
-    if (s === state.currentPhase) el.classList.add('active');
-    else if (s < state.currentPhase) el.classList.add('done');
+    const paso = Number(el.dataset.step);
+    el.classList.toggle('active', paso === state.fase);
+    el.classList.toggle('done', paso < state.fase);
   });
 }
 
-function updateNavButtons() {
-  const back = document.getElementById('btnBack');
-  const next = document.getElementById('btnNext');
-  back.style.display = state.currentPhase > 1 ? 'flex' : 'none';
-  if (state.currentPhase === 5) {
-    next.textContent = 'Emitir Acta →';
-    next.className = 'btn btn-success';
-  } else if (state.currentPhase === 6) {
-    next.style.display = 'none';
-  } else {
-    next.textContent = 'Siguiente →';
-    next.className = 'btn btn-primary';
-    next.style.display = 'flex';
-  }
+function actualizarNavegacion() {
+  const atras = $('btnBack'), sig = $('btnNext');
+  atras.style.display = state.fase > 1 ? 'flex' : 'none';
+  sig.style.display = state.fase === ULTIMA_FASE ? 'none' : 'flex';
+  const emitir = state.fase === ULTIMA_FASE - 1;
+  sig.textContent = emitir ? 'Emitir Acta →' : 'Siguiente →';
+  sig.className = emitir ? 'btn btn-success' : 'btn btn-primary';
 }
 
 // ═══════════════════════════════════
-//  VALIDATION
+//  FASE 1 · IDENTIFICACIÓN Y GPS
 // ═══════════════════════════════════
-function validatePhase(phase) {
-  if (phase === 1) {
-    if (!document.getElementById('actaNum').value.trim()) return showAlert('⚠️','Campo requerido','Introduce el número de acta para continuar.'), false;
-    if (!document.getElementById('tecnico').value.trim()) return showAlert('⚠️','Campo requerido','Introduce el nombre del técnico.'), false;
-    if (!document.getElementById('expediente').value.trim()) return showAlert('⚠️','Campo requerido','Introduce el expediente del trabajo.'), false;
-    if (!document.getElementById('fechaVisita').value) return showAlert('⚠️','Campo requerido','Selecciona la fecha de la visita.'), false;
-    if (!state.gpsData) return showAlert('📍','GPS requerido','Debes obtener la localización GPS antes de continuar.'), false;
+function validarIdentificacion() {
+  const obligatorios = [
+    ['actaNum', 'Introduce el número de acta para continuar.'],
+    ['tecnico', 'Introduce el nombre del técnico.'],
+    ['expediente', 'Introduce el expediente del trabajo.'],
+    ['fechaVisita', 'Selecciona la fecha de la visita.'],
+  ];
+  for (const [id, mensaje] of obligatorios) {
+    if (!$(id).value.trim()) return aviso('⚠️', 'Campo requerido', mensaje);
   }
-  if (phase === 2) {
-    if (state.photos.length === 0) return showAlert('📸','Sin fotos','Añade al menos una fotografía para continuar.'), false;
-  }
-  if (phase === 4) {
-    if (!state.signature || isCanvasBlank()) return showAlert('✍️','Firma requerida','Por favor, firma en el recuadro para continuar.'), false;
-  }
-  return true;
+  return Boolean(state.gps) || aviso('📍', 'GPS requerido', 'Debes obtener la localización GPS antes de continuar.');
 }
 
-// ═══════════════════════════════════
-//  GPS
-// ═══════════════════════════════════
-function getGPS() {
-  const status = document.getElementById('gpsStatus');
-  status.className = 'gps-status loading';
-  status.textContent = '🔄 Obteniendo coordenadas…';
+function obtenerGPS() {
+  const estado = $('gpsStatus');
+  estado.className = 'gps-status loading';
+  estado.textContent = '🔄 Obteniendo coordenadas…';
   if (!navigator.geolocation) {
-    status.className = 'gps-status err';
-    status.textContent = '❌ Tu navegador no soporta geolocalización.';
+    estado.className = 'gps-status err';
+    estado.textContent = '❌ Tu navegador no soporta geolocalización.';
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -1070,473 +1092,516 @@ function getGPS() {
       const lat = pos.coords.latitude.toFixed(6);
       const lng = pos.coords.longitude.toFixed(6);
       const acc = Math.round(pos.coords.accuracy);
-      state.gpsData = { lat, lng, acc };
-      status.className = 'gps-status ok';
-      status.innerHTML = `✅ <strong>Lat:</strong> ${lat} &nbsp; <strong>Lng:</strong> ${lng}<br><small>Precisión: ±${acc}m · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color:var(--verde)">Ver en Maps</a></small>`;
+      state.gps = { lat, lng, acc };
+      estado.className = 'gps-status ok';
+      estado.innerHTML = `✅ <strong>Lat:</strong> ${lat} &nbsp; <strong>Lng:</strong> ${lng}<br><small>Precisión: ±${acc} m · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" rel="noopener" style="color:var(--verde)">Ver en Maps</a></small>`;
     },
     err => {
-      status.className = 'gps-status err';
-      const msgs = {1:'Permiso denegado. Activa la localización.', 2:'Posición no disponible.', 3:'Tiempo de espera agotado.'};
-      status.textContent = `❌ ${msgs[err.code] || 'Error desconocido.'}`;
+      estado.className = 'gps-status err';
+      const mensajes = { 1: 'Permiso denegado. Activa la localización.', 2: 'Posición no disponible.', 3: 'Tiempo de espera agotado.' };
+      estado.textContent = `❌ ${mensajes[err.code] || 'Error desconocido.'}`;
     },
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
 }
 
 // ═══════════════════════════════════
-//  FOTOS
+//  FASE 2 · FOTOS
 // ═══════════════════════════════════
-function triggerPhotoInput() {
-  if (state.photos.length >= 10) return;
-  document.getElementById('photoInput').value = '';
-  document.getElementById('photoInput').click();
+function abrirSelectorFotos() {
+  if (state.fotosEnProceso || state.fotos.length >= MAX_FOTOS) return;
+  $('photoInput').value = '';
+  $('photoInput').click();
 }
 
-function handlePhotoAdd(input) {
-  const files = Array.from(input.files);
-  const remaining = 10 - state.photos.length;
-  const toProcess = files.slice(0, remaining);
+async function anadirFotos(input) {
+  const libres = MAX_FOTOS - state.fotos.length - state.fotosEnProceso;
+  const archivos = Array.from(input.files || []).slice(0, Math.max(0, libres));
+  input.value = '';
+  if (!archivos.length) return;
+  state.fotosEnProceso += archivos.length;
+  pintarFotos();
+  let fallidas = 0;
+  for (const archivo of archivos) {          // en serie: se respeta el orden de selección
+    try {
+      const foto = await comprimirImagen(archivo);
+      state.fotos.push({ ...foto, comentario: '' });
+    } catch (e) {
+      fallidas++;
+    }
+    state.fotosEnProceso--;
+    pintarFotos();
+  }
+  if (fallidas) aviso('⚠️', 'Fotos no añadidas', `${fallidas} archivo(s) no se han podido leer como imagen.`);
+}
 
-  toProcess.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      // Compress image
-      compressImage(e.target.result, 1200, 0.75, compressed => {
-        state.photos.push({ dataUrl: compressed, comment: '' });
-        renderPhotosGrid();
-      });
+function comprimirImagen(archivo) {
+  return new Promise((resolver, rechazar) => {
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => {
+      let ancho = img.naturalWidth, alto = img.naturalHeight;
+      if (ancho > FOTO_ANCHO_MAX) { alto = Math.round(alto * FOTO_ANCHO_MAX / ancho); ancho = FOTO_ANCHO_MAX; }
+      const lienzo = document.createElement('canvas');
+      lienzo.width = ancho;
+      lienzo.height = alto;
+      lienzo.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+      URL.revokeObjectURL(url);
+      resolver({ dataUrl: lienzo.toDataURL('image/jpeg', FOTO_CALIDAD), ancho, alto });
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); rechazar(new Error('Imagen no válida')); };
+    img.src = url;
   });
 }
 
-function compressImage(dataUrl, maxW, quality, cb) {
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    let w = img.width, h = img.height;
-    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    cb(canvas.toDataURL('image/jpeg', quality));
-  };
-  img.src = dataUrl;
+function quitarFoto(indice) {
+  state.fotos.splice(indice, 1);
+  pintarFotos();
 }
 
-function removePhoto(idx) {
-  state.photos.splice(idx, 1);
-  renderPhotosGrid();
-}
-
-function renderPhotosGrid() {
-  const grid = document.getElementById('photosGrid');
-  const count = state.photos.length;
-  document.getElementById('photoCountVal').textContent = count;
-  document.getElementById('addPhotoBtn').disabled = count >= 10;
-
-  grid.innerHTML = state.photos.map((p, i) => `
+function pintarFotos() {
+  const total = state.fotos.length, enProceso = state.fotosEnProceso;
+  $('photoCountVal').textContent = total;
+  const boton = $('addPhotoBtn');
+  boton.disabled = enProceso > 0 || total >= MAX_FOTOS;
+  boton.textContent = enProceso ? `⏳ Procesando ${enProceso} foto(s)…` : '📷 Añadir foto';
+  $('photosGrid').innerHTML = state.fotos.map((f, i) => `
     <div class="photo-slot">
-      <img src="${p.dataUrl}" alt="Foto ${i+1}">
-      <span class="photo-num">Foto ${i+1}</span>
-      <button class="remove-btn" onclick="removePhoto(${i})">✕</button>
-    </div>
-  `).join('');
+      <img src="${f.dataUrl}" alt="Foto ${i + 1}">
+      <span class="photo-num">Foto ${i + 1}</span>
+      <button class="remove-btn" onclick="quitarFoto(${i})" aria-label="Quitar foto ${i + 1}">✕</button>
+    </div>`).join('');
+}
+
+function validarFotos() {
+  if (state.fotosEnProceso) return aviso('⏳', 'Procesando fotos', 'Espera a que terminen de procesarse las fotos.');
+  return state.fotos.length > 0 || aviso('📸', 'Sin fotos', 'Añade al menos una fotografía para continuar.');
 }
 
 // ═══════════════════════════════════
-//  COMENTARIOS
+//  FASE 3 · COMENTARIOS
 // ═══════════════════════════════════
-function buildCommentsPhase() {
-  const container = document.getElementById('commentsContainer');
-  const noMsg = document.getElementById('noPhotosMsg');
-  if (state.photos.length === 0) {
-    noMsg.classList.remove('hidden');
-    container.innerHTML = '';
-    return;
-  }
-  noMsg.classList.add('hidden');
-  container.innerHTML = state.photos.map((p, i) => `
+function construirComentarios() {
+  $('noPhotosMsg').classList.toggle('hidden', state.fotos.length > 0);
+  $('commentsContainer').innerHTML = state.fotos.map((f, i) => `
     <div class="comment-card">
       <div class="comment-photo-header">
-        <img class="comment-thumb" src="${p.dataUrl}" alt="Foto ${i+1}">
+        <img class="comment-thumb" src="${f.dataUrl}" alt="Foto ${i + 1}">
         <div>
-          <div class="comment-photo-label">Fotografía ${i+1}</div>
+          <div class="comment-photo-label">Fotografía ${i + 1}</div>
           <div class="comment-photo-sub">Añade observación o hallazgo</div>
         </div>
       </div>
-      <textarea class="comment-textarea"
-        placeholder="Ej. Fisura en viga principal lado norte…"
-        oninput="state.photos[${i}].comment=this.value"
-      >${p.comment}</textarea>
-    </div>
-  `).join('');
+      <textarea class="comment-textarea" data-foto="${i}" maxlength="${MAX_COMENTARIO}"
+        placeholder="Ej. Fisura en viga principal lado norte…">${esc(f.comentario)}</textarea>
+      <div class="comment-count"><span>${f.comentario.length}</span> / ${MAX_COMENTARIO}</div>
+    </div>`).join('');
+}
+
+function alEscribirComentario(e) {
+  const area = e.target;
+  if (!area.classList.contains('comment-textarea')) return;
+  state.fotos[Number(area.dataset.foto)].comentario = area.value;
+  area.nextElementSibling.firstElementChild.textContent = area.value.length;
 }
 
 // ═══════════════════════════════════
-//  FIRMA
+//  FASE 4 · FIRMA
 // ═══════════════════════════════════
-let sigCtx, sigDrawing = false, sigCanvas;
+const lienzoFirma = { el: null, ctx: null, ancho: 0, alto: 0, trazo: null };
+const GROSOR_FIRMA = 2.5;
 
-function initSignatureCanvas() {
-  sigCanvas = document.getElementById('sigCanvas');
-  sigCtx = sigCanvas.getContext('2d');
-  // set real pixel dimensions
-  const setSize = () => {
-    const rect = sigCanvas.getBoundingClientRect();
-    sigCanvas.width = rect.width * window.devicePixelRatio;
-    sigCanvas.height = rect.height * window.devicePixelRatio;
-    sigCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    sigCtx.strokeStyle = '#1A1A1A';
-    sigCtx.lineWidth = 2.5;
-    sigCtx.lineCap = 'round';
-    sigCtx.lineJoin = 'round';
-  };
-  setSize();
-  window.addEventListener('resize', setSize);
-
-  // Touch events
-  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); sigDrawing = true; const t = e.touches[0]; const r = sigCanvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(t.clientX - r.left, t.clientY - r.top); }, {passive:false});
-  sigCanvas.addEventListener('touchmove', e => { e.preventDefault(); if (!sigDrawing) return; const t = e.touches[0]; const r = sigCanvas.getBoundingClientRect(); sigCtx.lineTo(t.clientX - r.left, t.clientY - r.top); sigCtx.stroke(); }, {passive:false});
-  sigCanvas.addEventListener('touchend', () => { sigDrawing = false; state.signature = sigCanvas.toDataURL('image/png'); });
-
-  // Mouse events
-  sigCanvas.addEventListener('mousedown', e => { sigDrawing = true; const r = sigCanvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(e.clientX - r.left, e.clientY - r.top); });
-  sigCanvas.addEventListener('mousemove', e => { if (!sigDrawing) return; const r = sigCanvas.getBoundingClientRect(); sigCtx.lineTo(e.clientX - r.left, e.clientY - r.top); sigCtx.stroke(); });
-  sigCanvas.addEventListener('mouseup', () => { sigDrawing = false; state.signature = sigCanvas.toDataURL('image/png'); });
+function iniciarFirma() {
+  const el = lienzoFirma.el = $('sigCanvas');
+  lienzoFirma.ctx = el.getContext('2d');
+  // Se reajusta cuando el lienzo cambia de tamaño: al mostrarse la fase o al girar el móvil.
+  if ('ResizeObserver' in window) new ResizeObserver(() => ajustarLienzo()).observe(el);
+  window.addEventListener('resize', () => ajustarLienzo());
+  el.addEventListener('pointerdown', empezarTrazo);
+  el.addEventListener('pointermove', continuarTrazo);
+  el.addEventListener('pointerup', terminarTrazo);
+  el.addEventListener('pointercancel', terminarTrazo);
 }
 
-function clearSignature() {
-  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-  state.signature = null;
+function entrarFirma() {
+  ajustarLienzo();
+  $('sigNameDisplay').textContent = $('tecnico').value.trim() || '—';
+  $('sigDateDisplay').textContent = `${$('fechaVisita').value} ${$('horaVisita').value}`;
 }
 
-function isCanvasBlank() {
-  const pixels = sigCtx.getImageData(0, 0, sigCanvas.width, sigCanvas.height).data;
-  return !pixels.some(v => v !== 0);
+function ajustarLienzo() {
+  const { el, ctx } = lienzoFirma;
+  const caja = el.getBoundingClientRect();
+  if (!caja.width || !caja.height) return;            // fase oculta: se ajustará al mostrarse
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.round(caja.width * dpr), h = Math.round(caja.height * dpr);
+  if (el.width !== w || el.height !== h) {
+    el.width = w;
+    el.height = h;
+    lienzoFirma.trazo = null;      // si se gira a mitad de un trazo, el siguiente empieza en el marco nuevo
+  }
+  lienzoFirma.ancho = caja.width;
+  lienzoFirma.alto = caja.height;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  redibujarFirma();
 }
 
-function updateSigLabels() {
-  const name = document.getElementById('tecnico').value || '—';
-  const fecha = document.getElementById('fechaVisita').value;
-  const hora = document.getElementById('horaVisita').value;
-  document.getElementById('sigNameDisplay').textContent = name;
-  document.getElementById('sigDateDisplay').textContent = `${fecha} ${hora}`;
+function puntoDe(evento) {
+  const caja = lienzoFirma.el.getBoundingClientRect();
+  return [evento.clientX - caja.left, evento.clientY - caja.top];
+}
+
+function empezarTrazo(e) {
+  e.preventDefault();
+  if (!lienzoFirma.ancho) ajustarLienzo();
+  if (lienzoFirma.el.setPointerCapture) lienzoFirma.el.setPointerCapture(e.pointerId);
+  lienzoFirma.trazo = { refW: lienzoFirma.ancho, refH: lienzoFirma.alto, puntos: [puntoDe(e)] };
+  state.firma.push(lienzoFirma.trazo);
+  redibujarFirma();
+}
+
+function continuarTrazo(e) {
+  const trazo = lienzoFirma.trazo;
+  if (!trazo) return;
+  e.preventDefault();
+  const eventos = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
+  const { ctx } = lienzoFirma;
+  estiloTrazo(ctx, GROSOR_FIRMA);
+  ctx.beginPath();
+  ctx.moveTo(...trazo.puntos[trazo.puntos.length - 1]);
+  for (const ev of eventos) {
+    const p = puntoDe(ev);
+    trazo.puntos.push(p);
+    ctx.lineTo(...p);
+  }
+  ctx.stroke();
+}
+
+function terminarTrazo() { lienzoFirma.trazo = null; }
+
+function borrarFirma() {
+  state.firma = [];
+  lienzoFirma.trazo = null;
+  redibujarFirma();
+}
+
+function validarFirma() {
+  const puntos = state.firma.reduce((n, t) => n + t.puntos.length, 0);
+  return puntos >= 5 || aviso('✍️', 'Firma requerida', 'Por favor, firma en el recuadro para continuar.');
+}
+
+function estiloTrazo(ctx, grosor) {
+  ctx.strokeStyle = '#1A1A1A';
+  ctx.lineWidth = grosor;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+}
+
+// Trazos escalados (sin deformar) a un marco de ancho × alto.
+function trazosEnMarco(ancho, alto) {
+  return state.firma.filter(t => t.puntos.length).map(t => {
+    const k = Math.min(ancho / t.refW, alto / t.refH);
+    return t.puntos.map(([x, y]) => [x * k, y * k]);
+  });
+}
+
+function dibujarTrazos(ctx, trazos, k = 1, dx = 0, dy = 0) {
+  for (const puntos of trazos) {
+    ctx.beginPath();
+    ctx.moveTo(dx + puntos[0][0] * k, dy + puntos[0][1] * k);
+    if (puntos.length === 1) ctx.lineTo(dx + puntos[0][0] * k + 0.1, dy + puntos[0][1] * k);
+    for (const [x, y] of puntos.slice(1)) ctx.lineTo(dx + x * k, dy + y * k);
+    ctx.stroke();
+  }
+}
+
+function redibujarFirma() {
+  const { ctx, ancho, alto } = lienzoFirma;
+  if (!ctx || !ancho) return;
+  ctx.clearRect(0, 0, ancho, alto);
+  estiloTrazo(ctx, GROSOR_FIRMA);
+  dibujarTrazos(ctx, trazosEnMarco(ancho, alto));
+}
+
+// Imagen JPEG de la firma, recortada a su contenido, en proporción 2,5 : 1 (recuadro de 70 × 28 mm del PDF).
+function firmaComoImagen() {
+  const base = state.firma.find(t => t.puntos.length);
+  if (!base) return null;
+  const trazos = trazosEnMarco(base.refW, base.refH);
+  const xs = trazos.flat().map(p => p[0]), ys = trazos.flat().map(p => p[1]);
+  const margen = 8;
+  const x0 = Math.min(...xs) - margen, y0 = Math.min(...ys) - margen;
+  const ancho = Math.max(...xs) + margen - x0, alto = Math.max(...ys) + margen - y0;
+  const W = 750, H = 300;
+  const k = Math.min(W / ancho, H / alto, 3);
+  const lienzo = document.createElement('canvas');
+  lienzo.width = W;
+  lienzo.height = H;
+  const ctx = lienzo.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, W, H);
+  estiloTrazo(ctx, Math.max(2, GROSOR_FIRMA * k));
+  dibujarTrazos(ctx, trazos, k, (W - ancho * k) / 2 - x0 * k, (H - alto * k) / 2 - y0 * k);
+  return lienzo.toDataURL('image/jpeg', 0.92);
 }
 
 // ═══════════════════════════════════
-//  REVISIÓN
+//  FASE 5 · REVISIÓN (se construye al entrar)
 // ═══════════════════════════════════
-function buildReviewPhase() {
-  const d = collectData();
+function construirRevision() {
+  const d = recogerDatos();
+  const campo = (etiqueta, valor) => `
+    <div class="review-field">
+      <div class="review-field-label">${esc(etiqueta)}</div>
+      <div class="review-field-val">${esc(valor)}</div>
+    </div>`;
+  $('reviewGeneral').innerHTML = [
+    campo('Nº de Acta', d.actaNum),
+    campo('Técnico', d.tecnico),
+    campo('Expediente', d.expediente),
+    campo('Descripción', d.descripcion || '—'),
+    campo('Fecha', d.fecha),
+    campo('Hora', d.hora || '—'),
+    campo('Localización GPS', d.gps ? `${d.gps.lat}, ${d.gps.lng} (±${d.gps.acc} m)` : '—'),
+  ].join('');
 
-  // Datos generales
-  document.getElementById('reviewGeneral').innerHTML = `
-    ${reviewField('Nº de Acta', d.actaNum)}
-    ${reviewField('Técnico', d.tecnico)}
-    ${reviewField('Expediente', d.expediente)}
-    ${reviewField('Descripción', d.descripcion || '—')}
-    ${reviewField('Fecha', d.fecha)}
-    ${reviewField('Hora', d.hora || '—')}
-    ${reviewField('Localización GPS', d.gps ? `${d.gps.lat}, ${d.gps.lng} (±${d.gps.acc}m)` : '—')}
-  `;
-
-  // Fotos
-  document.getElementById('reviewPhotoCount').textContent = state.photos.length;
-  document.getElementById('reviewPhotos').innerHTML = state.photos.map((p, i) => `
+  $('reviewPhotoCount').textContent = state.fotos.length;
+  $('reviewPhotos').innerHTML = state.fotos.map((f, i) => `
     <div class="review-photo-row">
-      <img class="review-photo-thumb" src="${p.dataUrl}" alt="Foto ${i+1}">
+      <img class="review-photo-thumb" src="${f.dataUrl}" alt="Foto ${i + 1}">
       <div>
-        <div class="review-photo-num">FOTO ${i+1}</div>
-        <div class="review-photo-comment">${p.comment || '(Sin comentario)'}</div>
+        <div class="review-photo-num">FOTO ${i + 1}</div>
+        <div class="review-photo-comment">${esc(f.comentario.trim()) || '(Sin comentario)'}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 
-  // Firma
-  document.getElementById('reviewFirma').innerHTML = state.signature
+  const imagenFirma = firmaComoImagen();
+  $('reviewFirma').innerHTML = imagenFirma
     ? `<div style="display:flex;align-items:center;gap:12px;">
-        <img class="sig-preview-small" src="${state.signature}" alt="Firma">
-        <div style="font-size:12px;color:var(--gris);">Firmado por <strong>${d.tecnico}</strong><br>${d.fecha} ${d.hora}</div>
+        <img class="sig-preview-small" src="${imagenFirma}" alt="Firma">
+        <div style="font-size:12px;color:var(--gris);">Firmado por <strong>${esc(d.tecnico)}</strong><br>${esc(d.fecha)} ${esc(d.hora)}</div>
        </div>`
     : `<div class="badge-err" style="padding:8px 12px;border-radius:8px;font-size:12px;">Sin firma</div>`;
 }
 
-function reviewField(label, val) {
-  return `<div class="review-field">
-    <div class="review-field-label">${label}</div>
-    <div class="review-field-val">${val}</div>
-  </div>`;
-}
-
 // ═══════════════════════════════════
-//  EMISIÓN
+//  FASE 6 · EMISIÓN
 // ═══════════════════════════════════
-function buildEmissionPhase() {
-  const d = collectData();
-  document.getElementById('emitActaTitle').textContent = `Acta ${d.actaNum}`;
-  document.getElementById('emitActaSub').innerHTML =
-    `<strong>${d.tecnico}</strong> · ${d.expediente}<br>${d.fecha} · ${state.photos.length} foto(s)<br>
+function construirEmision() {
+  const d = recogerDatos();
+  $('emitActaTitle').textContent = `Acta ${d.actaNum}`;
+  $('emitActaSub').innerHTML =
+    `<strong>${esc(d.tecnico)}</strong> · ${esc(d.expediente)}<br>${esc(d.fecha)} · ${state.fotos.length} foto(s)<br>
     <span style="color:var(--verde);font-weight:700;">✅ Lista para emitir</span>`;
 }
 
-// ═══════════════════════════════════
-//  COLLECT DATA
-// ═══════════════════════════════════
-function collectData() {
+function recogerDatos() {
+  const valor = id => $(id).value.trim();
   return {
-    actaNum: document.getElementById('actaNum').value.trim(),
-    tecnico: document.getElementById('tecnico').value.trim(),
-    expediente: document.getElementById('expediente').value.trim(),
-    descripcion: document.getElementById('descripcion').value.trim(),
-    fecha: document.getElementById('fechaVisita').value,
-    hora: document.getElementById('horaVisita').value,
-    gps: state.gpsData,
+    actaNum: valor('actaNum'),
+    tecnico: valor('tecnico'),
+    expediente: valor('expediente'),
+    descripcion: valor('descripcion'),
+    fecha: $('fechaVisita').value,
+    hora: $('horaVisita').value,
+    gps: state.gps,
   };
 }
 
 // ═══════════════════════════════════
-//  PDF GENERATION
+//  PDF
 // ═══════════════════════════════════
-async function generatePDF() {
-  document.getElementById('loadingOverlay').classList.add('open');
-  const d = collectData();
+const PDF = {
+  W: 210, H: 297, M: 15,          // A4 vertical y margen (mm)
+  LIMITE: 297 - 12 - 4,           // límite inferior del contenido: pie de 12 mm y 4 mm de aire
+  ROJO: [204, 34, 34], NEGRO: [26, 26, 26], GRIS: [107, 107, 107], BLANCO: [255, 255, 255],
+};
+const INTERLINEADO = 1.2;
+const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de texto
+// La fuente del PDF no tiene emojis: se retiran para que no salgan como cajas.
+const textoPDF = t => String(t ?? '').replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').trim();
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const W = 210, H = 297;
-    const margin = 15;
-    let y = margin;
+function crearPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+  pdf.setLineHeightFactor(INTERLINEADO);
+  const fuente = pdf.getFontList().ActaSans ? 'ActaSans' : 'helvetica';
+  const { W, H, M, LIMITE } = PDF;
+  const d = recogerDatos();
+  let y = M;
 
-    // ── Header bar ──
-    pdf.setFillColor(26, 26, 26);
-    pdf.rect(0, 0, W, 28, 'F');
-    pdf.setFillColor(204, 34, 34);
-    pdf.rect(0, 28, W, 4, 'F');
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(14);
-    pdf.setTextColor(204, 34, 34);
-    pdf.text('TEAMBIMCIVIL', margin, 13);
-    pdf.setFontSize(8);
-    pdf.setTextColor(200, 200, 200);
-    pdf.text('ENGINEERING, TRAINING & CONSULTANCY', margin, 20);
-
-    pdf.setFontSize(10);
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    const actaTxt = `ACTA ${d.actaNum}`;
-    pdf.text(actaTxt, W - margin, 18, { align: 'right' });
-
-    y = 42;
-
-    // ── Title ──
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16);
-    pdf.setTextColor(26, 26, 26);
-    pdf.text('ACTA DE VISITA DE CAMPO', margin, y);
-    y += 8;
-
-    // ── Info table ──
-    const fields = [
-      ['Nº de Acta', d.actaNum],
-      ['Técnico', d.tecnico],
-      ['Expediente', d.expediente],
-      ['Descripción', d.descripcion || '—'],
-      ['Fecha', d.fecha],
-      ['Hora', d.hora || '—'],
-      ['Localización GPS', d.gps ? `Lat: ${d.gps.lat}  |  Lng: ${d.gps.lng}  |  Prec: ±${d.gps.acc}m` : '—'],
-    ];
-
-    pdf.setDrawColor(232, 232, 232);
-    fields.forEach(([label, val], i) => {
-      if (i % 2 === 0) { pdf.setFillColor(250, 250, 250); pdf.rect(margin, y - 4, W - margin*2, 8, 'F'); }
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.setTextColor(107, 107, 107);
-      pdf.text(label.toUpperCase(), margin + 2, y + 1);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.setTextColor(26, 26, 26);
-      pdf.text(String(val), margin + 50, y + 1);
-      y += 8;
-    });
-    y += 6;
-
-    // ── Photos ──
-    if (state.photos.length > 0) {
-      // Section heading
-      pdf.setFillColor(204, 34, 34);
-      pdf.rect(margin, y, W - margin*2, 7, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(`FOTOGRAFÍAS DE CAMPO (${state.photos.length})`, margin + 3, y + 5);
-      y += 12;
-
-      const imgW = (W - margin*2 - 6) / 2;
-      const imgH = imgW * 0.72;
-
-      for (let i = 0; i < state.photos.length; i++) {
-        const col = i % 2;
-        const x = margin + col * (imgW + 6);
-
-        if (y + imgH + 16 > H - margin) {
-          pdf.addPage();
-          y = margin;
-        }
-
-        try {
-          pdf.addImage(state.photos[i].dataUrl, 'JPEG', x, y, imgW, imgH);
-          // border
-          pdf.setDrawColor(200, 200, 200);
-          pdf.setLineWidth(0.3);
-          pdf.rect(x, y, imgW, imgH);
-          // photo number badge
-          pdf.setFillColor(204, 34, 34);
-          pdf.roundedRect(x + 2, y + 2, 14, 6, 1, 1, 'F');
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(7);
-          pdf.setTextColor(255, 255, 255);
-          pdf.text(`Foto ${i+1}`, x + 9, y + 6.5, { align: 'center' });
-          // comment
-          pdf.setFont('helvetica', 'italic');
-          pdf.setFontSize(7.5);
-          pdf.setTextColor(60, 60, 60);
-          const comment = state.photos[i].comment || '(Sin comentario)';
-          const lines = pdf.splitTextToSize(comment, imgW);
-          pdf.text(lines.slice(0, 2), x, y + imgH + 5);
-        } catch(e) { /* skip broken image */ }
-
-        if (col === 1 || i === state.photos.length - 1) {
-          y += imgH + 16;
-        }
-      }
-    }
-
-    y += 8;
-    if (y + 40 > H - margin) { pdf.addPage(); y = margin; }
-
-    // ── Signature section ──
-    pdf.setFillColor(204, 34, 34);
-    pdf.rect(margin, y, W - margin*2, 7, 'F');
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text('FIRMA DEL TÉCNICO', margin + 3, y + 5);
+  const letra = (estilo, pt, color) => { pdf.setFont(fuente, estilo); pdf.setFontSize(pt); pdf.setTextColor(...color); };
+  const asegurar = alto => { if (y + alto > LIMITE) { pdf.addPage(); y = M; } };
+  const banda = (titulo, altoSiguiente) => {      // título de sección; no se deja huérfano al pie
+    asegurar(12 + altoSiguiente);
+    pdf.setFillColor(...PDF.ROJO);
+    pdf.rect(M, y, W - 2 * M, 7, 'F');
+    letra('bold', 9, PDF.BLANCO);
+    pdf.text(titulo, M + 3, y + 5);
     y += 12;
+  };
 
-    if (state.signature) {
-      const sigW = 70, sigH = 28;
-      pdf.setDrawColor(200, 200, 200);
-      pdf.rect(margin, y, sigW, sigH);
-      pdf.addImage(state.signature, 'PNG', margin, y, sigW, sigH);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(107, 107, 107);
-      pdf.text(d.tecnico, margin, y + sigH + 5);
-      pdf.text(`${d.fecha} ${d.hora}`, margin, y + sigH + 10);
+  // ── Cabecera ──
+  pdf.setFillColor(...PDF.NEGRO);
+  pdf.rect(0, 0, W, 28, 'F');
+  pdf.setFillColor(...PDF.ROJO);
+  pdf.rect(0, 28, W, 4, 'F');
+  letra('bold', 14, PDF.ROJO);
+  pdf.text('TEAMBIMCIVIL', M, 13);
+  letra('bold', 8, [200, 200, 200]);
+  pdf.text('ENGINEERING, TRAINING & CONSULTANCY', M, 20);
+  letra('bold', 10, PDF.BLANCO);
+  pdf.text(textoPDF(`ACTA ${d.actaNum}`), W - M, 18, { align: 'right' });
+
+  // ── Título ──
+  y = 42;
+  letra('bold', 16, PDF.NEGRO);
+  pdf.text('ACTA DE VISITA DE CAMPO', M, y);
+  y += 8;
+
+  // ── Datos generales (los valores largos saltan de línea) ──
+  const filas = [
+    ['Nº de Acta', d.actaNum],
+    ['Técnico', d.tecnico],
+    ['Expediente', d.expediente],
+    ['Descripción', d.descripcion || '—'],
+    ['Fecha', d.fecha],
+    ['Hora', d.hora || '—'],
+    ['Localización GPS', d.gps ? `Lat: ${d.gps.lat}  |  Lng: ${d.gps.lng}  |  Prec: ±${d.gps.acc} m` : '—'],
+  ];
+  const xValor = M + 50, anchoValor = W - M - xValor - 2;
+  filas.forEach(([etiqueta, valor], i) => {
+    letra('normal', 9, PDF.NEGRO);
+    const lineas = pdf.splitTextToSize(textoPDF(valor) || '—', anchoValor);
+    const alto = 8 + (lineas.length - 1) * altoLinea(9);
+    asegurar(alto);
+    if (i % 2 === 0) { pdf.setFillColor(250, 250, 250); pdf.rect(M, y - 4, W - 2 * M, alto, 'F'); }
+    letra('bold', 8, PDF.GRIS);
+    pdf.text(etiqueta.toUpperCase(), M + 2, y + 1);
+    letra('normal', 9, PDF.NEGRO);
+    pdf.text(lineas, xValor, y + 1);
+    y += alto;
+  });
+  y += 6;
+
+  // ── Fotografías: 2 por fila, cada una encajada en su caja 4:3 sin deformar y con su comentario completo ──
+  if (state.fotos.length) {
+    const hueco = 6;
+    const anchoCelda = (W - 2 * M - hueco) / 2;
+    const altoCaja = anchoCelda * 0.75;
+    const ptPie = 7.5;
+    letra('italic', ptPie, [60, 60, 60]);
+    const filasFotos = [];
+    for (let i = 0; i < state.fotos.length; i += 2) {
+      const celdas = state.fotos.slice(i, i + 2).map((foto, j) => ({
+        foto, numero: i + j + 1,
+        pie: pdf.splitTextToSize(textoPDF(foto.comentario) || '(Sin comentario)', anchoCelda),
+      }));
+      const lineasPie = Math.max(...celdas.map(c => c.pie.length));
+      filasFotos.push({ celdas, alto: altoCaja + 5 + (lineasPie - 1) * altoLinea(ptPie) + 9 });
     }
 
-    // ── Footer ──
-    const pageCount = pdf.getNumberOfPages();
-    for (let p = 1; p <= pageCount; p++) {
-      pdf.setPage(p);
-      pdf.setFillColor(26, 26, 26);
-      pdf.rect(0, H - 12, W, 12, 'F');
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text('TeamBIMCivil · Engineering, Training & Consultancy', margin, H - 5);
-      pdf.text(`Pág. ${p} / ${pageCount}`, W - margin, H - 5, { align: 'right' });
-      pdf.setTextColor(204, 34, 34);
-      pdf.text(`Acta ${d.actaNum}`, W/2, H - 5, { align: 'center' });
+    banda(`FOTOGRAFÍAS DE CAMPO (${state.fotos.length})`, filasFotos[0].alto);
+    for (const fila of filasFotos) {
+      asegurar(fila.alto);
+      fila.celdas.forEach(({ foto, numero, pie }, j) => {
+        const x = M + j * (anchoCelda + hueco);
+        const k = Math.min(anchoCelda / foto.ancho, altoCaja / foto.alto);
+        const wi = foto.ancho * k, hi = foto.alto * k;
+        const xi = x + (anchoCelda - wi) / 2, yi = y + (altoCaja - hi) / 2;
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(x, y, anchoCelda, altoCaja, 'F');
+        pdf.addImage(foto.dataUrl, 'JPEG', xi, yi, wi, hi);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.3);
+        pdf.rect(x, y, anchoCelda, altoCaja);
+        pdf.setFillColor(...PDF.ROJO);
+        pdf.roundedRect(xi + 2, yi + 2, 14, 6, 1, 1, 'F');
+        letra('bold', 7, PDF.BLANCO);
+        pdf.text(`Foto ${numero}`, xi + 9, yi + 6.5, { align: 'center' });
+        letra('italic', ptPie, [60, 60, 60]);
+        pdf.text(pie, x, y + altoCaja + 5);
+      });
+      y += fila.alto;
     }
+  }
 
-    document.getElementById('loadingOverlay').classList.remove('open');
-    const filename = `Acta_${d.actaNum.replace(/[^a-zA-Z0-9-]/g,'_')}_${d.fecha}.pdf`;
-    pdf.save(filename);
+  // ── Firma ──
+  y += 2;
+  banda('FIRMA DEL TÉCNICO', 28 + 12);
+  const imagenFirma = firmaComoImagen();
+  if (imagenFirma) {
+    const anchoFirma = 70, altoFirma = 28;
+    pdf.addImage(imagenFirma, 'JPEG', M, y, anchoFirma, altoFirma);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.rect(M, y, anchoFirma, altoFirma);
+    letra('normal', 8, PDF.GRIS);
+    pdf.text(textoPDF(d.tecnico), M, y + altoFirma + 5);
+    pdf.text(`${d.fecha} ${d.hora}`, M, y + altoFirma + 10);
+  }
 
-  } catch(err) {
-    document.getElementById('loadingOverlay').classList.remove('open');
-    showAlert('❌', 'Error al generar PDF', err.message || 'Inténtalo de nuevo.');
+  // ── Pie en todas las páginas ──
+  const paginas = pdf.getNumberOfPages();
+  for (let p = 1; p <= paginas; p++) {
+    pdf.setPage(p);
+    pdf.setFillColor(...PDF.NEGRO);
+    pdf.rect(0, H - 12, W, 12, 'F');
+    letra('normal', 7, [150, 150, 150]);
+    pdf.text('TeamBIMCivil · Engineering, Training & Consultancy', M, H - 5);
+    pdf.text(`Pág. ${p} / ${paginas}`, W - M, H - 5, { align: 'right' });
+    pdf.setTextColor(...PDF.ROJO);
+    pdf.text(textoPDF(`Acta ${d.actaNum}`), W / 2, H - 5, { align: 'center' });
+  }
+
+  const nombre = `Acta_${d.actaNum.replace(/[^a-zA-Z0-9-]/g, '_')}_${d.fecha}.pdf`;
+  return { pdf, nombre };
+}
+
+async function descargarPDF() {
+  const capa = $('loadingOverlay');
+  capa.classList.add('open');
+  await esperar(60);                 // deja que se pinte el aviso «Generando…»
+  try {
+    const { pdf, nombre } = crearPDF();
+    pdf.save(nombre);
+    return true;
+  } catch (err) {
+    aviso('❌', 'Error al generar PDF', err.message || 'Inténtalo de nuevo.');
+    return false;
+  } finally {
+    capa.classList.remove('open');
   }
 }
 
 // ═══════════════════════════════════
-//  WHATSAPP
+//  WHATSAPP (igual que la v1; se mejorará en el bloque D)
 // ═══════════════════════════════════
-async function sendWhatsApp() {
-  await generatePDF();
+async function enviarWhatsApp() {
+  if (!(await descargarPDF())) return;
   setTimeout(() => {
-    const d = collectData();
+    const d = recogerDatos();
     const msg = encodeURIComponent(`Hola, adjunto el Acta de Visita de Campo:\n\n📋 Acta: ${d.actaNum}\n👷 Técnico: ${d.tecnico}\n📁 Expediente: ${d.expediente}\n📅 Fecha: ${d.fecha}\n📍 GPS: ${d.gps ? `${d.gps.lat}, ${d.gps.lng}` : 'N/D'}\n\n[Adjunta el PDF descargado]`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }, 800);
 }
 
 // ═══════════════════════════════════
-//  ALERT
+//  NUEVA ACTA
 // ═══════════════════════════════════
-function showAlert(icon, title, msg) {
-  document.getElementById('alertIcon').textContent = icon;
-  document.getElementById('alertTitle').textContent = title;
-  document.getElementById('alertMsg').textContent = msg;
-  document.getElementById('alertOverlay').classList.add('open');
-}
-function closeAlert() { document.getElementById('alertOverlay').classList.remove('open'); }
-
-// ═══════════════════════════════════
-//  RESET
-// ═══════════════════════════════════
-function resetApp() {
+function nuevaActa() {
   if (!confirm('¿Seguro que quieres iniciar una nueva acta? Se perderán todos los datos actuales.')) return;
-  state.currentPhase = 1;
-  state.gpsData = null;
-  state.photos = [];
-  state.signature = null;
-  document.getElementById('actaNum').value = '';
-  document.getElementById('tecnico').value = '';
-  document.getElementById('expediente').value = '';
-  document.getElementById('descripcion').value = '';
-  document.getElementById('gpsStatus').className = 'gps-status';
-  document.getElementById('headerActaNum').textContent = 'Nueva Acta';
-  renderPhotosGrid();
-  clearSignature();
-  const today = new Date();
-  document.getElementById('fechaVisita').value = today.toISOString().split('T')[0];
-  document.querySelectorAll('.phase-container').forEach(p => p.classList.remove('active'));
-  document.getElementById('phase1').classList.add('active');
-  document.getElementById('btnNext').style.display = 'flex';
-  updateStepper();
-  updateNavButtons();
-  window.scrollTo(0, 0);
+  state.gps = null;
+  state.fotos = [];
+  state.firma = [];
+  lienzoFirma.trazo = null;
+  ['actaNum', 'tecnico', 'expediente', 'descripcion'].forEach(id => { $(id).value = ''; });
+  ponerFechaHoraActual();
+  $('gpsStatus').className = 'gps-status';
+  $('gpsStatus').textContent = '';
+  actualizarNumActa();
+  pintarFotos();
+  irAFase(1);
 }
-
-// ═══════════════════════════════════
-//  INTERCEPT goNext for phase 3
-// ═══════════════════════════════════
-const _origGoNext = goNext;
-window.goNext = function() {
-  if (state.currentPhase === 2) {
-    if (!validatePhase(2)) return;
-    setPhase(3);
-    buildCommentsPhase();
-    return;
-  }
-  if (state.currentPhase === 3) {
-    setPhase(4);
-    updateSigLabels();
-    return;
-  }
-  if (state.currentPhase === 5) {
-    buildReviewPhase();
-    setPhase(6);
-    buildEmissionPhase();
-    return;
-  }
-  _origGoNext();
-};
 </script>
 </body>
 </html>
