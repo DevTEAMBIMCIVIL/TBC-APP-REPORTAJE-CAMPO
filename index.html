@@ -1446,6 +1446,14 @@
 
   <div class="emit-nota" id="emitNota"></div>
 
+  <div class="copia-card aviso hidden" id="emitCopia">
+    <div class="copia-titulo">💾 Copia de seguridad de hoy</div>
+    <div class="copia-estado" id="emitCopiaEstado"></div>
+    <div class="acta-card-actions">
+      <button id="btnCopiaEmision" onclick="hacerCopiaSeguridad()">💾 Hacer copia ahora</button>
+    </div>
+  </div>
+
   <div class="emit-extra">
     <button class="btn btn-dark hidden" id="btnCorregir" onclick="corregirActa(state.acta.id)">📝 Corregir (nueva revisión)</button>
     <button class="btn btn-secondary" onclick="nuevaActa()">🔄 Nueva Acta</button>
@@ -1485,10 +1493,10 @@
         <button id="btnRegistro" onclick="descargarRegistro()">📊 Descargar registro (.xlsx)</button>
       </div>
     </div>
-    <div class="panel-note">Las actas se guardan solo en este teléfono. Las emitidas son de solo lectura.</div>
+    <div class="panel-note" id="panelNota">Las actas se guardan solo en este navegador del teléfono. Las emitidas son de solo lectura.</div>
     <div id="listaActas"></div>
     <button class="btn btn-secondary panel-enlace" onclick="compartirApp()">🔗 Compartir el enlace de la app</button>
-    <input type="file" id="importInput" accept=".zip,application/zip,application/x-zip-compressed" class="hidden" onchange="importarActas(this)">
+    <input type="file" id="importInput" accept=".zip,.pdf,application/zip,application/x-zip-compressed,application/pdf" class="hidden" onchange="importarActas(this)">
   </div>
 </div>
 
@@ -1525,7 +1533,7 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE CAMPO · TEAMBIMCIVIL · v3.1.1
+//  ACTA DE CAMPO · TEAMBIMCIVIL · v3.1.2
 //  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
 //    Las actas emitidas (PDF compartido o descargado) son de solo lectura;
@@ -1540,7 +1548,7 @@
 //  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '3.1.1';
+const VERSION = '3.1.2';
 const NOMBRE_APP = 'Acta de Campo';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
 const EMPRESA = 'TEAMBIMCIVIL';
@@ -1572,8 +1580,9 @@ const GPS_ESPERA_MS = 60000;          // búsqueda máxima de señal
 const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fotos durante 2 min
 const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
 const CLAVE_ULTIMA_COPIA = 'tbc-ultima-copia';
+const CLAVE_CONTENIDO_COPIA = 'tbc-contenido-copia';   // versión («modificada») de cada acta en la última copia
 const CLAVE_ULTIMO_TECNICO = 'tbc-ultimo-tecnico';   // técnico y cargo que se proponen en un acta nueva
-const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios
+const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios (con actas emitidas sin copia, el mismo día)
 const ESQUEMA = 4;                    // versión del registro del acta en el teléfono
 const FORMATO_EXPORTACION = 'tbc-acta';   // identifica los acta.json exportados por la app
 const VERSION_EXPORTACION = 1;
@@ -1598,6 +1607,9 @@ const state = {
   fase: 1,
   acta: null,            // registro del acta en pantalla (se guarda tal cual en el teléfono)
   persistida: false,     // false = acta nueva sin cambios: aún no se guarda
+  pendiente: false,      // hay cambios sin guardar: solo entonces se guarda (una ventana atrasada no pisa a otra)
+  base: null,            // «modificada» del acta guardada cuando esta ventana la abrió o la guardó (null: acta nueva)
+  fotosQuitadas: new Set(),   // fotos quitadas del acta: su imagen se borra del teléfono al guardar el acta sin ellas
   fotosEnProceso: 0,
   blobs: new Map(),      // id de foto → Blob JPEG
   urls: new Map(),       // id de foto → URL para mostrarla
@@ -1726,6 +1738,75 @@ const Almacen = (() => {
   }
   return {
     guardarActa: acta => operar('actas', 'readwrite', s => s.put(acta)),
+    // Guarda el acta en pantalla solo si la del teléfono sigue siendo la que abrió esta ventana (base = su
+    // «modificada»; null si es nueva). Si otra ventana la ha cambiado, emitido o borrado, no la pisa y devuelve el
+    // conflicto con la versión actual. Una emitida no se pisa nunca. Al emitir, la emitida gana a un borrador cambiado
+    // o borrado en otra ventana: es la del PDF que se acaba de distribuir (sus fotos, con restaurarFotos). Las
+    // imágenes de las fotos quitadas se borran a la vez, solo si se guarda el acta.
+    async guardarActaSiNoCambio(acta, base, { emision = false, quitadas = [] } = {}) {
+      const bdActas = await bd();
+      return new Promise((resolver, rechazar) => {
+        const tx = bdActas.transaction(['actas', 'fotos'], 'readwrite');
+        const almacen = tx.objectStore('actas'), almacenFotos = tx.objectStore('fotos');
+        let resultado = { conflicto: null, actual: null };
+        const lectura = almacen.get(acta.id);
+        lectura.onsuccess = () => {
+          const actual = lectura.result || null;
+          let conflicto = null;
+          if (actual && actual.estado === 'emitida') conflicto = 'emitida';
+          else if (!emision && !actual && base !== null) conflicto = 'borrada';
+          else if (!emision && actual && (actual.modificada ?? null) !== base) conflicto = 'cambiada';
+          if (conflicto) {
+            resultado = { conflicto, actual: actual && migrarActa(actual) };
+            return;
+          }
+          // Siempre una versión nueva (al emitir sobre un borrador más reciente de otra ventana, posterior a la suya)
+          if (actual && !(String(acta.modificada) > String(actual.modificada))) acta.modificada = nuevaMarca(actual.modificada);
+          almacen.put(acta);
+          for (const id of quitadas) almacenFotos.delete(id);
+        };
+        tx.oncomplete = () => resolver(resultado);
+        tx.onerror = tx.onabort = () => rechazar(tx.error);
+      });
+    },
+    // Vuelve a guardar las imágenes que le falten a un acta recién emitida (otra ventana la había borrado o le había
+    // quitado fotos) desde las que tiene esta ventana. Cada una por separado: si una no cabe, el acta ya está guardada
+    // y las demás se guardan igual. Devuelve cuántas no se han podido guardar.
+    async restaurarFotos(acta, imagenes) {
+      let guardadas;
+      try {
+        guardadas = new Set(await operar('fotos', 'readonly', s => s.index('porActa').getAllKeys(IDBKeyRange.only(acta.id))));
+      } catch (e) { return 0; }
+      let fallidas = 0;
+      for (const f of acta.fotos) {
+        if (guardadas.has(f.id) || !imagenes.has(f.id)) continue;
+        try {
+          await operar('fotos', 'readwrite', s => s.put({ id: f.id, actaId: acta.id, blob: imagenes.get(f.id) }));
+        } catch (e) { fallidas++; }
+      }
+      return fallidas;
+    },
+    // Marca como sustituida por la revisión `revision` el acta `id`, leyéndola y guardándola en una sola operación
+    // (sin pisar lo que haya cambiado otra ventana). Devuelve true si la ha marcado.
+    async marcarSustituida(id, revision) {
+      const bdActas = await bd();
+      return new Promise((resolver, rechazar) => {
+        const tx = bdActas.transaction('actas', 'readwrite');
+        const almacen = tx.objectStore('actas');
+        let marcada = false;
+        const lectura = almacen.get(id);
+        lectura.onsuccess = () => {
+          const anterior = lectura.result;
+          if (!anterior || (anterior.sustituidaPor && anterior.sustituidaRev >= revision.revision)) return;
+          anterior.sustituidaPor = revision.id;
+          anterior.sustituidaRev = revision.revision;
+          almacen.put(anterior);
+          marcada = true;
+        };
+        tx.oncomplete = () => resolver(marcada);
+        tx.onerror = tx.onabort = () => rechazar(tx.error);
+      });
+    },
     leerActa: async id => migrarActa(await operar('actas', 'readonly', s => s.get(id))),
     listarActas: async () => (await operar('actas', 'readonly', s => s.getAll())).map(migrarActa),
     guardarFoto: (id, actaId, blob) => operar('fotos', 'readwrite', s => s.put({ id, actaId, blob })),
@@ -1745,20 +1826,28 @@ const Almacen = (() => {
         tx.onerror = tx.onabort = () => rechazar(tx.error);
       });
     },
-    // Guarda un acta importada con sus fotos en una sola operación (o todo o nada),
-    // sustituyendo las fotos que tuviera esa acta en el teléfono.
+    // Guarda un acta importada con sus fotos en una sola operación (o todo o nada), sustituyendo las fotos que
+    // tuviera esa acta en el teléfono. La decisión se repite con la versión del teléfono en ese momento (otra
+    // ventana puede haberla cambiado o emitido durante la importación): devuelve 'nueva', 'actualizar' (guardada),
+    // 'igual' o 'conservar' (no se toca).
     async reemplazarActa(acta, fotos) {
       const base = await bd();
       return new Promise((resolver, rechazar) => {
         const tx = base.transaction(['actas', 'fotos'], 'readwrite');
-        const almacenFotos = tx.objectStore('fotos');
-        almacenFotos.index('porActa').openKeyCursor(IDBKeyRange.only(acta.id)).onsuccess = e => {
-          const cursor = e.target.result;
-          if (cursor) { almacenFotos.delete(cursor.primaryKey); cursor.continue(); return; }
-          for (const f of fotos) almacenFotos.put({ id: f.id, actaId: acta.id, blob: f.blob });
+        const almacenActas = tx.objectStore('actas'), almacenFotos = tx.objectStore('fotos');
+        let decision = null;
+        const lectura = almacenActas.get(acta.id);
+        lectura.onsuccess = () => {
+          decision = decidirImportacion(lectura.result ? migrarActa(lectura.result) : null, acta);
+          if (decision === 'igual' || decision === 'conservar') return;
+          almacenFotos.index('porActa').openKeyCursor(IDBKeyRange.only(acta.id)).onsuccess = e => {
+            const cursor = e.target.result;
+            if (cursor) { almacenFotos.delete(cursor.primaryKey); cursor.continue(); return; }
+            for (const f of fotos) almacenFotos.put({ id: f.id, actaId: acta.id, blob: f.blob });
+          };
+          almacenActas.put(acta);
         };
-        tx.objectStore('actas').put(acta);
-        tx.oncomplete = () => resolver();
+        tx.oncomplete = () => resolver(decision);
         tx.onerror = tx.onabort = () => rechazar(tx.error);
       });
     },
@@ -1832,30 +1921,172 @@ function migrarActa(acta) {
 // ═══════════════════════════════════
 let temporizadorGuardado = null;
 let persistenciaPedida = false;
+let colaGuardado = Promise.resolve();   // los guardados de esta ventana, de uno en uno
+
+// Nueva «modificada» de un acta: la hora actual, siempre posterior a la anterior (aunque sea en el mismo milisegundo
+// o el reloj del teléfono haya retrocedido). Cada guardado cambia así la marca y las ventanas no confunden versiones.
+function nuevaMarca(anterior) {
+  const ahora = Date.now(), previa = Date.parse(anterior);
+  return new Date(previa >= ahora ? previa + 1 : ahora).toISOString();
+}
 
 function guardarPronto() {
   if (!state.acta || soloLectura()) return;
   state.persistida = true;
-  state.acta.modificada = new Date().toISOString();
+  state.pendiente = true;
+  state.acta.modificada = nuevaMarca(state.acta.modificada);
   indicarGuardado('pendiente');
   clearTimeout(temporizadorGuardado);
   temporizadorGuardado = setTimeout(guardarYa, 400);
 }
 
-async function guardarYa() {
+// Guarda los cambios pendientes del acta en pantalla (si no hay, no escribe nada: así una ventana que se ha quedado
+// atrás no pisa al ocultarse lo que otra ha guardado después). Los guardados van en cola para que cada uno parta del
+// anterior.
+function guardarYa() {
   clearTimeout(temporizadorGuardado);
-  if (!state.acta || !state.persistida) return;
+  const turno = colaGuardado.then(guardarAhora, guardarAhora);
+  colaGuardado = turno.catch(() => {});
+  return turno;
+}
+
+async function guardarAhora() {
+  if (!state.acta || !state.persistida || !state.pendiente) return;
+  // Se guarda una copia del momento: si se sigue escribiendo mientras se guarda, lo guardado es justo la versión
+  // «marca» (la base de la siguiente) y lo nuevo queda pendiente.
+  const acta = state.acta;
+  const foto = typeof structuredClone === 'function' ? structuredClone(acta) : JSON.parse(JSON.stringify(acta));
+  const marca = foto.modificada, emision = foto.estado === 'emitida', quitadas = [...state.fotosQuitadas];
+  const imagenes = emision ? new Map(state.blobs) : null;
+  let r;
   try {
-    await Almacen.guardarActa(state.acta);
-    recordarActaActual(state.acta.id);
-    indicarGuardado(soloLectura() ? 'lectura' : 'ok');
-    if (!persistenciaPedida && navigator.storage && navigator.storage.persist) {
-      persistenciaPedida = true;
-      navigator.storage.persist().catch(() => {});   // pide al navegador que no borre los datos
-    }
+    r = await Almacen.guardarActaSiNoCambio(foto, state.base, { emision, quitadas });
   } catch (e) {
     indicarGuardado('error');
+    return;
   }
+  if (r.conflicto) {
+    if (state.acta !== acta) return;
+    // Si se está emitiendo esta acta, la emisión gana a un borrador cambiado o borrado en otra ventana: no se recarga
+    // y la guarda emitirActa (queda pendiente). Si no llega a emitirse, se resuelve al terminar.
+    if (r.conflicto !== 'emitida' && (acta.estado === 'emitida' || emisionEnCurso === acta)) {
+      sincronizarAlEmitir = true;
+      return;
+    }
+    await resolverConflicto(r);
+    return;
+  }
+  quitadas.forEach(id => state.fotosQuitadas.delete(id));
+  const sinGuardar = emision ? await Almacen.restaurarFotos(foto, imagenes) : 0;
+  avisarVentanas({ tipo: 'guardada', id: acta.id });
+  if (sinGuardar) {
+    aviso('⚠️', 'Fotos sin guardar', `${sinGuardar} foto(s) del acta emitida no se han podido guardar en el teléfono (¿memoria llena?). `
+      + 'El PDF ya distribuido sí las lleva: guárdalo, porque al cerrar la app el acta se quedará sin ellas.');
+  }
+  if (state.acta !== acta) return;                       // mientras tanto se ha abierto otra acta
+  state.base = foto.modificada;                           // la guardada (al emitir puede ser posterior a «marca»)
+  if (acta.modificada === marca) {                        // si se ha seguido escribiendo, queda pendiente
+    state.pendiente = false;
+    acta.modificada = foto.modificada;
+  }
+  recordarActaActual(acta.id);
+  indicarGuardado(soloLectura() ? 'lectura' : 'ok');
+  if (!persistenciaPedida && navigator.storage && navigator.storage.persist) {
+    persistenciaPedida = true;
+    navigator.storage.persist().catch(() => {});   // pide al navegador que no borre los datos
+  }
+}
+
+// ═══════════════════════════════════
+//  VARIAS VENTANAS (v3.1.2)
+//  La app puede estar abierta a la vez en dos pestañas o en una pestaña y en el icono instalado, que comparten
+//  las actas del navegador. Cada ventana guarda solo sus cambios, nunca pisa una versión más nueva que la que
+//  abrió (Almacen.guardarActaSiNoCambio) y avisa a las demás al guardar o borrar; la que vuelve a primer plano
+//  comprueba si su acta ha cambiado. Además, la app advierte de que está abierta dos veces.
+// ═══════════════════════════════════
+const ID_VENTANA = nuevoId('ventana');
+const canalVentanas = typeof BroadcastChannel === 'function' ? new BroadcastChannel('tbc-actas') : null;
+let avisoVentanaPendiente = false, avisoVentanaMostrado = false;
+// Acta cuyo PDF se está compartiendo o descargando: mientras tanto no se recarga desde el teléfono, para que quede
+// emitida justo la del PDF distribuido. Lo que llegue entretanto se comprueba al terminar (sincronizarAlEmitir).
+let emisionEnCurso = null, sincronizarAlEmitir = false;
+let menuCompartir = false;   // el menú de compartir del teléfono está abierto
+
+// Si el menú de compartir no llega a cerrarse (un navegador que no responde), la primera pulsación en la app (salvo en
+// «Compartir PDF») lo da por cerrado: deja de esperar la emisión y vuelve a ponerse al día. Si el menú responde
+// después, el acta se emite solo si sigue en pantalla, en Emisión y sin cambios (si no, se avisa).
+function alTocarConMenuAbierto(e) {
+  if (!menuCompartir || !emisionEnCurso) return;
+  if (e && e.target && e.target.closest && e.target.closest('#btnCompartir')) return;   // otra pulsación en Compartir
+  terminarEmision(emisionEnCurso);
+}
+
+function avisarVentanas(mensaje) {
+  try { if (canalVentanas) canalVentanas.postMessage({ ...mensaje, ventana: ID_VENTANA }); } catch (e) { /* sin canal */ }
+}
+
+function iniciarVentanas() {
+  if (!canalVentanas) return;
+  canalVentanas.onmessage = e => alMensajeVentana(e.data);
+  avisarVentanas({ tipo: 'hola' });
+}
+
+function alMensajeVentana(m) {
+  if (!m || typeof m !== 'object' || m.ventana === ID_VENTANA) return;
+  if (m.tipo === 'hola') {
+    avisarVentanas({ tipo: 'aqui' });
+    avisarDobleVentana();
+  } else if (m.tipo === 'aqui') {
+    avisarDobleVentana();
+  } else if (m.tipo === 'guardada' || m.tipo === 'borrada') {
+    if (state.acta && m.id === state.acta.id) sincronizarActa();
+    if ($('panelActas').classList.contains('open')) abrirMisActas();
+    else actualizarAvisoCopia();
+  }
+}
+
+function avisarDobleVentana() {
+  if (avisoVentanaMostrado) return;
+  if (document.visibilityState !== 'visible') { avisoVentanaPendiente = true; return; }
+  avisoVentanaMostrado = true;
+  aviso('🪟', 'La app está abierta dos veces',
+    'Tienes la app abierta también en otra pestaña o ventana de este navegador (por ejemplo, el icono y Chrome). Usa solo una y cierra la otra, para no mezclar cambios.');
+}
+
+// Al volver a esta ventana o cuando otra avisa de un cambio: si el acta en pantalla ha cambiado en el teléfono y aquí
+// no hay nada pendiente, se abre la versión guardada. Con cambios pendientes decide guardarYa() (conflicto).
+async function sincronizarActa() {
+  if (!state.acta || !state.persistida) return;
+  if (emisionEnCurso) { sincronizarAlEmitir = true; return; }
+  if (state.pendiente) return guardarYa();
+  const acta = state.acta;
+  let actual;
+  try { actual = await Almacen.leerActa(acta.id); } catch (e) { return; }
+  if (emisionEnCurso) { sincronizarAlEmitir = true; return; }
+  if (state.acta !== acta || state.pendiente) return;
+  if (!actual) return resolverConflicto({ conflicto: 'borrada', actual: null });
+  if ((actual.modificada ?? null) === state.base && actual.sustituidaPor === acta.sustituidaPor) return;
+  const emitidaFuera = actual.estado === 'emitida' && acta.estado !== 'emitida';
+  await abrirActa(actual);
+  if (emitidaFuera) {
+    aviso('🔒', 'Acta emitida en otra ventana', `El acta ${actual.datos.actaNum || ''} se ha emitido en otra ventana de la app: se muestra la versión emitida.`);
+  }
+}
+
+// Otra ventana ha cambiado, emitido o borrado el acta en pantalla: no se pisa; se muestra lo que hay en el teléfono.
+async function resolverConflicto({ conflicto, actual }) {
+  state.pendiente = false;
+  if (conflicto === 'borrada' || !actual) {
+    await abrirActa(actaNueva(tecnicoRecordado()), { nueva: true });
+    return aviso('🗑️', 'Acta borrada en otra ventana', 'Esta acta se ha borrado en otra ventana de la app. Se abre un acta nueva.');
+  }
+  await abrirActa(actual);
+  if (conflicto === 'emitida') {
+    return aviso('🔒', 'Acta emitida en otra ventana',
+      `El acta ${actual.datos.actaNum || ''} ya se había emitido en otra ventana de la app: se muestra esa versión, que es la que vale. Lo que quedara sin guardar aquí no se ha guardado.`);
+  }
+  aviso('🔄', 'Acta cambiada en otra ventana',
+    'Otra ventana de la app ha guardado cambios en esta acta: se muestra su versión. Si estabas cambiando algo aquí, vuelve a hacerlo.');
 }
 
 function recordarActaActual(id) {
@@ -1894,13 +2125,76 @@ window.addEventListener('DOMContentLoaded', async () => {
   $('indicacionesLista').addEventListener('input', alEditarIndicacion);
   $('observaciones').addEventListener('input', alEscribirObservaciones);
   $('firmasAsistentes').addEventListener('change', alMarcarNoFirma);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') guardarYa(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') return guardarYa();
+    sincronizarActa();                        // al volver: ¿ha cambiado el acta en otra ventana?
+    if (avisoVentanaPendiente) { avisoVentanaPendiente = false; avisarDobleVentana(); }
+  });
   window.addEventListener('pagehide', () => { guardarYa(); });
+  document.addEventListener('pointerdown', alTocarConMenuAbierto, true);
+  document.addEventListener('keydown', alTocarConMenuAbierto, true);
+  iniciarVentanas();
+  avisarNavegador();
   registrarServiceWorker();
   prepararInstalacion();
   await cargarActaInicial();
   actualizarAvisoCopia();
 });
+
+// Navegadores que se reconocen por su agente de usuario.
+const NAVEGADORES = [
+  [/SamsungBrowser/, 'Samsung Internet'], [/EdgA|EdgiOS|Edg\//, 'Microsoft Edge'], [/OPR\/|OPiOS|Opera/, 'Opera'],
+  [/Firefox|FxiOS/, 'Firefox'], [/MiuiBrowser/, 'Mi Browser'], [/HuaweiBrowser/, 'Huawei Browser'],
+  [/YaBrowser/, 'Yandex'], [/DuckDuckGo/, 'DuckDuckGo'], [/Vivaldi/, 'Vivaldi'],
+];
+
+// Navegador en el que está abierta la app: cada navegador (y, en iPhone, Safari y el icono de la pantalla de inicio)
+// guarda sus propias actas, así que conviene abrirla siempre desde el mismo. `nombre`: «Chrome», «Samsung
+// Internet»…; null si no se reconoce.
+function navegadorActual() {
+  const ua = navigator.userAgent || '';
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const instalada = Boolean((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true);
+  const conocido = NAVEGADORES.find(([patron]) => patron.test(ua));
+  let nombre = null, chrome = false;
+  if (conocido) nombre = conocido[1];
+  else if (android && (/; wv\)/.test(ua) || /Version\/[\d.]+ Chrome\//.test(ua))) nombre = 'el navegador de otra app';
+  else if (/CriOS|Chrome\//.test(ua)) {
+    const marca = /CriOS/.test(ua) ? 'Google Chrome' : marcaChromium();
+    if (!marca || marca === 'Google Chrome') { nombre = 'Chrome'; chrome = true; }
+    else nombre = marca === 'Android WebView' ? 'el navegador de otra app' : marca;
+  } else if (/Safari\//.test(ua) && /Version\//.test(ua)) nombre = 'Safari';
+  return { nombre, chrome, ios, android, instalada };
+}
+
+// Marca que declara un navegador basado en Chromium, cuyo agente de usuario puede ser igual que el de Chrome: Chrome
+// declara «Google Chrome»; Brave, Edge, el visor de otra app… la suya. Null si no declara ninguna reconocible.
+function marcaChromium() {
+  try {
+    const marcas = ((navigator.userAgentData && navigator.userAgentData.brands) || []).map(m => String(m.brand).trim());
+    if (marcas.includes('Google Chrome')) return 'Google Chrome';
+    return marcas.find(m => !/^chromium$|not.?a.?brand/i.test(m)) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Aviso al abrir la app en Android con un navegador que no es Chrome (una vez por sesión) y, en iPhone, una vez.
+function avisarNavegador() {
+  const nav = navegadorActual();
+  const visto = (almacen, clave) => { try { return almacen.getItem(clave) === '1'; } catch (e) { return false; } };
+  const marcar = (almacen, clave) => { try { almacen.setItem(clave, '1'); } catch (e) { /* sin almacenamiento */ } };
+  if (nav.android && !nav.chrome && !visto(sessionStorage, 'tbc-aviso-navegador')) {
+    marcar(sessionStorage, 'tbc-aviso-navegador');
+    aviso('🌐', `Estás usando ${nav.nombre || 'un navegador distinto de Chrome'}`,
+      `Cada navegador guarda sus propias actas: las que hagas aquí no aparecerán en Chrome, ni las de Chrome aquí. Abre la app siempre desde Chrome o desde su icono instalado con Chrome.`);
+  } else if (nav.ios && !visto(localStorage, 'tbc-aviso-ios')) {
+    marcar(localStorage, 'tbc-aviso-ios');
+    aviso('📱', 'Ábrela siempre desde el mismo sitio',
+      'En el iPhone, Safari y el icono de la app en la pantalla de inicio guardan las actas por separado. Usa siempre el mismo: mejor el icono.');
+  }
+}
 
 function avisarSiEsArchivo() {
   if (entornoSeguro()) return;
@@ -1925,6 +2219,9 @@ async function abrirActa(acta, { nueva = false } = {}) {
   liberarFotos();
   state.acta = migrarActa(acta);
   state.persistida = !nueva;
+  state.pendiente = false;
+  state.base = nueva ? null : (acta.modificada ?? null);   // la versión del teléfono que abre esta ventana
+  state.fotosQuitadas.clear();
   if (!nueva) {
     const fotos = await Almacen.fotosDeActa(acta.id).catch(() => []);
     for (const f of fotos) {
@@ -2613,7 +2910,7 @@ async function anadirFotos(input) {
   input.value = '';
   const libres = Math.max(0, MAX_FOTOS - state.acta.fotos.length - state.fotosEnProceso);
   const archivos = elegidas.slice(0, libres);
-  const descartadas = elegidas.length - archivos.length;
+  let descartadas = elegidas.length - archivos.length;
   if (archivos.length) {
     state.fotosEnProceso += archivos.length;
     pintarFotos();
@@ -2630,10 +2927,17 @@ async function anadirFotos(input) {
           gps: exif.gps || gpsParaFoto(),
         };
         try { await Almacen.guardarFoto(foto.id, acta.id, comprimida.blob); } catch (e) { sinGuardar++; }
-        if (state.acta !== acta) continue;     // se cambió de acta mientras tanto
+        // Si entretanto se ha vuelto a abrir el acta (la ha guardado otra ventana), la foto va a la versión abierta.
+        // Si se ha abierto otra acta o ya no admite fotos, la imagen recién guardada se borra.
+        const destino = state.acta, misma = Boolean(destino) && destino.id === acta.id && !soloLectura();
+        if (!misma || destino.fotos.length >= MAX_FOTOS) {
+          Almacen.borrarFoto(foto.id).catch(() => {});
+          if (misma) descartadas++;
+          continue;
+        }
         state.blobs.set(foto.id, comprimida.blob);
         state.urls.set(foto.id, URL.createObjectURL(comprimida.blob));
-        acta.fotos.push(foto);
+        destino.fotos.push(foto);
         guardarPronto();
       } catch (e) {
         fallidas++;
@@ -2733,7 +3037,7 @@ async function quitarFoto(indice) {
   URL.revokeObjectURL(state.urls.get(foto.id));
   state.urls.delete(foto.id);
   state.blobs.delete(foto.id);
-  Almacen.borrarFoto(foto.id).catch(() => {});
+  state.fotosQuitadas.add(foto.id);   // su imagen se borra al guardarse el acta sin ella (no si otra ventana la cambió)
   guardarPronto();
   pintarFotos();
 }
@@ -3478,6 +3782,8 @@ function construirEmision() {
     ? `🔒 <strong>Acta emitida: solo lectura.</strong> Puedes volver a compartir o descargar el PDF. Para corregirla, pulsa «Corregir»: se crea la Rev. ${acta.revision + 1}, editable, que habrá que volver a firmar.${sustituida}`
     : 'ℹ️ Al compartir o descargar el PDF, el acta queda <strong>emitida</strong> y ya no se podrá modificar.';
   $('btnCorregir').classList.toggle('hidden', !emitida || Boolean(acta.sustituidaPor));
+  if (!emitida) $('emitCopia').classList.add('hidden');
+  else actualizarAvisoCopia();
 
   const compartir = puedeCompartirArchivos();
   $('btnCompartir').classList.toggle('hidden', !compartir);
@@ -3543,7 +3849,7 @@ function prepararPDF() {
     const { pdf, nombre } = await crearPDF(acta, blobs, emision, (fotos, total) => {
       if (pdfEmision.promesa === promesa) pintarEstadoPDF({ fotos, total });
     });
-    return { blob: pdf.output('blob'), nombre, emision, paginas: pdf.getNumberOfPages() };
+    return { blob: pdf.output('blob'), nombre, emision, clave, paginas: pdf.getNumberOfPages() };
   })();
   Object.assign(pdfEmision, { clave, promesa, listo: null });
   pintarEstadoPDF({ fotos: 0, total: acta.fotos.length });
@@ -3572,30 +3878,48 @@ function pintarEstadoPDF({ fotos = 0, total = 0, listo = null, error = null, tex
 
 // Comparte el PDF con el menú del teléfono. El acta se emite al compartirlo (no si se cierra el menú).
 async function compartirPDF() {
+  if (menuCompartir) {
+    return aviso('📤', 'Menú de compartir abierto', 'El teléfono aún no ha terminado de compartir el PDF. Si el menú no aparece, usa «📥 Descargar PDF».');
+  }
   if (!soloLectura() && !validarEmision()) return;
+  const acta = state.acta;
   let listo = pdfVigente();
   const alInstante = Boolean(listo);   // sin esperas: el navegador aún reconoce la pulsación
-  if (!listo) {
-    try { listo = await prepararPDF(); } catch (e) { return aviso('❌', 'Error al generar el PDF', e.message || 'Inténtalo de nuevo.'); }
-  }
-  const datos = {
-    files: [new File([listo.blob], listo.nombre, { type: 'application/pdf' })],
-    title: `Acta ${recogerDatos().actaNum} · Rev. ${state.acta.revision}`,
-    text: textoCompartir(),
-  };
-  if (!navigator.canShare || !navigator.canShare(datos)) {
-    descargarBlob(listo.blob, listo.nombre);
-    await emitirActa(listo.emision);
-    return aviso('📥', 'PDF descargado', 'Este navegador no permite compartir el archivo: adjúntalo desde la carpeta Descargas.');
-  }
+  const propia = empezarEmision(acta);
   try {
-    await navigator.share(datos);
-  } catch (e) {
-    if (e.name === 'AbortError') return;                       // se cerró el menú sin compartir
-    if (e.name === 'NotAllowedError' && !alInstante) return aviso('📤', 'PDF listo', 'Pulsa otra vez «Compartir PDF».');
-    return aviso('❌', 'No se ha podido compartir', 'Prueba con «Descargar PDF» y adjúntalo desde la carpeta Descargas.');
+    if (!listo) {
+      try { listo = await prepararPDF(); } catch (e) { return aviso('❌', 'Error al generar el PDF', e.message || 'Inténtalo de nuevo.'); }
+      if (!sigueIgual(acta, listo)) return;
+    }
+    const datos = {
+      files: [new File([listo.blob], listo.nombre, { type: 'application/pdf' })],
+      title: `Acta ${recogerDatos().actaNum} · Rev. ${acta.revision}`,
+      text: textoCompartir(),
+    };
+    if (!navigator.canShare || !navigator.canShare(datos)) {
+      descargarBlob(listo.blob, listo.nombre);
+      await emitirActa(listo.emision, acta);
+      return aviso('📥', 'PDF descargado', 'Este navegador no permite compartir el archivo: adjúntalo desde la carpeta Descargas.');
+    }
+    try {
+      menuCompartir = true;
+      await navigator.share(datos);
+    } catch (e) {
+      if (e.name === 'AbortError') return;                       // se cerró el menú sin compartir
+      if (e.name === 'NotAllowedError' && !alInstante) return aviso('📤', 'PDF listo', 'Pulsa otra vez «Compartir PDF».');
+      return aviso('❌', 'No se ha podido compartir', 'Prueba con «Descargar PDF» y adjúntalo desde la carpeta Descargas.');
+    } finally {
+      menuCompartir = false;
+    }
+    if (acta.estado === 'emitida') return;                       // se ha vuelto a compartir un acta ya emitida
+    if (!sigueIgual(acta, listo)) {   // el menú tardó en responder y, entretanto, el acta ha cambiado o se ha vuelto a abrir
+      return aviso('⚠️', 'PDF compartido sin emitir', 'El acta ha cambiado mientras se compartía el PDF, así que no se ha '
+        + 'registrado como emitida. Revísala y vuelve a pulsar «Compartir PDF» o «Descargar PDF».');
+    }
+    await emitirActa(listo.emision, acta);
+  } finally {
+    if (propia) terminarEmision(acta);
   }
-  await emitirActa(listo.emision);
 }
 
 // Compara versiones de la app («3.0», «3.1», «3.0.1»): negativo si `a` es anterior a `b`.
@@ -3684,7 +4008,7 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   const anchoUtil = W - 2 * M;
   // Un acta emitida vuelve a generar exactamente el PDF que se distribuyó: enlaces al mapa en los borradores y en
   // las emitidas desde la v3.0; formato del SGC y marco de las páginas según la versión con la que se emitió.
-  const conEnlaces = !emitidaAntesDe(acta, '3.0');
+  const antesDeV30 = emitidaAntesDe(acta, '3.0'), conEnlaces = !antesDeV30;
   const formatoActa = formatoSGC(acta), marco = MARCOS_PDF[formatoActa.marco];
   let y = M;
 
@@ -3717,9 +4041,14 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     pdf.line(x, yBase + 0.7, x + ancho, yBase + 0.7);
     return ancho;
   };
-  // Secciones numeradas según las que lleva el acta (las nuevas solo salen si tienen contenido).
+  // Secciones numeradas según las que lleva el acta (las nuevas solo salen si tienen contenido). Las emitidas antes
+  // de la v3.0 conservan la numeración fija de entonces: sin fotos, Firmas sigue siendo la 6 (v3.1.2).
+  const NUMERACION_V23 = { 'DATOS GENERALES': 1, ASISTENTES: 2, 'OBSERVACIONES GENERALES': 3, INDICACIONES: 4, FIRMAS: 6, 'CONTROL DE REVISIONES': 7 };
   let numeroSeccion = 0;
-  const seccion = titulo => `${++numeroSeccion} · ${titulo}`;
+  const seccion = titulo => {
+    const fijo = antesDeV30 && (titulo.startsWith('REPORTAJE') ? 5 : NUMERACION_V23[titulo]);
+    return `${fijo || ++numeroSeccion} · ${titulo}`;
+  };
   // Tabla con cabecera gris; las filas saltan de línea y de página (repitiendo la cabecera).
   // Cada celda es un texto o { texto, color }: en negrita y en ese color (p. ej. el estado de una indicación).
   const tabla = (columnas, filas) => {
@@ -3995,30 +4324,63 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
 // Descargar el PDF también emite el acta: a partir de ahí queda en solo lectura.
 async function descargarPDF() {
   if (!soloLectura() && !validarEmision()) return false;
-  let listo;
+  const acta = state.acta;
+  const propia = empezarEmision(acta);
   try {
-    listo = pdfVigente() || await prepararPDF();
-  } catch (err) {
-    aviso('❌', 'Error al generar el PDF', err.message || 'Inténtalo de nuevo.');
-    return false;
+    let listo;
+    try {
+      listo = pdfVigente() || await prepararPDF();
+    } catch (err) {
+      aviso('❌', 'Error al generar el PDF', err.message || 'Inténtalo de nuevo.');
+      return false;
+    }
+    if (!sigueIgual(acta, listo)) return false;
+    descargarBlob(listo.blob, listo.nombre);
+    await emitirActa(listo.emision, acta);
+    return true;
+  } finally {
+    if (propia) terminarEmision(acta);
   }
-  descargarBlob(listo.blob, listo.nombre);
-  await emitirActa(listo.emision);
+}
+
+// Tras esperar a que se prepare el PDF: ¿sigue en pantalla la misma acta y, si es un borrador, en Emisión y con el
+// contenido de ese PDF? Si se ha abierto otra, se ha vuelto atrás o se ha cambiado algo, no se distribuye ni se emite.
+function sigueIgual(acta, listo) {
+  if (state.acta !== acta) return false;
+  return acta.estado === 'emitida' || (state.fase === ULTIMA_FASE && clavePDF(acta) === listo.clave);
+}
+
+// Mientras se comparte o descarga el PDF de un borrador, el acta no se recarga desde el teléfono (emisionEnCurso).
+// Devuelve si ha marcado el acta (si ya estaba marcada o emitida, no hace nada).
+function empezarEmision(acta) {
+  if (emisionEnCurso || !acta || acta.estado === 'emitida') return false;
+  emisionEnCurso = acta;
   return true;
 }
 
-// Emite el acta en pantalla con la fecha del PDF distribuido. Las actas ya emitidas no cambian.
-async function emitirActa(emision) {
-  if (soloLectura()) return;
-  const acta = state.acta;
+// Al terminar, se comprueba lo que haya cambiado entretanto en otra ventana (sin emitir, se resuelve el conflicto).
+function terminarEmision(acta) {
+  if (emisionEnCurso !== acta) return;
+  emisionEnCurso = null;
+  if (sincronizarAlEmitir) {
+    sincronizarAlEmitir = false;
+    sincronizarActa();
+  }
+}
+
+// Emite el acta del PDF distribuido (la que está en pantalla) con la fecha de ese PDF. Las ya emitidas no cambian.
+async function emitirActa(emision, acta = state.acta) {
+  if (!acta || acta.estado === 'emitida' || state.acta !== acta) return;
   acta.estado = 'emitida';
   acta.emitida = emision;
   acta.versionEmision = VERSION;      // las emitidas antes de la v3.0 no lo tienen: su PDF se rehace como entonces
-  acta.modificada = emision;
+  acta.modificada = nuevaMarca(acta.modificada);   // la del guardado; la fecha del PDF queda en «emitida»
   acta.revisiones[acta.revisiones.length - 1].fecha = emision;
   state.persistida = true;
+  state.pendiente = true;
   if (pdfEmision.listo && pdfEmision.listo.emision === emision) pdfEmision.clave = clavePDF(acta);   // es el mismo PDF
   await guardarYa();
+  if (state.acta !== acta) return;    // otra ventana ya la había emitido: se muestra aquella (resolverConflicto)
   if (acta.corrigeA) await marcarSustituida(acta);
   pintarActa();
   construirEmision();
@@ -4029,11 +4391,7 @@ async function emitirActa(emision) {
 // Al emitir una revisión, la anterior queda marcada como sustituida.
 async function marcarSustituida(revision) {
   try {
-    const anterior = await Almacen.leerActa(revision.corrigeA);
-    if (!anterior) return;
-    anterior.sustituidaPor = revision.id;
-    anterior.sustituidaRev = revision.revision;
-    await Almacen.guardarActa(anterior);
+    if (await Almacen.marcarSustituida(revision.corrigeA, revision)) avisarVentanas({ tipo: 'guardada', id: revision.corrigeA });
   } catch (e) { /* si no se puede marcar, la revisión sigue siendo válida */ }
 }
 
@@ -4048,6 +4406,10 @@ async function abrirMisActas() {
   $('listaActas').innerHTML = actas.length
     ? actas.map(tarjetaActa).join('')
     : '<div class="panel-empty">Todavía no hay actas guardadas en este teléfono.</div>';
+  const nav = navegadorActual();
+  const detalle = [nav.nombre, nav.instalada && 'app instalada'].filter(Boolean).join(', ');
+  $('panelNota').textContent = `${actas.length === 1 ? '1 acta guardada' : `${actas.length} actas guardadas`} en este navegador`
+    + `${detalle ? ` (${detalle})` : ''}. Cada navegador guarda las suyas: usa siempre el mismo. Las emitidas son de solo lectura.`;
   pintarEstadoCopia(actas);
   $('panelActas').classList.add('open');
 }
@@ -4150,6 +4512,7 @@ async function corregirActa(id) {
       copia.fotos.push(nueva);
     }
     await Almacen.guardarActa(copia);
+    avisarVentanas({ tipo: 'guardada', id: copia.id });
   } catch (e) {
     return aviso('⚠️', 'No se pudo copiar', 'No se ha podido crear la revisión en el teléfono.');
   }
@@ -4163,6 +4526,7 @@ async function borrarActaGuardada(id) {
   const nombre = acta ? `${acta.datos.actaNum.trim() || 'sin número'}${acta.revision ? ` (Rev. ${acta.revision})` : ''}` : '';
   if (!confirm(`¿Borrar el acta ${nombre} de este teléfono? No se puede deshacer.`)) return;
   await Almacen.borrarActa(id).catch(() => {});
+  avisarVentanas({ tipo: 'borrada', id });
   if (state.acta && state.acta.id === id) {
     try { localStorage.removeItem(CLAVE_ACTA_ACTUAL); } catch (e) { /* sin almacenamiento local */ }
     await abrirActa(actaNueva(tecnicoRecordado()), { nueva: true });
@@ -4541,18 +4905,41 @@ function leerUltimaCopia() {
   try { return localStorage.getItem(CLAVE_ULTIMA_COPIA); } catch (e) { return null; }
 }
 
-function registrarCopia() {
-  try { localStorage.setItem(CLAVE_ULTIMA_COPIA, new Date().toISOString()); } catch (e) { /* sin almacenamiento local */ }
+// Cuándo se hizo la última copia y qué versión de cada acta lleva: así se sabe qué ha cambiado después sin depender
+// del reloj del teléfono (una hora adelantada no deja un acta «sin copia» para siempre).
+function registrarCopia(actas) {
+  try {
+    localStorage.setItem(CLAVE_ULTIMA_COPIA, new Date().toISOString());
+    localStorage.setItem(CLAVE_CONTENIDO_COPIA, JSON.stringify(Object.fromEntries(actas.map(a => [a.id, a.modificada]))));
+  } catch (e) { /* sin almacenamiento local */ }
 }
 
-// Actas con cambios desde la última copia y si toca avisar (más de DIAS_AVISO_COPIA días sin copia).
+function leerContenidoCopia() {
+  try {
+    const contenido = JSON.parse(localStorage.getItem(CLAVE_CONTENIDO_COPIA) || 'null');
+    return contenido && typeof contenido === 'object' ? contenido : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Actas con cambios desde la última copia y si toca avisar: el mismo día si hay actas emitidas que no están en
+// ninguna copia (v3.1.2); con borradores solo, a los DIAS_AVISO_COPIA días. Un acta está en la copia si la lleva en
+// su versión actual; con una copia de antes de la v3.1.2 (sin contenido anotado), si se guardó antes de hacerla.
 function estadoCopia(actas) {
-  const ultima = leerUltimaCopia();
-  const pendientes = actas.filter(a => !ultima || String(a.modificada) > ultima).length;
+  const ultima = leerUltimaCopia(), contenido = ultima ? leerContenidoCopia() : null;
+  const sinCopia = a => !ultima || (contenido ? contenido[a.id] !== a.modificada : String(a.modificada) > ultima);
+  const pendientes = actas.filter(sinCopia).length;
+  const emitidasSinCopia = actas.filter(a => a.estado === 'emitida' && sinCopia(a)).length;
   const desde = ultima || actas.reduce((min, a) => (!min || String(a.creada) < min ? String(a.creada) : min), null);
   const dias = desde ? (Date.now() - Date.parse(desde)) / 86400000 : 0;
-  return { ultima, pendientes, total: actas.length, avisar: pendientes > 0 && dias >= DIAS_AVISO_COPIA };
+  return {
+    ultima, pendientes, emitidasSinCopia, total: actas.length,
+    avisar: emitidasSinCopia > 0 || (pendientes > 0 && dias >= DIAS_AVISO_COPIA),
+  };
 }
+
+const textoEmitidasSinCopia = n => (n === 1 ? '1 acta emitida' : `${n} actas emitidas`) + ' sin copia de seguridad';
 
 function pintarEstadoCopia(actas) {
   const e = estadoCopia(actas);
@@ -4565,16 +4952,29 @@ function pintarEstadoCopia(actas) {
     texto = e.ultima
       ? `Última copia: ${fechaHoraES(e.ultima)}. ${e.pendientes} acta(s) con cambios desde entonces.`
       : `Aún no se ha hecho ninguna copia de las ${e.total} acta(s) de este teléfono.`;
-    if (e.avisar) texto = `⚠️ ${texto} Haz una copia y guárdala fuera del teléfono.`;
+    if (e.emitidasSinCopia) texto = `⚠️ ${textoEmitidasSinCopia(e.emitidasSinCopia)}. ${texto} Haz la copia hoy y guárdala fuera del teléfono.`;
+    else if (e.avisar) texto = `⚠️ ${texto} Haz una copia y guárdala fuera del teléfono.`;
   }
   $('copiaEstado').textContent = texto;
   $('copiaCard').className = `copia-card${e.avisar ? ' aviso' : (e.total && !e.pendientes ? ' al-dia' : '')}`;
   document.querySelector('.header-btn').classList.toggle('pendiente', e.avisar);
 }
 
-// Punto rojo en el botón de «Mis actas» cuando toca hacer copia.
+// Punto rojo en el botón de «Mis actas» cuando toca hacer copia y, en Emisión, la tarjeta para hacerla en el momento.
 async function actualizarAvisoCopia() {
-  try { pintarEstadoCopia(await Almacen.listarActas()); } catch (e) { /* sin almacén */ }
+  try {
+    const actas = await Almacen.listarActas();
+    pintarEstadoCopia(actas);
+    pintarCopiaEmision(estadoCopia(actas));
+  } catch (e) { /* sin almacén */ }
+}
+
+function pintarCopiaEmision(e) {
+  const ver = soloLectura() && e.emitidasSinCopia > 0;
+  $('emitCopia').classList.toggle('hidden', !ver);
+  if (ver) {
+    $('emitCopiaEstado').textContent = `Hay ${textoEmitidasSinCopia(e.emitidasSinCopia)}. Las actas solo están en este navegador: haz la copia ahora y guárdala fuera del teléfono (Drive, correo o el PC).`;
+  }
 }
 
 // Carpeta de un acta dentro del ZIP: «425_2026_CON-AV-03_Rev0» (única dentro del archivo).
@@ -4635,7 +5035,8 @@ async function hacerCopiaSeguridad() {
   } catch (e) {
     return aviso('❌', 'No se ha podido hacer la copia', e.message || 'Inténtalo de nuevo.');
   }
-  registrarCopia();
+  registrarCopia(actas);
+  actualizarAvisoCopia();
   await abrirMisActas();
   aviso('💾', 'Copia guardada en Descargas', `Archivo «${nombre}». Para que sirva si se pierde el teléfono, guárdalo fuera de él: desde la app Archivos (Descargas), compártelo a Drive o por correo. Para recuperarlo: Mis actas → Importar.`);
 }
@@ -4666,10 +5067,21 @@ function elegirImportacion() {
   entrada.click();
 }
 
+// Lo que se explica cuando se intenta importar un PDF (o un .zip de PDF): el PDF es el documento, no los datos.
+const TEXTO_PDF_NO_IMPORTABLE = 'El PDF es el documento del acta, no sus datos: la app no puede volver a cargarlo. '
+  + 'Para pasar actas a este teléfono, en el que las tiene usa Mis actas → 💾 Hacer copia (todas) o 📤 Exportar (una) '
+  + 'e importa aquí ese .zip. Si el acta ya no está en ningún teléfono, avisa a la gerencia: se puede reconstruir desde su PDF.';
+
+async function esArchivoPDF(archivo) {
+  if (/\.pdf$/i.test(archivo.name || '') || archivo.type === 'application/pdf') return true;
+  try { return (await archivo.slice(0, 5).text()) === '%PDF-'; } catch (e) { return false; }
+}
+
 async function importarActas(entrada) {
   const archivo = entrada.files && entrada.files[0];
   entrada.value = '';
   if (!archivo) return;
+  if (await esArchivoPDF(archivo)) return aviso('📄', 'Un PDF no se puede importar', TEXTO_PDF_NO_IMPORTABLE);
   await guardarYa();
   let r;
   try {
@@ -4677,6 +5089,7 @@ async function importarActas(entrada) {
   } catch (e) {
     return aviso('⚠️', 'No se ha podido importar', e.message || 'El archivo no es válido.');
   }
+  for (const id of new Set(r.ids)) avisarVentanas({ tipo: 'guardada', id });
   if (state.acta && r.ids.includes(state.acta.id)) {       // ha cambiado el acta en pantalla: se vuelve a abrir
     const acta = await Almacen.leerActa(state.acta.id).catch(() => null);
     if (acta) await abrirActa(acta);
@@ -4700,7 +5113,13 @@ async function importarActas(entrada) {
 async function importarZip(archivo) {
   const zip = await Zip.abrir(archivo);
   const fichas = zip.entradas.filter(e => /(^|\/)acta\.json$/i.test(e.nombre) && !/(^|\/)__MACOSX\//i.test(e.nombre));
-  if (!fichas.length) throw new Error('El archivo no contiene actas exportadas desde la app.');
+  if (!fichas.length) {
+    // Sin contar las copias ocultas que añade el Mac al comprimir (__MACOSX/, «._acta.pdf»)
+    const pdfs = zip.entradas.filter(e => /\.pdf$/i.test(e.nombre) && !/(^|\/)(__MACOSX\/|\._)/i.test(e.nombre)).length;
+    throw new Error(pdfs
+      ? `Este .zip contiene ${pdfs === 1 ? 'un PDF' : `${pdfs} PDF`} de actas, no una copia de la app. ${TEXTO_PDF_NO_IMPORTABLE}`
+      : 'El archivo no contiene actas exportadas desde la app.');
+  }
   const porId = new Map((await Almacen.listarActas()).map(a => [a.id, a]));
   const r = { nuevas: 0, actualizadas: 0, iguales: 0, conservadas: 0, invalidas: 0, ids: [], repetidos: [] };
   const leidas = [];
@@ -4722,10 +5141,14 @@ async function importarZip(archivo) {
         delete f.archivo;
         fotos.push({ id: f.id, blob: new Blob([datos], { type: 'image/jpeg' }) });
       }
-      await Almacen.reemplazarActa(acta, fotos);
-      porId.set(acta.id, acta);
+      const final = await Almacen.reemplazarActa(acta, fotos);    // otra ventana puede haberla cambiado entretanto
       leidas.push(acta);
-      r[decision === 'nueva' ? 'nuevas' : 'actualizadas']++;
+      if (final === 'igual' || final === 'conservar') {
+        r[final === 'igual' ? 'iguales' : 'conservadas']++;
+        continue;
+      }
+      porId.set(acta.id, acta);
+      r[final === 'nueva' ? 'nuevas' : 'actualizadas']++;
       r.ids.push(acta.id);
     } catch (e) {
       r.invalidas++;
@@ -4751,11 +5174,10 @@ async function marcarSustituidasImportadas(actas, porId) {
   for (const revision of actas) {
     const anterior = revision.estado === 'emitida' && revision.corrigeA ? porId.get(revision.corrigeA) : null;
     if (!anterior || (anterior.sustituidaPor && anterior.sustituidaRev >= revision.revision)) continue;
-    anterior.sustituidaPor = revision.id;
-    anterior.sustituidaRev = revision.revision;
     try {
-      await Almacen.guardarActa(anterior);
-      marcadas.push(anterior.id);
+      if (await Almacen.marcarSustituida(anterior.id, revision)) marcadas.push(anterior.id);   // con la versión de ese momento
+      anterior.sustituidaPor = revision.id;
+      anterior.sustituidaRev = revision.revision;
     } catch (e) { /* la revisión importada sigue siendo válida */ }
   }
   return marcadas;
