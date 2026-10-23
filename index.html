@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1A1A1A">
+<meta name="theme-color" content="#888888">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icono-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -19,6 +19,7 @@
     --gris-claro: #E8E8E8;
     --gris-medio: #CCCCCC;
     --negro: #1A1A1A;
+    --gris-corporativo: #888888;   /* cabecera de la app (el gris del logotipo) */
     --blanco: #FFFFFF;
     --fondo: #F2F2F2;
     --verde: #1E7A3D;
@@ -41,7 +42,7 @@
 
   /* ── HEADER ── */
   .app-header {
-    background: var(--negro);
+    background: var(--gris-corporativo);
     padding: 14px 20px 12px;
     display: flex;
     align-items: center;
@@ -83,7 +84,7 @@
 
   /* ── STEPPER ── */
   .stepper {
-    background: var(--negro);
+    background: var(--gris-corporativo);
     padding: 0 16px 14px;
     display: flex;
     align-items: center;
@@ -813,7 +814,7 @@
     z-index: 1;
     margin: 0 -16px 16px;
     padding: 14px 16px;
-    background: var(--negro);
+    background: var(--gris-corporativo);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1110,6 +1111,21 @@
   .review-seg-estado.pendiente { color: #7A4500; }
   .review-seg-estado.vencida { color: var(--rojo); }
   .review-seg-estado.anulada { color: #4F4F4F; }
+  /* ── v3.1 · CABECERA EN GRIS CORPORATIVO Y LISTAS DESPLEGABLES ── */
+  /* Sobre el gris, los textos pequeños van en negro (5:1) y el logotipo, en su recuadro oscuro. */
+  .logo-mark { background: var(--negro); border-radius: 8px; padding: 3px; }
+  .header-text h1 { color: white; font-size: 15px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+  .header-text p { color: var(--negro); font-weight: 600; }
+  .estado-guardado, .estado-guardado.ok, .estado-guardado.lectura { color: var(--negro); font-weight: 600; }
+  .estado-guardado.error { color: #5C0000; }
+  .header-btn { border-color: #5E5E5E; }
+  .step-item:not(:last-child)::after { background: #5E5E5E; }
+  .step-dot { border-color: #3A3A3A; background: #2A2A2A; color: #D9D9D9; }
+  .step-label, .step-item.done .step-label { color: var(--negro); }
+  .step-item.active .step-label { color: var(--negro); font-weight: 800; }
+  .panel-title, .panel-close { color: var(--negro); }
+  .campo-otro { margin-top: 8px; }
+  .campo-detalle { margin-top: 12px; }
   .hidden { display: none !important; }
 
 </style>
@@ -1191,6 +1207,12 @@
   <p class="phase-subtitle">Completa los datos generales de la visita de campo.</p>
 
   <div class="field-group">
+    <label class="field-label" for="expediente">Expediente del trabajo <span class="required">*</span></label>
+    <input type="text" class="field-input" id="expediente" list="expedientesLista" autocomplete="off" placeholder="Código / Nombre del proyecto">
+    <datalist id="expedientesLista"></datalist>
+  </div>
+
+  <div class="field-group">
     <div class="num-row">
       <div>
         <label class="field-label" for="actaNum">Nº de Acta <span class="required">*</span></label>
@@ -1205,18 +1227,21 @@
   </div>
 
   <div class="field-group">
-    <div class="field-label">Técnico responsable <span class="required">*</span></div>
-    <input type="text" class="field-input" id="tecnico" placeholder="Nombre completo">
+    <label class="field-label" for="tecnico">Técnico responsable <span class="required">*</span></label>
+    <select class="field-input" id="tecnico"></select>
   </div>
 
   <div class="field-group">
-    <div class="field-label">Expediente del trabajo <span class="required">*</span></div>
-    <input type="text" class="field-input" id="expediente" placeholder="Código / Nombre del proyecto">
+    <label class="field-label" for="cargoTecnico">Cargo del técnico <span class="required">*</span></label>
+    <select class="field-input" id="cargoTecnico"></select>
+    <input type="text" class="field-input campo-otro hidden" id="cargoTecnicoOtro" maxlength="120" placeholder="Escribe el cargo" aria-label="Otro cargo del técnico">
   </div>
 
   <div class="field-group">
-    <div class="field-label">Objeto de la visita</div>
-    <input type="text" class="field-input" id="descripcion" placeholder="Motivo de la visita">
+    <label class="field-label" for="objeto">Objeto de la visita <span class="required">*</span></label>
+    <select class="field-input" id="objeto"></select>
+    <label class="field-label campo-detalle" for="descripcion" id="descripcionEtiqueta">Detalle (opcional)</label>
+    <input type="text" class="field-input" id="descripcion" maxlength="2000" placeholder="p. ej. Hormigonado de la losa de planta 1">
   </div>
 
   <div class="field-group">
@@ -1282,9 +1307,7 @@
   <div class="asistente-card">
     <div class="asistente-cabecera"><span>Técnico · firma obligatoria</span></div>
     <div class="asistente-nombre" id="tecnicoNombreAsist">—</div>
-    <div class="asistente-sub">TEAMBIMCIVIL</div>
-    <label class="field-label" for="cargoTecnico">Cargo del técnico</label>
-    <input type="text" class="field-input" id="cargoTecnico" placeholder="Dirección facultativa, técnico redactor…">
+    <div class="asistente-sub" id="tecnicoCargoAsist">TEAMBIMCIVIL</div>
   </div>
   <div id="asistentesLista"></div>
   <button class="add-photo-btn" onclick="anadirAsistente()">➕ Añadir asistente</button>
@@ -1502,13 +1525,13 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v3.0
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v3.1
 //  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
 //    Las actas emitidas (PDF compartido o descargado) son de solo lectura;
 //    «Corregir» crea la revisión siguiente del mismo número (control ISO 9001).
-//  · Numeración automática por expediente, asistentes, condiciones de la visita,
-//    observaciones, indicaciones y firmas de todos los asistentes.
+//  · Numeración automática por expediente, técnico, cargo y objeto de listas desplegables,
+//    asistentes, condiciones de la visita, observaciones, indicaciones y firmas de todos los asistentes.
 //  · Seguimiento de las indicaciones de la visita anterior del expediente (cumplida,
 //    pendiente o anulada) y registro de actas e indicaciones en Excel (sin librerías).
 //  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto, con enlace al mapa en el PDF.
@@ -1517,12 +1540,23 @@
 //  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '3.0';
+const VERSION = '3.1';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
 const EMPRESA = 'TEAMBIMCIVIL';
 // Formato del sistema de gestión de calidad (ISO 9001): su nombre es el título del PDF y figura en el
 // bloque de control de cada página. Si el formato llega a tener código y revisión, se añaden aquí.
 const FORMATO_SGC = { nombre: 'Acta de Visita de Inspección', codigo: '', revision: '' };
+// Listas desplegables de la app. Se cambian aquí, sin tocar el resto del código.
+// · Técnicos de TEAMBIMCIVIL (la app los muestra en orden alfabético).
+const TECNICOS = ['Alberto de Álava', 'Ana Cascajosa', 'Ángel García', 'Blas González', 'Francisco S. Ortiz', 'José A. Gómez', 'José L. Gutiérrez'];
+// · Cargos o roles del técnico y de los asistentes; «Otro» permite escribir uno distinto.
+const CARGOS = ['Inspector de Campo', 'Redactor de Estudio', 'Director de Obra', 'Supervisor de Obra'];
+// · Objeto de la visita; «Otro» obliga a describirlo. Las claves se guardan en el acta: no cambiarlas.
+const OBJETOS = [
+  { clave: 'licitacion', nombre: 'Licitación de Obra' }, { clave: 'tajos', nombre: 'Inspección de Tajos de Obra' },
+  { clave: 'inventario', nombre: 'Inventario' }, { clave: 'patologia', nombre: 'Estudio de Patología' },
+  { clave: 'otro', nombre: 'Otro' },
+];
 const MAX_FOTOS = 50;
 const MAX_COMENTARIO = 1000;          // caracteres por comentario de foto
 const MAX_OBSERVACIONES = 3000;
@@ -1534,8 +1568,9 @@ const GPS_ESPERA_MS = 60000;          // búsqueda máxima de señal
 const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fotos durante 2 min
 const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
 const CLAVE_ULTIMA_COPIA = 'tbc-ultima-copia';
+const CLAVE_ULTIMO_TECNICO = 'tbc-ultimo-tecnico';   // técnico y cargo que se proponen en un acta nueva
 const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios
-const ESQUEMA = 3;                    // versión del registro del acta en el teléfono
+const ESQUEMA = 4;                    // versión del registro del acta en el teléfono
 const FORMATO_EXPORTACION = 'tbc-acta';   // identifica los acta.json exportados por la app
 const VERSION_EXPORTACION = 1;
 // Condiciones de la visita (opcionales, varias a la vez). Las claves se guardan en el acta: no cambiarlas.
@@ -1739,7 +1774,8 @@ function actaNueva(base = {}) {
     revision: 0,
     revisiones: [{ rev: 0, fecha: null, motivo: 'Emisión inicial' }],
     datos: {
-      actaNum: '', numAuto: true, tecnico: '', cargoTecnico: '', expediente: '', descripcion: '',
+      actaNum: '', numAuto: true, tecnico: '', cargoTecnico: '', expediente: '',
+      objeto: '', descripcion: '',     // clave de OBJETOS y detalle (con «Otro», la descripción del objeto)
       fecha: fechaLocal(ahora), hora: horaLocal(ahora), ...base,
     },
     gps: null,                        // { lat, lng, acc, hora }
@@ -1781,6 +1817,8 @@ function migrarActa(acta) {
   acta.seguimientoOrigen = acta.seguimientoOrigen || null;
   acta.seguimientoNotas = acta.seguimientoNotas || [];
   acta.seguimientoGuardado = acta.seguimientoGuardado || null;
+  // esquema 3 (v3.0): el objeto de la visita era solo texto; queda como detalle, sin tipo
+  if (typeof acta.datos.objeto !== 'string') acta.datos.objeto = '';
   acta.esquema = ESQUEMA;
   return acta;
 }
@@ -1842,6 +1880,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   avisarSiEsArchivo();
   iniciarFirmas();
   enlazarCampos();
+  iniciarListas();
   iniciarCondiciones();
   $('commentsContainer').addEventListener('input', alEscribirComentario);
   $('asistentesLista').addEventListener('input', alEditarAsistente);
@@ -1873,7 +1912,7 @@ async function cargarActaInicial() {
     const id = localStorage.getItem(CLAVE_ACTA_ACTUAL);
     if (id) acta = await Almacen.leerActa(id);
   } catch (e) { /* sin almacén: se trabaja solo en memoria */ }
-  await abrirActa(acta || actaNueva(), { nueva: !acta });
+  await abrirActa(acta || actaNueva(tecnicoRecordado()), { nueva: !acta });
 }
 
 async function abrirActa(acta, { nueva = false } = {}) {
@@ -1912,6 +1951,7 @@ function pintarActa() {
   $('actaNum').readOnly = state.acta.revision > 0;   // una revisión conserva el número
   actualizarNumActa();
   pintarAyudaNumero();
+  pintarListas();
   pintarCondiciones();
   pintarGPS();
   pintarSinGps();
@@ -1983,9 +2023,8 @@ function actualizarNavegacion() {
 // ═══════════════════════════════════
 //  FASE 1 · IDENTIFICACIÓN, NUMERACIÓN Y UBICACIÓN
 // ═══════════════════════════════════
-const CAMPOS = {   // clave en el acta → id del campo
-  actaNum: 'actaNum', tecnico: 'tecnico', expediente: 'expediente', descripcion: 'descripcion',
-  fecha: 'fechaVisita', hora: 'horaVisita', cargoTecnico: 'cargoTecnico',
+const CAMPOS = {   // clave en el acta → id del campo (el técnico, su cargo y el objeto van en listas: iniciarListas)
+  actaNum: 'actaNum', expediente: 'expediente', descripcion: 'descripcion', fecha: 'fechaVisita', hora: 'horaVisita',
 };
 const CAMPOS_SIN_GPS = { referencia: 'sinGpsRef', lat: 'sinGpsLat', lng: 'sinGpsLng' };
 
@@ -2079,18 +2118,117 @@ function pintarAyudaNumero() {
 function validarIdentificacion() {
   const d = state.acta.datos;
   const obligatorios = [
-    ['actaNum', 'Introduce el número de acta (se genera solo al indicar el expediente).'],
-    ['tecnico', 'Introduce el nombre del técnico.'],
     ['expediente', 'Introduce el expediente del trabajo.'],
+    ['actaNum', 'Introduce el número de acta (se genera solo al indicar el expediente).'],
+    ['tecnico', 'Elige el técnico responsable.'],
+    ['cargoTecnico', 'Elige el cargo del técnico (o «Otro» y escríbelo).'],
+    ['objeto', 'Elige el objeto de la visita.'],
     ['fecha', 'Selecciona la fecha de la visita.'],
   ];
   for (const [clave, mensaje] of obligatorios) {
     if (!String(d[clave] || '').trim()) return aviso('⚠️', 'Campo requerido', mensaje);
   }
+  if (d.objeto === 'otro' && !d.descripcion.trim()) {
+    return aviso('⚠️', 'Campo requerido', 'Con «Otro», describe el objeto de la visita.');
+  }
   if (temperaturaValida(state.acta.condiciones.temperatura) === false) {
     return aviso('🌡️', 'Temperatura no válida', `Escribe la temperatura en °C, entre ${TEMPERATURA.min} y ${TEMPERATURA.max} (p. ej. 14 o 14,5), o déjala vacía.`);
   }
   return validarUbicacion();
+}
+
+// ── Listas desplegables: técnico, cargo (con «Otro») y objeto (con detalle) ──
+// El acta guarda el texto del técnico y del cargo, y la clave del objeto. Un valor que no está en la lista
+// (actas anteriores o importadas) se muestra tal cual: el técnico como una opción más y el cargo como «Otro».
+const OTRO = '__otro';
+const opcion = (valor, texto, elegida) => `<option value="${esc(valor)}"${elegida ? ' selected' : ''}>${esc(texto)}</option>`;
+const tecnicosOrdenados = () => [...TECNICOS].sort((a, b) => a.localeCompare(b, 'es'));
+const cargoDeLista = valor => CARGOS.find(c => mismoTexto(c, valor)) || null;
+
+function opcionesCargo(valor) {
+  const deLista = cargoDeLista(valor), otro = Boolean(String(valor || '').trim()) && !deLista;
+  return opcion('', 'Elige el cargo', !deLista && !otro) + CARGOS.map(c => opcion(c, c, c === deLista)).join('') + opcion(OTRO, 'Otro…', otro);
+}
+
+function iniciarListas() {
+  $('tecnico').addEventListener('change', () => {
+    if (soloLectura()) return;
+    state.acta.datos.tecnico = $('tecnico').value;
+    recordarTecnico();
+    guardarPronto();
+  });
+  $('cargoTecnico').addEventListener('change', () => {
+    if (soloLectura()) return;
+    const otro = $('cargoTecnico').value === OTRO, campoOtro = $('cargoTecnicoOtro');
+    campoOtro.classList.toggle('hidden', !otro);
+    state.acta.datos.cargoTecnico = otro ? campoOtro.value : $('cargoTecnico').value;
+    if (otro) campoOtro.focus();
+    recordarTecnico();
+    guardarPronto();
+  });
+  $('cargoTecnicoOtro').addEventListener('input', () => {
+    if (soloLectura()) return;
+    state.acta.datos.cargoTecnico = $('cargoTecnicoOtro').value;
+    recordarTecnico();
+    guardarPronto();
+  });
+  $('objeto').addEventListener('change', () => {
+    if (soloLectura()) return;
+    state.acta.datos.objeto = $('objeto').value;
+    pintarDetalleObjeto();
+    if (state.acta.datos.objeto === 'otro' && !$('descripcion').value.trim()) $('descripcion').focus();
+    guardarPronto();
+  });
+  $('expediente').addEventListener('focus', pintarExpedientes);
+}
+
+function pintarListas() {
+  const d = state.acta.datos, tecnico = d.tecnico.trim(), lista = tecnicosOrdenados();
+  const fuera = tecnico && !lista.includes(tecnico) ? [tecnico] : [];
+  $('tecnico').innerHTML = opcion('', 'Elige el técnico', !tecnico) + [...lista, ...fuera].map(n => opcion(n, n, n === tecnico)).join('');
+  $('cargoTecnico').innerHTML = opcionesCargo(d.cargoTecnico);
+  const otro = $('cargoTecnico').value === OTRO;
+  $('cargoTecnicoOtro').classList.toggle('hidden', !otro);
+  $('cargoTecnicoOtro').value = otro ? d.cargoTecnico : '';
+  $('objeto').innerHTML = opcion('', 'Elige el objeto', !d.objeto) + OBJETOS.map(o => opcion(o.clave, o.nombre, o.clave === d.objeto)).join('');
+  pintarDetalleObjeto();
+  pintarExpedientes();
+}
+
+function pintarDetalleObjeto() {
+  const otro = state.acta.datos.objeto === 'otro';
+  $('descripcionEtiqueta').innerHTML = otro ? 'Describe el objeto <span class="required">*</span>' : 'Detalle (opcional)';
+  $('descripcion').placeholder = otro ? 'Qué se revisa en la visita' : 'p. ej. Hormigonado de la losa de planta 1';
+}
+
+// Sugerencias al escribir el expediente: los de las actas del teléfono, de la más reciente a la más antigua.
+async function pintarExpedientes() {
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { return; }
+  const vistos = new Set(), lista = [];
+  for (const a of actas.sort((x, y) => String(y.modificada).localeCompare(String(x.modificada)))) {
+    const expediente = a.datos.expediente.trim();
+    if (!expediente || vistos.has(expediente.toLowerCase())) continue;
+    vistos.add(expediente.toLowerCase());
+    lista.push(expediente);
+  }
+  $('expedientesLista').innerHTML = lista.slice(0, 50).map(e => `<option value="${esc(e)}"></option>`).join('');
+}
+
+// El teléfono recuerda el último técnico y cargo elegidos y los propone en un acta nueva.
+function recordarTecnico() {
+  const d = state.acta.datos;
+  try { localStorage.setItem(CLAVE_ULTIMO_TECNICO, JSON.stringify({ tecnico: d.tecnico, cargoTecnico: d.cargoTecnico })); } catch (e) { /* sin almacenamiento local */ }
+}
+
+function tecnicoRecordado() {
+  try {
+    const r = JSON.parse(localStorage.getItem(CLAVE_ULTIMO_TECNICO) || 'null');
+    if (r && typeof r.tecnico === 'string' && typeof r.cargoTecnico === 'string') {
+      return { tecnico: r.tecnico.slice(0, 500), cargoTecnico: r.cargoTecnico.slice(0, 500) };
+    }
+  } catch (e) { /* sin almacenamiento local o dato dañado */ }
+  return {};
 }
 
 // ── Condiciones de la visita (opcionales): tiempo, varias a la vez, y temperatura ──
@@ -2323,8 +2461,9 @@ function cambiarSinGps(activo) {
 let sugeridos = [];
 
 function construirAsistentes() {
-  $('tecnicoNombreAsist').textContent = state.acta.datos.tecnico.trim() || '—';
-  $('cargoTecnico').value = state.acta.datos.cargoTecnico || '';
+  const d = state.acta.datos;
+  $('tecnicoNombreAsist').textContent = d.tecnico.trim() || '—';
+  $('tecnicoCargoAsist').textContent = empresaCargo(EMPRESA, d.cargoTecnico);
   pintarAsistentes();
   pintarSugeridos();
 }
@@ -2340,7 +2479,8 @@ function pintarAsistentes() {
       <input type="text" class="field-input" id="asNombre${i}" data-campo="nombre" value="${esc(a.nombre)}" placeholder="Nombre y apellidos">
       <div class="coord-row">
         <div><label class="field-label" for="asEmpresa${i}">Empresa</label><input type="text" class="field-input" id="asEmpresa${i}" data-campo="empresa" value="${esc(a.empresa)}" placeholder="Empresa"></div>
-        <div><label class="field-label" for="asCargo${i}">Cargo</label><input type="text" class="field-input" id="asCargo${i}" data-campo="cargo" value="${esc(a.cargo)}" placeholder="Cargo"></div>
+        <div><label class="field-label" for="asCargo${i}">Cargo</label><select class="field-input" id="asCargo${i}" data-campo="cargoLista">${opcionesCargo(a.cargo)}</select>
+          <input type="text" class="field-input campo-otro${cargoDeLista(a.cargo) || !a.cargo.trim() ? ' hidden' : ''}" id="asCargoOtro${i}" data-campo="cargoOtro" maxlength="120" value="${esc(cargoDeLista(a.cargo) ? '' : a.cargo)}" placeholder="Escribe el cargo" aria-label="Otro cargo del asistente ${i + 2}"></div>
       </div>
       <label class="gps-sin asistente-firma"><input type="checkbox" data-campo="firma"${a.firma ? ' checked' : ''}> Firma el acta</label>
     </div>`).join('');
@@ -2349,8 +2489,18 @@ function pintarAsistentes() {
 function alEditarAsistente(e) {
   const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-asistente]');
   if (!campo || !tarjeta || soloLectura()) return;
-  const asistente = state.acta.asistentes[Number(tarjeta.dataset.asistente)];
-  asistente[campo] = campo === 'firma' ? e.target.checked : e.target.value;
+  const i = Number(tarjeta.dataset.asistente), asistente = state.acta.asistentes[i];
+  if (campo === 'cargoLista') {                  // cargo de la lista; con «Otro» se escribe en el campo de debajo
+    if (e.type !== 'change') return;
+    const otro = e.target.value === OTRO, campoOtro = $(`asCargoOtro${i}`);
+    campoOtro.classList.toggle('hidden', !otro);
+    asistente.cargo = otro ? campoOtro.value : e.target.value;
+    if (otro) campoOtro.focus();
+  } else if (campo === 'cargoOtro') {
+    asistente.cargo = e.target.value;
+  } else {
+    asistente[campo] = campo === 'firma' ? e.target.checked : e.target.value;
+  }
   guardarPronto();
 }
 
@@ -3458,11 +3608,19 @@ function textoCompartir(acta = state.acta) {
   ].filter(Boolean).join('\n');
 }
 
+// Objeto de la visita para mostrar: «Inspección de Tajos de Obra · detalle», el texto si es «Otro», o el texto de las
+// actas anteriores a la v3.1, que no tienen tipo.
+function textoObjeto(acta) {
+  const d = acta.datos, tipo = OBJETOS.find(o => o.clave === d.objeto), detalle = String(d.descripcion || '').trim();
+  if (!tipo || tipo.clave === 'otro') return detalle;
+  return detalle ? `${tipo.nombre} · ${detalle}` : tipo.nombre;
+}
+
 function recogerDatos(acta = state.acta) {
   const d = acta.datos, limpio = v => String(v || '').trim();
   return {
     actaNum: limpio(d.actaNum), tecnico: limpio(d.tecnico), cargoTecnico: limpio(d.cargoTecnico),
-    expediente: limpio(d.expediente), descripcion: limpio(d.descripcion), fecha: d.fecha || '', hora: d.hora || '',
+    expediente: limpio(d.expediente), descripcion: limpio(textoObjeto(acta)), fecha: d.fecha || '', hora: d.hora || '',
   };
 }
 
@@ -3895,7 +4053,7 @@ async function abrirActaGuardada(id) {
 // Nueva acta en blanco; la anterior queda guardada en «Mis actas».
 async function nuevaActa() {
   await guardarYa();
-  await abrirActa(actaNueva(), { nueva: true });
+  await abrirActa(actaNueva(tecnicoRecordado()), { nueva: true });
   cerrarMisActas();
 }
 
@@ -3904,8 +4062,8 @@ async function nuevaVisita(id) {
   await guardarYa();
   const origen = await Almacen.leerActa(id).catch(() => null);
   if (!origen) return;
-  const { tecnico, cargoTecnico, expediente, descripcion } = origen.datos;
-  const nueva = actaNueva({ tecnico, cargoTecnico, expediente, descripcion });
+  const { tecnico, cargoTecnico, expediente, descripcion, objeto } = origen.datos;
+  const nueva = actaNueva({ tecnico, cargoTecnico, expediente, descripcion, objeto: objeto || '' });
   nueva.asistentes = origen.asistentes.map(a => ({ ...a, id: nuevoId('asis') }));
   await abrirActa(nueva, { nueva: true });
   guardarPronto();
@@ -3973,7 +4131,7 @@ async function borrarActaGuardada(id) {
   await Almacen.borrarActa(id).catch(() => {});
   if (state.acta && state.acta.id === id) {
     try { localStorage.removeItem(CLAVE_ACTA_ACTUAL); } catch (e) { /* sin almacenamiento local */ }
-    await abrirActa(actaNueva(), { nueva: true });
+    await abrirActa(actaNueva(tecnicoRecordado()), { nueva: true });
   }
   await abrirMisActas();
 }
@@ -4246,7 +4404,8 @@ function hojaActasRegistro(actas) {
       { titulo: 'Nº de acta', ancho: 24, tipo: 'texto' }, { titulo: 'Rev.', ancho: 6, tipo: 'numero' },
       { titulo: 'Estado', ancho: 17, tipo: 'estado' }, { titulo: 'Fecha', ancho: 12, tipo: 'fecha' },
       { titulo: 'Hora', ancho: 8, tipo: 'texto' }, { titulo: 'Expediente', ancho: 18, tipo: 'texto' },
-      { titulo: 'Objeto', ancho: 40, tipo: 'texto' }, { titulo: 'Técnico', ancho: 26, tipo: 'texto' },
+      { titulo: 'Objeto', ancho: 26, tipo: 'texto' }, { titulo: 'Detalle', ancho: 36, tipo: 'texto' },
+      { titulo: 'Técnico', ancho: 22, tipo: 'texto' }, { titulo: 'Cargo del técnico', ancho: 20, tipo: 'texto' },
       { titulo: 'Condiciones', ancho: 22, tipo: 'texto' }, { titulo: 'Ubicación', ancho: 34, tipo: 'texto' },
       { titulo: 'Asistentes', ancho: 44, tipo: 'texto' }, { titulo: 'Fotos', ancho: 7, tipo: 'numero' },
       { titulo: 'Indicaciones', ancho: 12, tipo: 'numero' }, { titulo: 'Seguimiento: cumplidas', ancho: 13, tipo: 'numero' },
@@ -4257,8 +4416,9 @@ function hojaActasRegistro(actas) {
       const d = recogerDatos(a), r = resumenSeguimiento(a);
       const asistentes = a.asistentes.filter(x => x.nombre.trim())
         .map(x => `${x.nombre.trim()}${empresaCargo(x.empresa, x.cargo) ? ` (${empresaCargo(x.empresa, x.cargo)})` : ''}`).join('; ');
-      const ubicacion = textoUbicacion(a, false);
-      return [d.actaNum, a.revision, estado(a), d.fecha, d.hora, d.expediente, d.descripcion, d.tecnico, textoCondiciones(a),
+      const ubicacion = textoUbicacion(a, false), tipo = OBJETOS.find(o => o.clave === a.datos.objeto);
+      return [d.actaNum, a.revision, estado(a), d.fecha, d.hora, d.expediente, tipo ? tipo.nombre : '', a.datos.descripcion.trim(),
+        d.tecnico, d.cargoTecnico, textoCondiciones(a),
         ubicacion === '—' ? '' : ubicacion, asistentes, a.fotos.length, a.indicaciones.length,
         r.total ? r.cumplidas : null, r.total ? r.pendientes : null, r.total ? r.anuladas : null, a.estado === 'emitida' ? a.emitida : ''];
     }),
@@ -4629,7 +4789,7 @@ function actaDesdeArchivo(contenido) {
   acta.datos = {
     actaNum: texto(d.actaNum, 120), numAuto: false,       // el número ya está asignado: no se recalcula
     tecnico: texto(d.tecnico), cargoTecnico: texto(d.cargoTecnico), expediente: texto(d.expediente),
-    descripcion: texto(d.descripcion, 2000), fecha: dia(d.fecha),
+    objeto: OBJETOS.some(x => x.clave === d.objeto) ? d.objeto : '', descripcion: texto(d.descripcion, 2000), fecha: dia(d.fecha),
     hora: hhmm(d.hora),
   };
   const g = objeto(o.gps);
