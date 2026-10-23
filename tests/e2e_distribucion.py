@@ -215,6 +215,7 @@ def main():
 
         # ══ Teléfono A: con Web Share (como Chrome para Android) ══
         ctx_a, pa, cdp_a = telefono(p, navegador, externas, errores)
+        version = pa.evaluate("VERSION")
         pa.evaluate(ESPIAR_PDF)
         crear_acta(pa, cdp_a, [horizontal, vertical], hasta=7)
         pa.evaluate("window.__retrasoPDF = 1500")
@@ -272,7 +273,7 @@ def main():
                     meta.get("/Title") == f"{FORMATO} {num0} · Rev. 0"
                     and meta.get("/Author") == "Blas González González · TEAMBIMCIVIL"
                     and f"Expediente {EXP}" in (meta.get("/Subject") or "")
-                    and num0 in (meta.get("/Keywords") or "") and "v2.3" in (meta.get("/Creator") or ""),
+                    and num0 in (meta.get("/Keywords") or "") and f"v{version}" in (meta.get("/Creator") or ""),
                     f"{meta.get('/Title')} | {meta.get('/Author')}")
         nombre_pdf = descargar(pa, "#btnDescargar", SALIDA / "D-descargado.pdf")
         r.comprobar("D1 · Acta emitida: el PDF descargado es el mismo que se compartió",
@@ -348,7 +349,7 @@ def main():
                     carpetas == ["425_2026_CON-AV-01_Rev0", "425_2026_CON-AV-01_Rev1", "425_2026_CON-AV-02_Rev0"]
                     and len(fotos_zip) == fotos_a and jpeg and enlazadas, ", ".join(carpetas))
         r.comprobar("D2 · acta.json identifica formato, versión y app; LEEME.txt explica cómo recuperarla",
-                    all(f["formato"] == "tbc-acta" and f["version"] == 1 and f["app"] == "2.3" for f in fichas.values())
+                    all(f["formato"] == "tbc-acta" and f["version"] == 1 and f["app"] == version for f in fichas.values())
                     and leeme.startswith("﻿") and "Importar" in leeme and URL_OFICIAL in leeme)
 
         # ── D4 · Compartir el enlace de la app (con Web Share) ──

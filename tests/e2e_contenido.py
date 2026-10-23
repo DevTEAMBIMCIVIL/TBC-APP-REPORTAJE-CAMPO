@@ -261,7 +261,8 @@ def main():
         migrada = pg.evaluate("""({ fase: state.fase, esquema: state.acta.esquema, rev: state.acta.revision,
             asistentes: state.acta.asistentes.length, auto: state.acta.datos.numAuto, revisiones: state.acta.revisiones.length })""")
         r.comprobar("Un borrador de la v2.1 se abre migrado y en la fase equivalente (fotos)", migrada == {
-            "fase": 3, "esquema": 2, "rev": 0, "asistentes": 0, "auto": False, "revisiones": 1}, str(migrada))
+            "fase": 3, "esquema": pg.evaluate("ESQUEMA"), "rev": 0, "asistentes": 0, "auto": False, "revisiones": 1},
+            str(migrada))
         pg.evaluate("abrirActaGuardada('acta-v21-emitida')")
         pg.wait_for_function("state.acta.id === 'acta-v21-emitida' && state.fase === 8")
         ruta_v21 = SALIDA / "acta-v21-migrada.pdf"
