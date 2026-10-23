@@ -1015,6 +1015,101 @@
   .copia-estado { font-size: 12px; color: #4F4F4F; line-height: 1.5; margin-top: 4px; }
   .copia-card.aviso .copia-estado { color: #7A5A00; }
   .panel-enlace { width: 100%; margin-top: 14px; font-size: 13px; }
+  /* ── v3.0 · CONDICIONES DE LA VISITA, SEGUIMIENTO DE INDICACIONES Y REGISTRO EN EXCEL ── */
+  .condiciones-card {
+    background: white;
+    border: 2px solid var(--gris-claro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .condiciones-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .condiciones-cabecera .field-label, .temperatura-row .field-label { margin-bottom: 0; }
+  .opcional { font-size: 11px; color: var(--gris); }
+  .meteo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .chip-btn {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 10px;
+    background: white;
+    color: var(--negro);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .chip-btn[aria-pressed="true"] { border-color: var(--rojo); background: var(--rojo); color: white; font-weight: 700; }
+  .chip-btn:disabled { opacity: 0.6; cursor: default; }
+  .temperatura-row { display: flex; align-items: center; gap: 10px; }
+  .temperatura-row .field-input { width: 84px; padding: 10px 12px; text-align: right; }
+  .temperatura-row span { font-size: 14px; color: #4F4F4F; }
+  .signo-btn { flex: 0 0 44px; width: 44px; padding: 0; font-size: 18px; }
+  .condiciones-ayuda { font-size: 11.5px; color: #4F4F4F; line-height: 1.45; }
+  .seg-cabecera { margin-bottom: 8px; }
+  .seg-cabecera .field-label { margin-bottom: 2px; }
+  .seg-sub { font-size: 11.5px; color: #4F4F4F; line-height: 1.45; }
+  .seg-resumen { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .seg-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; color: white; }
+  .seg-pill.cumplida { background: var(--verde); }
+  .seg-pill.pendiente { background: #FFF4D6; color: #7A4500; border: 1px solid var(--amarillo); padding: 2px 9px; }
+  .seg-pill.vencida { background: var(--rojo); }
+  .seg-pill.anulada { background: var(--gris); }
+  .seg-card {
+    background: white;
+    border: 1px solid var(--gris-claro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .seg-card.vencida { border: 2px solid var(--rojo); }
+  .seg-top { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .seg-origen { font-size: 11px; font-weight: 700; color: white; background: var(--negro); padding: 2px 8px; border-radius: 10px; }
+  .seg-plazo { font-size: 11px; color: #4F4F4F; }
+  .seg-plazo.vencida { color: var(--rojo); font-weight: 700; }
+  .seg-texto { font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+  .seg-resp { font-size: 11.5px; color: #4F4F4F; }
+  .seg-estados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .seg-estado {
+    height: 44px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 9px;
+    background: white;
+    color: #4F4F4F;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .seg-estado[aria-pressed="true"][data-estado="pendiente"] { border-color: var(--amarillo); background: #FFF4D6; color: #7A4500; }
+  .seg-estado[aria-pressed="true"][data-estado="cumplida"] { border-color: var(--verde); background: var(--verde); color: white; }
+  .seg-estado[aria-pressed="true"][data-estado="anulada"] { border-color: var(--gris); background: var(--gris); color: white; }
+  .seg-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px; }
+  .seg-campos.uno { grid-template-columns: minmax(0, 1fr); }
+  .seg-campos .field-label { font-size: 10px; margin-bottom: 3px; }
+  .seg-campos .field-input { padding: 9px 10px; font-size: 13px; border-radius: 9px; }
+  .seg-vacio {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px dashed var(--gris-medio);
+    border-radius: var(--radio);
+    background: white;
+    font-size: 12px;
+    color: #4F4F4F;
+    line-height: 1.45;
+  }
+  .review-seg-estado { font-weight: 700; }
+  .review-seg-estado.cumplida { color: var(--verde); }
+  .review-seg-estado.pendiente { color: #7A4500; }
+  .review-seg-estado.vencida { color: var(--rojo); }
+  .review-seg-estado.anulada { color: #4F4F4F; }
   .hidden { display: none !important; }
 
 </style>
@@ -1135,6 +1230,23 @@
   </div>
 
   <div class="field-group">
+    <div class="condiciones-card">
+      <div class="condiciones-cabecera">
+        <div class="field-label" id="condicionesTitulo">Condiciones de la visita</div>
+        <span class="opcional">Opcional</span>
+      </div>
+      <div class="meteo-grid" id="meteoGrid" role="group" aria-labelledby="condicionesTitulo"></div>
+      <div class="temperatura-row">
+        <label class="field-label" for="temperatura">Temperatura</label>
+        <input type="text" class="field-input" id="temperatura" inputmode="decimal" maxlength="5" placeholder="14" autocomplete="off">
+        <span>°C</span>
+        <button type="button" class="chip-btn signo-btn" id="temperaturaSigno" aria-label="Cambiar el signo de la temperatura (bajo cero)" title="Bajo cero">±</button>
+      </div>
+      <div class="condiciones-ayuda">Marca las que apliquen. Salen en el PDF, en Datos generales.</div>
+    </div>
+  </div>
+
+  <div class="field-group">
     <div class="field-label">Localización GPS <span class="required">*</span></div>
     <div class="gps-card">
       <div class="gps-warning">
@@ -1215,12 +1327,14 @@
   <p class="phase-title">📝 <span>Observaciones e indicaciones</span></p>
   <p class="phase-subtitle">Lo observado en la visita y lo que se ordena o se acuerda.</p>
 
+  <div id="seguimientoBloque" class="hidden"></div>
+
   <div class="field-group">
     <label class="field-label" for="observaciones">Observaciones generales</label>
     <textarea class="field-input obs-textarea" id="observaciones" placeholder="Estado general, incidencias, comprobaciones realizadas…"></textarea>
     <div class="obs-count"><span id="obsCount">0</span> / <span id="obsMax">3000</span></div>
   </div>
-  <div class="field-label">Indicaciones <span>(<span id="indCount">0</span>)</span></div>
+  <div class="field-label"><span id="indTitulo">Indicaciones</span> <span>(<span id="indCount">0</span>)</span></div>
   <div id="indicacionesLista"></div>
   <button class="add-photo-btn" onclick="anadirIndicacion()">➕ Añadir indicación</button>
   <datalist id="responsablesLista"></datalist>
@@ -1341,6 +1455,13 @@
         <button onclick="elegirImportacion()">📥 Importar</button>
       </div>
     </div>
+    <div class="copia-card" id="registroCard">
+      <div class="copia-titulo">📊 Registro de actas (Excel)</div>
+      <div class="copia-estado">Todas las actas del teléfono y sus indicaciones, con el estado actual de cada una. Se guarda en Descargas.</div>
+      <div class="acta-card-actions">
+        <button id="btnRegistro" onclick="descargarRegistro()">📊 Descargar registro (.xlsx)</button>
+      </div>
+    </div>
     <div class="panel-note">Las actas se guardan solo en este teléfono. Las emitidas son de solo lectura.</div>
     <div id="listaActas"></div>
     <button class="btn btn-secondary panel-enlace" onclick="compartirApp()">🔗 Compartir el enlace de la app</button>
@@ -1381,20 +1502,22 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v2.3
+//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v3.0
 //  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
 //    Las actas emitidas (PDF compartido o descargado) son de solo lectura;
 //    «Corregir» crea la revisión siguiente del mismo número (control ISO 9001).
-//  · Numeración automática por expediente, asistentes, observaciones,
-//    indicaciones y firmas de todos los asistentes.
-//  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto.
+//  · Numeración automática por expediente, asistentes, condiciones de la visita,
+//    observaciones, indicaciones y firmas de todos los asistentes.
+//  · Seguimiento de las indicaciones de la visita anterior del expediente (cumplida,
+//    pendiente o anulada) y registro de actas e indicaciones en Excel (sin librerías).
+//  · GPS en vivo, modo «sin cobertura» y hora/GPS de cada foto, con enlace al mapa en el PDF.
 //  · PDF con jsPDF local (lib/), preparado al entrar en Emisión y compartido
 //    con el menú del teléfono (Web Share). Se instala y funciona sin cobertura (sw.js).
 //  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '2.3';
+const VERSION = '3.0';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
 const EMPRESA = 'TEAMBIMCIVIL';
 // Formato del sistema de gestión de calidad (ISO 9001): su nombre es el título del PDF y figura en el
@@ -1412,9 +1535,22 @@ const GPS_FOTO_VALIDEZ_MS = 120000;   // una lectura del móvil vale para las fo
 const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
 const CLAVE_ULTIMA_COPIA = 'tbc-ultima-copia';
 const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios
-const ESQUEMA = 2;                    // versión del registro del acta en el teléfono
+const ESQUEMA = 3;                    // versión del registro del acta en el teléfono
 const FORMATO_EXPORTACION = 'tbc-acta';   // identifica los acta.json exportados por la app
 const VERSION_EXPORTACION = 1;
+// Condiciones de la visita (opcionales, varias a la vez). Las claves se guardan en el acta: no cambiarlas.
+const METEO = [
+  { clave: 'despejado', nombre: 'Despejado' }, { clave: 'nuboso', nombre: 'Nuboso' }, { clave: 'lluvia', nombre: 'Lluvia' },
+  { clave: 'viento', nombre: 'Viento' }, { clave: 'niebla', nombre: 'Niebla' }, { clave: 'calor', nombre: 'Calor' },
+  { clave: 'frio', nombre: 'Frío' },
+];
+const TEMPERATURA = { min: -30, max: 55 };   // °C
+// Estado de una indicación de una visita anterior al revisarla en la visita siguiente.
+const ESTADOS_SEGUIMIENTO = [
+  { clave: 'pendiente', nombre: 'Pendiente' }, { clave: 'cumplida', nombre: 'Cumplida' }, { clave: 'anulada', nombre: 'Anulada' },
+];
+const MAX_COMENTARIO_SEGUIMIENTO = 300;
+const MAPA = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
 // ═══════════════════════════════════
 //  ESTADO
@@ -1439,6 +1575,13 @@ const horaLocal = (d = new Date()) => `${dos(d.getHours())}:${dos(d.getMinutes()
 const fechaES = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
 // fecha y hora ISO completas → '22/10/2026 10:30' (hora local)
 const fechaHoraES = iso => (iso ? `${fechaES(fechaLocal(new Date(iso)))} ${horaLocal(new Date(iso))}` : '');
+// 'aaaa-mm-dd' que existe en el calendario, entre 1900 y 2999 (lo que admite una hoja de Excel).
+const fechaValida = v => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(typeof v === 'string' ? v : '');
+  if (!m || m[1] < '1900' || m[1] > '2999') return false;
+  const f = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return f.getUTCMonth() === Number(m[2]) - 1 && f.getUTCDate() === Number(m[3]);
+};
 const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = valor => String(valor ?? '').replace(/[&<>"']/g, c => ENTIDADES[c]);
 const escaparRegex = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1601,8 +1744,15 @@ function actaNueva(base = {}) {
     },
     gps: null,                        // { lat, lng, acc, hora }
     sinGps: { activo: false, referencia: '', lat: '', lng: '' },
+    condiciones: { meteo: [], temperatura: '' },   // claves de METEO (en su orden) y °C tal como se escriben: '14' o '14,5'
     asistentes: [],                   // { id, nombre, empresa, cargo, firma } (el técnico va aparte)
     observaciones: '',
+    // Indicaciones de actas anteriores revisadas en esta visita. id = el de la indicación original (estable entre
+    // actas y revisiones); plazo = el vigente al empezar la visita; nuevoPlazo solo si queda pendiente.
+    seguimiento: [],                  // { id, origen: { acta, rev, n, fecha }, texto, responsable, plazo, plazoInicial, estado, nuevoPlazo, comentario }
+    seguimientoOrigen: null,          // acta de la que se cargó: { expediente, actaId, acta, rev, fecha, hora }
+    seguimientoNotas: [],             // lo anotado en indicaciones que han salido de la lista: { id, estado, nuevoPlazo, comentario }
+    seguimientoGuardado: null,        // lista cuya acta de origen no está en el teléfono, por si vuelve a valer: { origen, lista }
     indicaciones: [],                 // { id, texto, responsable, plazo }
     fotos: [],                        // { id, ancho, alto, comentario, hora, horaFuente, gps }
     firma: [],                        // firma del técnico: trazos { refW, refH, puntos: [[x, y], …] }
@@ -1610,19 +1760,27 @@ function actaNueva(base = {}) {
   };
 }
 
-// Pone al día un acta guardada con una versión anterior (v2.1: 6 fases, sin asistentes ni revisiones).
+// Pone al día un acta guardada con una versión anterior, paso a paso.
 function migrarActa(acta) {
   if (!acta || acta.esquema >= ESQUEMA) return acta;
-  const faseAntigua = { 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 8 };
-  acta.fase = faseAntigua[acta.fase] || 1;
-  acta.revision = acta.revision || 0;
-  acta.revisiones = acta.revisiones || [{ rev: 0, fecha: acta.emitida || null, motivo: 'Emisión inicial' }];
-  acta.datos = { numAuto: false, cargoTecnico: '', ...acta.datos };
-  acta.asistentes = acta.asistentes || [];
-  acta.observaciones = acta.observaciones || '';
-  acta.indicaciones = acta.indicaciones || [];
-  acta.firmasAsistentes = acta.firmasAsistentes || {};
-  acta.firma = acta.firma || [];
+  if (!(acta.esquema >= 2)) {         // esquema 1 (v2.1): 6 fases, sin asistentes ni revisiones
+    const faseAntigua = { 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 8 };
+    acta.fase = faseAntigua[acta.fase] || 1;
+    acta.revision = acta.revision || 0;
+    acta.revisiones = acta.revisiones || [{ rev: 0, fecha: acta.emitida || null, motivo: 'Emisión inicial' }];
+    acta.datos = { numAuto: false, cargoTecnico: '', ...acta.datos };
+    acta.asistentes = acta.asistentes || [];
+    acta.observaciones = acta.observaciones || '';
+    acta.indicaciones = acta.indicaciones || [];
+    acta.firmasAsistentes = acta.firmasAsistentes || {};
+    acta.firma = acta.firma || [];
+  }
+  // esquema 2 (v2.2 y v2.3): sin condiciones de la visita ni seguimiento de indicaciones
+  acta.condiciones = acta.condiciones || { meteo: [], temperatura: '' };
+  acta.seguimiento = acta.seguimiento || [];
+  acta.seguimientoOrigen = acta.seguimientoOrigen || null;
+  acta.seguimientoNotas = acta.seguimientoNotas || [];
+  acta.seguimientoGuardado = acta.seguimientoGuardado || null;
   acta.esquema = ESQUEMA;
   return acta;
 }
@@ -1684,9 +1842,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   avisarSiEsArchivo();
   iniciarFirmas();
   enlazarCampos();
+  iniciarCondiciones();
   $('commentsContainer').addEventListener('input', alEscribirComentario);
   $('asistentesLista').addEventListener('input', alEditarAsistente);
   $('asistentesLista').addEventListener('change', alEditarAsistente);
+  $('seguimientoBloque').addEventListener('click', alPulsarSeguimiento);
+  $('seguimientoBloque').addEventListener('input', alEditarSeguimiento);
   $('indicacionesLista').addEventListener('input', alEditarIndicacion);
   $('observaciones').addEventListener('input', alEscribirObservaciones);
   $('firmasAsistentes').addEventListener('change', alMarcarNoFirma);
@@ -1751,6 +1912,7 @@ function pintarActa() {
   $('actaNum').readOnly = state.acta.revision > 0;   // una revisión conserva el número
   actualizarNumActa();
   pintarAyudaNumero();
+  pintarCondiciones();
   pintarGPS();
   pintarSinGps();
   pintarFotos();
@@ -1925,7 +2087,73 @@ function validarIdentificacion() {
   for (const [clave, mensaje] of obligatorios) {
     if (!String(d[clave] || '').trim()) return aviso('⚠️', 'Campo requerido', mensaje);
   }
+  if (temperaturaValida(state.acta.condiciones.temperatura) === false) {
+    return aviso('🌡️', 'Temperatura no válida', `Escribe la temperatura en °C, entre ${TEMPERATURA.min} y ${TEMPERATURA.max} (p. ej. 14 o 14,5), o déjala vacía.`);
+  }
   return validarUbicacion();
+}
+
+// ── Condiciones de la visita (opcionales): tiempo, varias a la vez, y temperatura ──
+function iniciarCondiciones() {
+  $('meteoGrid').innerHTML = METEO.map(m =>
+    `<button type="button" class="chip-btn" data-meteo="${m.clave}" aria-pressed="false">${esc(m.nombre)}</button>`).join('');
+  $('meteoGrid').addEventListener('click', e => {
+    const boton = e.target.closest('[data-meteo]');
+    if (boton) alternarMeteo(boton.dataset.meteo);
+  });
+  $('temperatura').addEventListener('input', () => {
+    if (soloLectura()) return;
+    state.acta.condiciones.temperatura = $('temperatura').value;
+    guardarPronto();
+  });
+  // El teclado numérico del iPhone no tiene signo menos: «±» pone o quita el signo de la temperatura.
+  $('temperaturaSigno').addEventListener('click', () => {
+    if (soloLectura()) return;
+    const campo = $('temperatura'), t = campo.value.trim();
+    campo.value = /^[-−]/.test(t) ? t.slice(1) : `-${t}`;
+    state.acta.condiciones.temperatura = campo.value;
+    guardarPronto();
+    campo.focus();
+  });
+}
+
+function alternarMeteo(clave) {
+  if (soloLectura()) return;
+  const c = state.acta.condiciones;
+  const marcadas = new Set(c.meteo);
+  if (marcadas.has(clave)) marcadas.delete(clave);
+  else marcadas.add(clave);
+  c.meteo = METEO.map(m => m.clave).filter(k => marcadas.has(k));   // siempre en el orden de METEO
+  pintarCondiciones();
+  guardarPronto();
+}
+
+function pintarCondiciones() {
+  const c = state.acta.condiciones, bloqueado = soloLectura();
+  document.querySelectorAll('#meteoGrid [data-meteo]').forEach(boton => {
+    boton.setAttribute('aria-pressed', String(c.meteo.includes(boton.dataset.meteo)));
+    boton.disabled = bloqueado;
+  });
+  $('temperatura').value = c.temperatura || '';
+  $('temperaturaSigno').disabled = bloqueado;
+}
+
+// null = sin temperatura; false = no válida; número = válida (admite «14», «14,5», «-3» o «14.5»)
+function temperaturaValida(valor) {
+  const t = String(valor ?? '').trim().replace('−', '-');
+  if (!t) return null;
+  if (!/^-?\d{1,2}([.,]\d)?$/.test(t)) return false;
+  const n = Number(t.replace(',', '.'));
+  return n >= TEMPERATURA.min && n <= TEMPERATURA.max ? n : false;
+}
+
+// «Nuboso, viento · 14 °C» (vacío si no se ha indicado nada)
+function textoCondiciones(acta) {
+  const c = acta.condiciones || {};
+  const nombres = METEO.filter(m => (c.meteo || []).includes(m.clave)).map((m, i) => (i ? m.nombre.toLowerCase() : m.nombre));
+  const t = temperaturaValida(c.temperatura);
+  const temperatura = typeof t === 'number' ? `${String(t).replace('.', ',')} °C` : '';
+  return [nombres.join(', '), temperatura].filter(Boolean).join(' · ');
 }
 
 function validarUbicacion() {
@@ -1963,6 +2191,13 @@ function textoUbicacion(acta, paraPDF) {
     return `Sin cobertura GPS · Ref.: ${acta.sinGps.referencia.trim()}` + (c ? ` · Coord. manuales: ${c.lat}, ${c.lng}` : '');
   }
   return '—';
+}
+
+// Ubicación de la visita en Google Maps (GPS o coordenadas manuales); null si no hay coordenadas.
+function enlaceMapa(acta) {
+  if (acta.gps) return MAPA(acta.gps.lat, acta.gps.lng);
+  const c = acta.sinGps.activo ? coordenadasManuales(acta) : null;
+  return c ? MAPA(c.lat, c.lng) : null;
 }
 
 // ── GPS en vivo: se va quedando con la lectura más precisa ──
@@ -2349,17 +2584,30 @@ async function quitarFoto(indice) {
   pintarFotos();
 }
 
+// Hora de la foto, con el día si no es el de la visita: «20:22» o «21/10/2026 18:05»
+function cuandoFoto(foto, acta) {
+  const [dia, hora] = String(foto.hora || '').split(' ');
+  return dia && dia !== acta.datos.fecha ? `${fechaES(dia)} ${hora}` : (hora || '');
+}
+
+// Texto bajo la foto en el PDF, por partes: «20:22 · » + «37.389210, -5.984460» (enlace al mapa) + « (±8 m)»
+function partesMetaFoto(foto, acta) {
+  const g = foto.gps, cuando = cuandoFoto(foto, acta);
+  if (!g) return { antes: `${cuando} · sin GPS`, coordenadas: '', despues: '', url: null };
+  return {
+    antes: `${cuando} · `, coordenadas: `${g.lat}, ${g.lng}`, url: MAPA(g.lat, g.lng),
+    despues: `${g.acc ? ` (±${g.acc} m)` : ''}${g.fuente === 'camara' ? ' (cámara)' : ''}`,
+  };
+}
+
 // «20:22 · 📍 ±8 m» (pantalla) o «20:22 · 37.389210, -5.984460 (±8 m)» (PDF)
 function textoMetaFoto(foto, paraPDF, acta = state.acta) {
-  const [dia, hora] = String(foto.hora || '').split(' ');
-  const cuando = dia && dia !== acta.datos.fecha ? `${fechaES(dia)} ${hora}` : (hora || '');
-  const g = foto.gps;
-  const precision = g && g.acc ? ` (±${g.acc} m)` : '';
   if (paraPDF) {
-    const donde = g ? `${g.lat}, ${g.lng}${precision}${g.fuente === 'camara' ? ' (cámara)' : ''}` : 'sin GPS';
-    return `${cuando} · ${donde}`;
+    const p = partesMetaFoto(foto, acta);
+    return p.antes + p.coordenadas + p.despues;
   }
-  return `🕒 ${cuando} · ${g ? `📍${g.acc ? ` ±${g.acc} m` : ''}` : 'sin GPS'}`;
+  const g = foto.gps;
+  return `🕒 ${cuandoFoto(foto, acta)} · ${g ? `📍${g.acc ? ` ±${g.acc} m` : ''}` : 'sin GPS'}`;
 }
 
 function pintarFotos() {
@@ -2418,7 +2666,258 @@ function construirAcuerdos() {
   $('observaciones').value = state.acta.observaciones;
   $('obsCount').textContent = state.acta.observaciones.length;
   $('responsablesLista').innerHTML = responsablesPosibles().map(r => `<option value="${esc(r)}"></option>`).join('');
+  pintarSeguimiento();
   pintarIndicaciones();
+  cargarSeguimiento(5).then(cambio => {     // si ya había un seguimiento cargado y cambia, se avisa
+    if (cambio && cambio.habia) avisoSeguimiento(state.acta.seguimiento.length ? 'Revisa el estado de cada indicación.' : '');
+  });
+}
+
+// ── Seguimiento de las indicaciones de visitas anteriores ──
+// La fuente es la última acta emitida (y no sustituida) del mismo expediente que hay en el teléfono,
+// con otro número y con la visita antes que esta (el mismo día, a la misma hora o antes).
+const ordenVisitas = (a, b) => String(a.datos.fecha || '').localeCompare(String(b.datos.fecha || ''))
+  || String(a.datos.hora || '').localeCompare(String(b.datos.hora || ''))
+  || String(a.emitida || '').localeCompare(String(b.emitida || ''));
+const mismoTexto = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+// ¿Una visita (fecha y hora) es anterior a la del acta, o simultánea? Sin hora en alguna de las dos, cuenta el día.
+const visitaAnterior = (fecha, hora, d) => Boolean(fecha && d.fecha)
+  && (fecha < d.fecha || (fecha === d.fecha && (!hora || !d.hora || hora <= d.hora)));
+
+function fuenteSeguimiento(actas, acta) {
+  const d = acta.datos;
+  if (!d.expediente.trim()) return null;
+  const candidatas = actas.filter(a => a.id !== acta.id && a.estado === 'emitida' && !a.sustituidaPor
+    && mismoTexto(a.datos.expediente, d.expediente) && !mismoTexto(a.datos.actaNum, d.actaNum)
+    && visitaAnterior(a.datos.fecha, a.datos.hora, d));
+  return candidatas.sort(ordenVisitas).pop() || null;
+}
+
+const origenDeActa = a => ({
+  expediente: a.datos.expediente.trim(), actaId: a.id, acta: a.datos.actaNum.trim(), rev: a.revision,
+  fecha: a.datos.fecha, hora: a.datos.hora || '',
+});
+
+// Un origen cuya acta no está en este teléfono (borrador traído de otro teléfono, o acta borrada) sigue valiendo si es
+// del mismo expediente, anterior a la visita y no hay aquí un acta posterior: su seguimiento se conserva tal cual.
+function conservarOrigen(origen, fuente, actas, acta) {
+  if (!origen || actas.some(a => a.id === origen.actaId)) return false;
+  const d = acta.datos;
+  if (!mismoTexto(origen.expediente, d.expediente) || mismoTexto(origen.acta, d.actaNum)
+    || !visitaAnterior(origen.fecha, origen.hora, d)) return false;
+  if (!fuente) return true;
+  if (mismoTexto(fuente.datos.actaNum, origen.acta)) return fuente.revision < origen.rev;   // otra revisión de la misma acta
+  const f = fuente.datos;
+  return !(f.fecha > origen.fecha || (f.fecha === origen.fecha && f.hora && origen.hora && f.hora > origen.hora));
+}
+
+// Lo que la fuente deja abierto: las de su seguimiento que siguen pendientes (con su plazo vigente)
+// y sus indicaciones nuevas. Todas empiezan como «pendiente».
+function indicacionesAbiertas(fuente) {
+  const lista = (fuente.seguimiento || []).filter(s => s.estado === 'pendiente').map(s => ({
+    id: s.id, origen: { ...s.origen }, texto: s.texto, responsable: s.responsable,
+    plazo: s.nuevoPlazo || s.plazo, plazoInicial: s.plazoInicial, estado: 'pendiente', nuevoPlazo: '', comentario: '',
+  }));
+  fuente.indicaciones.forEach((ind, i) => lista.push({
+    id: ind.id, origen: { acta: fuente.datos.actaNum.trim(), rev: fuente.revision, n: i + 1, fecha: fuente.datos.fecha },
+    texto: ind.texto.trim(), responsable: ind.responsable.trim(), plazo: ind.plazo || '', plazoInicial: ind.plazo || '',
+    estado: 'pendiente', nuevoPlazo: '', comentario: '',
+  }));
+  const vistas = new Set();
+  return lista.filter(s => !vistas.has(s.id) && vistas.add(s.id));
+}
+
+// Carga el seguimiento al entrar en Acuerdos y lo vuelve a comprobar en Revisión, antes de emitir y tras importar.
+// Solo en borradores de la Rev. 0: una revisión conserva el del acta que corrige. Si cambia la fuente (otro expediente
+// u otra fecha, o se ha emitido otra acta), se rehace la lista, sin perder nada de lo que no se puede rehacer:
+// · lo anotado en cada indicación (estado, nuevo plazo y comentario) que sale de la lista queda en seguimientoNotas
+//   y vuelve con ella (p. ej. al corregir una fecha mal puesta);
+// · una lista cuya acta de origen no está en este teléfono queda en seguimientoGuardado y vuelve cuando ese origen
+//   vuelve a valer.
+// Solo se aplica si se sigue en la fase que lo pidió y no ha empezado otra comprobación (si no, SEGUIMIENTO_ABORTADO).
+// Devuelve null si no hay cambios, o { habia } (si ya había un seguimiento) si los hay.
+let turnoSeguimiento = 0;
+const SEGUIMIENTO_ABORTADO = Object.freeze({ abortado: true });
+const anotada = s => s.estado !== 'pendiente' || Boolean(String(s.comentario).trim() || s.nuevoPlazo);
+const copiaSeguimiento = lista => lista.map(s => ({ ...s, origen: { ...s.origen } }));
+
+async function cargarSeguimiento(fase = state.fase) {
+  const acta = state.acta;
+  if (!acta || soloLectura() || acta.revision > 0) return null;
+  const turno = ++turnoSeguimiento;
+  let actas;
+  try { actas = await Almacen.listarActas(); } catch (e) { return null; }   // sin almacén: no hay actas anteriores
+  if (state.acta !== acta || turno !== turnoSeguimiento || state.fase !== fase || soloLectura()) return SEGUIMIENTO_ABORTADO;
+  const fuente = fuenteSeguimiento(actas, acta), origen = acta.seguimientoOrigen, guardado = acta.seguimientoGuardado || null;
+  if (conservarOrigen(origen, fuente, actas, acta)) return null;
+  const destino = guardado && conservarOrigen(guardado.origen, fuente, actas, acta)
+    ? { origen: guardado.origen, lista: copiaSeguimiento(guardado.lista), deGuardado: true }
+    : { origen: fuente ? origenDeActa(fuente) : null, lista: fuente ? indicacionesAbiertas(fuente) : [] };
+  if ((destino.origen ? destino.origen.actaId : null) === (origen ? origen.actaId : null)) return null;
+  const habia = Boolean(origen || guardado || acta.seguimiento.length || (acta.seguimientoNotas || []).length);
+  // La lista que se deja, si su acta no está en el teléfono, ya no se podría rehacer: se guarda por si vuelve.
+  const aGuardar = origen && !actas.some(a => a.id === origen.actaId)
+    ? { origen: { ...origen }, lista: copiaSeguimiento(acta.seguimiento) } : null;
+  const notas = new Map((acta.seguimientoNotas || []).map(n => [n.id, n]));
+  for (const s of acta.seguimiento) {
+    if (anotada(s)) notas.set(s.id, { id: s.id, estado: s.estado, nuevoPlazo: s.nuevoPlazo, comentario: s.comentario });
+    else notas.delete(s.id);
+  }
+  // Cada indicación de la lista nueva toma lo último anotado: lo de la lista actual o, si no está en ella, sus notas.
+  const actuales = new Map(acta.seguimiento.map(s => [s.id, s]));
+  acta.seguimiento = destino.lista.map(s => {
+    const n = actuales.get(s.id) || notas.get(s.id);
+    return n ? { ...s, estado: n.estado, nuevoPlazo: n.estado === 'pendiente' ? n.nuevoPlazo : '', comentario: n.comentario } : s;
+  });
+  const enLista = new Set(acta.seguimiento.map(s => s.id));
+  acta.seguimientoNotas = [...notas.values()].filter(n => !enLista.has(n.id));
+  acta.seguimientoOrigen = destino.origen ? { ...destino.origen } : null;
+  acta.seguimientoGuardado = aGuardar || (destino.deGuardado ? null : guardado);
+  guardarPronto();
+  if (state.fase === 5) {
+    pintarSeguimiento();
+    pintarIndicaciones();
+  }
+  return { habia };
+}
+
+// Tras importar actas: si cambia el seguimiento del borrador en pantalla, se actualiza y se vuelve a Acuerdos para
+// revisarlo (así no se emite un PDF ya preparado con el seguimiento anterior). Devuelve true si ha cambiado.
+async function revisarSeguimientoEnPantalla() {
+  if (!state.acta || soloLectura() || state.fase < 5) return false;
+  const fase = state.fase;
+  const cambio = await cargarSeguimiento(fase);
+  if (cambio && cambio !== SEGUIMIENTO_ABORTADO) {
+    if (state.fase !== 5) irAFase(5);
+    return true;
+  }
+  // Sin cambios: si la preparación del PDF se interrumpió por esta comprobación, se vuelve a lanzar.
+  if (fase === ULTIMA_FASE && state.fase === ULTIMA_FASE && !soloLectura() && pdfEmision.clave !== clavePDF(state.acta)) construirEmision();
+  return false;
+}
+
+function avisoSeguimiento(final) {
+  const o = state.acta.seguimientoOrigen;
+  aviso('🔁', 'Seguimiento actualizado', `${o
+    ? `Se han cargado las indicaciones abiertas del acta ${o.acta} (${fechaES(o.fecha)}), la última emitida de este expediente antes de esta visita.`
+    : 'No hay en el teléfono un acta emitida de este expediente anterior a esta visita: el acta queda sin seguimiento de indicaciones.'} ${final}`.trim());
+}
+
+const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+const seguimientoVencido = (s, acta) => s.estado === 'pendiente' && Boolean(s.plazo && acta.datos.fecha) && s.plazo < acta.datos.fecha;
+
+// «425_2026.CON-AV-02» → «AV-02 · 1»: sin el expediente, que ya figura en el acta.
+function origenCorto(origen, expediente) {
+  const numero = String(origen.acta || '').trim(), exp = String(expediente || '').trim().toLowerCase();
+  const corto = exp && numero.length > exp.length + 1 && numero.toLowerCase().startsWith(`${exp}-`) ? numero.slice(exp.length + 1) : numero;
+  return `${corto || '—'}${origen.rev ? ` Rev. ${origen.rev}` : ''}${origen.n ? ` · ${origen.n}` : ''}`;
+}
+
+function resumenSeguimiento(acta) {
+  const r = { total: 0, cumplidas: 0, pendientes: 0, vencidas: 0, anuladas: 0 };
+  for (const s of acta.seguimiento || []) {
+    r.total++;
+    if (s.estado === 'cumplida') r.cumplidas++;
+    else if (s.estado === 'anulada') r.anuladas++;
+    else {
+      r.pendientes++;
+      if (seguimientoVencido(s, acta)) r.vencidas++;
+    }
+  }
+  return r;
+}
+
+// «2 cumplidas · 1 pendiente · 0 anuladas»
+const textoResumenSeguimiento = r => [plural(r.cumplidas, 'cumplida', 'cumplidas'),
+  `${plural(r.pendientes, 'pendiente', 'pendientes')}${r.vencidas ? ` (${plural(r.vencidas, 'vencida', 'vencidas')})` : ''}`,
+  plural(r.anuladas, 'anulada', 'anuladas')].join(' · ');
+
+// Estado para mostrar: [texto, clase] (la clase da el color en pantalla, en el PDF y en el registro)
+function estadoSeguimiento(s, acta) {
+  if (s.estado === 'cumplida') return ['Cumplida', 'cumplida'];
+  if (s.estado === 'anulada') return ['Anulada', 'anulada'];
+  return seguimientoVencido(s, acta) ? ['Pendiente · vencida', 'vencida'] : ['Pendiente', 'pendiente'];
+}
+
+function pintarSeguimiento() {
+  const acta = state.acta, lista = acta.seguimiento, origen = acta.seguimientoOrigen;
+  const bloque = $('seguimientoBloque');
+  $('indTitulo').textContent = lista.length ? 'Nuevas indicaciones' : 'Indicaciones';
+  bloque.classList.toggle('hidden', !lista.length && !origen);
+  if (!lista.length && !origen) {
+    bloque.innerHTML = '';
+    return;
+  }
+  const ultima = origen ? `${origenCorto({ acta: origen.acta, rev: origen.rev }, acta.datos.expediente)} del ${fechaES(origen.fecha)}` : '';
+  if (!lista.length) {
+    bloque.innerHTML = `<div class="seg-vacio">✓ No quedan indicaciones abiertas de visitas anteriores. Última acta emitida de este expediente: ${esc(ultima)}.</div>`;
+    return;
+  }
+  bloque.innerHTML = `
+    <div class="seg-cabecera">
+      <div class="field-label">Indicaciones de visitas anteriores (${lista.length})</div>
+      <div class="seg-sub">${origen ? `Abiertas en las actas emitidas de ${esc(origen.expediente)} · última: ${esc(ultima)}` : 'Copiadas del acta que se corrige.'}</div>
+    </div>
+    <div class="seg-resumen" id="segResumen">${pastillasSeguimiento(resumenSeguimiento(acta))}</div>
+    ${lista.map((s, i) => tarjetaSeguimiento(s, i, acta)).join('')}`;
+}
+
+function pastillasSeguimiento(r) {
+  return [
+    [r.cumplidas, 'cumplida', 'cumplidas', 'cumplida'], [r.pendientes, 'pendiente', 'pendientes', 'pendiente'],
+    [r.vencidas, 'vencida', 'vencidas', 'vencida'], [r.anuladas, 'anulada', 'anuladas', 'anulada'],
+  ].filter(([n]) => n).map(([n, uno, varios, clase]) => `<span class="seg-pill ${clase}">${plural(n, uno, varios)}</span>`).join('');
+}
+
+function tarjetaSeguimiento(s, i, acta) {
+  const vencida = seguimientoVencido(s, acta), corto = origenCorto(s.origen, acta.datos.expediente);
+  const plazo = (s.plazo ? `Plazo ${fechaES(s.plazo)}` : 'Sin plazo')
+    + (s.plazoInicial && s.plazoInicial !== s.plazo ? ` (inicial ${fechaES(s.plazoInicial)})` : '') + (vencida ? ' · VENCIDA' : '');
+  const botones = ESTADOS_SEGUIMIENTO.map(e =>
+    `<button type="button" class="seg-estado" data-estado="${e.clave}" aria-pressed="${s.estado === e.clave}">${e.nombre}</button>`).join('');
+  const comentario = (etiqueta, ejemplo) => `<div><label class="field-label" for="segCom${i}">${etiqueta}</label>`
+    + `<input type="text" class="field-input" id="segCom${i}" data-campo="comentario" maxlength="${MAX_COMENTARIO_SEGUIMIENTO}" value="${esc(s.comentario)}" placeholder="${ejemplo}"></div>`;
+  let campos;
+  if (s.estado === 'pendiente') {
+    campos = `<div class="seg-campos"><div><label class="field-label" for="segPlazo${i}">Nuevo plazo</label>`
+      + `<input type="date" class="field-input" id="segPlazo${i}" data-campo="nuevoPlazo" min="${esc(acta.datos.fecha)}" value="${esc(s.nuevoPlazo)}"></div>`
+      + `${comentario('Comentario', 'Opcional')}</div>`;
+  } else if (s.estado === 'anulada') {
+    campos = `<div class="seg-campos uno">${comentario('Motivo <span class="required">*</span>', 'Por qué ya no procede')}</div>`;
+  } else {
+    campos = `<div class="seg-campos uno">${comentario('Comentario', 'Opcional: cómo se ha comprobado')}</div>`;
+  }
+  return `
+    <div class="seg-card${vencida ? ' vencida' : ''}" data-seguimiento="${i}">
+      <div class="seg-top"><span class="seg-origen">${esc(corto)}</span><span class="seg-plazo${vencida ? ' vencida' : ''}">${esc(plazo)}</span></div>
+      <div class="seg-texto">${esc(s.texto)}</div>
+      ${s.responsable ? `<div class="seg-resp">${esc(s.responsable)}</div>` : ''}
+      <div class="seg-estados" role="group" aria-label="Estado de la indicación ${esc(corto)}">${botones}</div>
+      ${campos}
+    </div>`;
+}
+
+function alPulsarSeguimiento(e) {
+  const boton = e.target.closest('[data-estado]'), tarjeta = e.target.closest('[data-seguimiento]');
+  if (!boton || !tarjeta || soloLectura()) return;
+  const i = Number(tarjeta.dataset.seguimiento), s = state.acta.seguimiento[i];
+  if (!s || s.estado === boton.dataset.estado) return;
+  s.estado = boton.dataset.estado;
+  if (s.estado !== 'pendiente') s.nuevoPlazo = '';      // el nuevo plazo solo tiene sentido si sigue pendiente
+  guardarPronto();
+  pintarSeguimiento();
+  const destino = s.estado === 'anulada' && !s.comentario.trim()
+    ? $(`segCom${i}`) : document.querySelector(`[data-seguimiento="${i}"] [data-estado="${s.estado}"]`);
+  if (destino) destino.focus();
+}
+
+function alEditarSeguimiento(e) {
+  const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-seguimiento]');
+  if (!campo || !tarjeta || soloLectura()) return;
+  const s = state.acta.seguimiento[Number(tarjeta.dataset.seguimiento)];
+  if (!s) return;
+  s[campo] = e.target.value;
+  guardarPronto();
 }
 
 // Sugerencias para «Responsable»: el técnico y cada asistente («Empresa · cargo»).
@@ -2477,7 +2976,14 @@ function quitarIndicacion(indice) {
 }
 
 function validarAcuerdos() {
-  const vacia = state.acta.indicaciones.findIndex(ind => !ind.texto.trim());
+  const acta = state.acta, nombre = s => origenCorto(s.origen, acta.datos.expediente);
+  const sinMotivo = acta.seguimiento.find(s => s.estado === 'anulada' && !s.comentario.trim());
+  if (sinMotivo) return aviso('📝', 'Falta el motivo', `Indica por qué se anula la indicación ${nombre(sinMotivo)}.`);
+  const plazoAnterior = acta.seguimiento.find(s => s.estado === 'pendiente' && s.nuevoPlazo && acta.datos.fecha && s.nuevoPlazo < acta.datos.fecha);
+  if (plazoAnterior) {
+    return aviso('📅', 'Nuevo plazo no válido', `El nuevo plazo de la indicación ${nombre(plazoAnterior)} no puede ser anterior a la fecha de la visita (${fechaES(acta.datos.fecha)}).`);
+  }
+  const vacia = acta.indicaciones.findIndex(ind => !ind.texto.trim());
   if (vacia >= 0) return aviso('📝', 'Indicación vacía', `Escribe la indicación ${vacia + 1} o quítala.`);
   return true;
 }
@@ -2730,12 +3236,24 @@ function validarEmision() {   // comprobación final antes de emitir: lleva a la
 }
 
 function construirRevision() {
+  pintarRevision();
+  // Se vuelve a comprobar el seguimiento: si desde la fase de Acuerdos se ha emitido otra acta del expediente,
+  // se carga lo que esa acta deja abierto y se avisa para revisarlo.
+  cargarSeguimiento(7).then(cambio => {
+    if (!cambio || cambio === SEGUIMIENTO_ABORTADO) return;
+    pintarRevision();
+    avisoSeguimiento('Revisa su estado en la fase de Acuerdos (← Atrás).');
+  });
+}
+
+function pintarRevision() {
   const acta = state.acta, d = recogerDatos();
   const campo = (etiqueta, valor) => `
     <div class="review-field">
       <div class="review-field-label">${esc(etiqueta)}</div>
       <div class="review-field-val">${esc(valor)}</div>
     </div>`;
+  const condiciones = textoCondiciones(acta);
   $('reviewGeneral').innerHTML = [
     campo('Nº de Acta', `${d.actaNum} · Rev. ${acta.revision}`),
     campo('Técnico', d.tecnico),
@@ -2743,8 +3261,9 @@ function construirRevision() {
     campo('Objeto', d.descripcion || '—'),
     campo('Fecha', fechaES(d.fecha)),
     campo('Hora', d.hora || '—'),
+    condiciones && campo('Condiciones', condiciones),
     campo('Localización GPS', textoUbicacion(acta, false)),
-  ].join('');
+  ].filter(Boolean).join('');
 
   const firmantes = firmantesDelActa();
   $('reviewAsistCount').textContent = firmantes.length;
@@ -2752,12 +3271,21 @@ function construirRevision() {
     i === 0 ? 'Técnico' : `Asistente ${i + 1}`,
     `${f.nombre || '—'}${empresaCargo(f.empresa, f.cargo) ? ` · ${empresaCargo(f.empresa, f.cargo)}` : ''}`)).join('');
 
+  const seguimiento = acta.seguimiento.map(s => {
+    const [estado, clase] = estadoSeguimiento(s, acta);
+    const extra = [s.estado === 'pendiente' && s.nuevoPlazo ? `nuevo plazo ${fechaES(s.nuevoPlazo)}` : '', s.comentario.trim()].filter(Boolean).join(' · ');
+    return `<li><strong>${esc(origenCorto(s.origen, d.expediente))}</strong> ${esc(s.texto)}
+      <span class="review-ind-meta"><span class="review-seg-estado ${clase}">${esc(estado)}</span>${extra ? ` · ${esc(extra)}` : ''}</span></li>`;
+  }).join('');
   const indicaciones = acta.indicaciones.map((ind, i) => `<li><strong>${i + 1}.</strong> ${esc(ind.texto.trim())}
       <span class="review-ind-meta">${esc(ind.responsable.trim() || 'Sin responsable')} · ${ind.plazo ? `Plazo ${esc(fechaES(ind.plazo))}` : 'Sin plazo'}</span></li>`).join('');
-  $('reviewAcuerdos').innerHTML = `
-    <div class="review-photo-num">OBSERVACIONES</div>
+  $('reviewAcuerdos').innerHTML = (seguimiento ? `
+    <div class="review-photo-num">SEGUIMIENTO DE INDICACIONES ANTERIORES (${acta.seguimiento.length})</div>
+    <div class="review-ind-meta">${esc(textoResumenSeguimiento(resumenSeguimiento(acta)))}</div>
+    <ol class="review-lista">${seguimiento}</ol>` : '') + `
+    <div class="review-photo-num"${seguimiento ? ' style="margin-top:10px;"' : ''}>OBSERVACIONES</div>
     <div class="review-photo-comment" style="font-style:normal;">${esc(acta.observaciones.trim()) || 'Sin observaciones.'}</div>
-    <div class="review-photo-num" style="margin-top:10px;">INDICACIONES (${acta.indicaciones.length})</div>
+    <div class="review-photo-num" style="margin-top:10px;">${seguimiento ? 'NUEVAS INDICACIONES' : 'INDICACIONES'} (${acta.indicaciones.length})</div>
     ${indicaciones ? `<ol class="review-lista">${indicaciones}</ol>` : '<div class="review-photo-comment" style="font-style:normal;">Sin indicaciones.</div>'}`;
 
   const fotos = acta.fotos;
@@ -2803,9 +3331,28 @@ function construirEmision() {
   $('emitAyuda').textContent = compartir
     ? '«Compartir PDF» abre el menú del teléfono: WhatsApp, correo, Drive, Teams…'
     : 'Este navegador no permite compartir archivos: descarga el PDF y adjúntalo desde la carpeta Descargas.';
+  if (!emitida) return prepararEmision(acta);
   const listo = pdfVigente();
   if (listo) pintarEstadoPDF({ listo });
   else prepararPDF().catch(() => {});   // el error se muestra en pantalla
+}
+
+// Un borrador comprueba por última vez el seguimiento cada vez que entra en Emisión (también si se abre directamente
+// en esta fase o ya tenía el PDF preparado). Si ha cambiado, no se emite: se vuelve a Acuerdos para revisarlo.
+// Si no, se usa el PDF ya preparado si sigue valiendo o se prepara.
+async function prepararEmision(acta) {
+  // Botones en espera hasta terminar la comprobación, aunque el PDF ya esté preparado: no se puede emitir antes.
+  pintarEstadoPDF(pdfVigente() ? { texto: '⏳ Comprobando el seguimiento de indicaciones…' } : { total: acta.fotos.length });
+  const cambio = await cargarSeguimiento(ULTIMA_FASE);
+  if (cambio === SEGUIMIENTO_ABORTADO || state.acta !== acta || state.fase !== ULTIMA_FASE) return;
+  if (cambio) {
+    irAFase(5);
+    avisoSeguimiento('Revísalo antes de emitir el acta.');
+    return;
+  }
+  const vigente = pdfVigente();
+  if (vigente) pintarEstadoPDF({ listo: vigente });
+  else prepararPDF().catch(() => {});                 // el error se muestra en pantalla
 }
 
 // ¿Permite el navegador compartir un PDF con el menú del teléfono? (Android, iPhone, Windows…)
@@ -2858,7 +3405,7 @@ function prepararPDF() {
   return promesa;
 }
 
-function pintarEstadoPDF({ fotos = 0, total = 0, listo = null, error = null }) {
+function pintarEstadoPDF({ fotos = 0, total = 0, listo = null, error = null, texto = '' }) {
   const caja = $('emitPdfEstado');
   const preparando = !listo && !error;
   $('btnCompartir').disabled = preparando;
@@ -2866,7 +3413,7 @@ function pintarEstadoPDF({ fotos = 0, total = 0, listo = null, error = null }) {
   caja.classList.toggle('error', Boolean(error));
   if (listo) caja.textContent = `PDF listo · ${listo.paginas} página(s) · ${tamanoLegible(listo.blob.size)}`;
   else if (error) caja.textContent = '❌ No se ha podido preparar el PDF. Pulsa «Descargar PDF» para volver a intentarlo.';
-  else caja.textContent = total ? `⏳ Preparando el PDF… fotos ${fotos} de ${total}` : '⏳ Preparando el PDF…';
+  else caja.textContent = texto || (total ? `⏳ Preparando el PDF… fotos ${fotos} de ${total}` : '⏳ Preparando el PDF…');
 }
 
 // Comparte el PDF con el menú del teléfono. El acta se emite al compartirlo (no si se cierra el menú).
@@ -2907,6 +3454,7 @@ function textoCompartir(acta = state.acta) {
     objeto && `Objeto: ${objeto}`,
     `Visita: ${fechaES(d.fecha)}${d.hora ? ` ${d.hora}` : ''} · Técnico: ${d.tecnico}`,
     acta.indicaciones.length && `Indicaciones: ${acta.indicaciones.length}`,
+    acta.seguimiento.length && `Seguimiento: ${textoResumenSeguimiento(resumenSeguimiento(acta))}`,
   ].filter(Boolean).join('\n');
 }
 
@@ -2926,6 +3474,7 @@ const PDF = {
   SUPERIOR: 40,                   // inicio del contenido bajo la cabecera, en las páginas 2 y siguientes
   LIMITE: 297 - 12 - 4,           // límite inferior del contenido: pie de 12 mm y 4 mm de aire
   ROJO: [204, 34, 34], NEGRO: [26, 26, 26], GRIS: [107, 107, 107], BLANCO: [255, 255, 255],
+  VERDE: [30, 122, 61], AMBAR: [138, 90, 0],
 };
 const INTERLINEADO = 1.2;
 const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de texto
@@ -2942,6 +3491,9 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   const { W, H, M, SUPERIOR, LIMITE } = PDF;
   const d = recogerDatos(acta);
   const anchoUtil = W - 2 * M;
+  // Enlaces al mapa: en los borradores y en las actas emitidas desde la v3.0. Un acta emitida antes vuelve a
+  // generar exactamente el PDF que se distribuyó.
+  const conEnlaces = acta.estado !== 'emitida' || Boolean(acta.versionEmision);
   let y = M;
 
   const letra = (estilo, pt, color) => { pdf.setFont(fuente, estilo); pdf.setFontSize(pt); pdf.setTextColor(...color); };
@@ -2964,9 +3516,24 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     }
     y += 4;
   };
+  // Texto en rojo y subrayado que abre `url` (la ubicación en Google Maps). Devuelve su anchura.
+  const enlace = (texto, x, yBase, url) => {
+    pdf.setTextColor(...PDF.ROJO);
+    const ancho = pdf.textWithLink(texto, x, yBase, { url });
+    pdf.setDrawColor(...PDF.ROJO);
+    pdf.setLineWidth(0.2);
+    pdf.line(x, yBase + 0.7, x + ancho, yBase + 0.7);
+    return ancho;
+  };
+  // Secciones numeradas según las que lleva el acta (las nuevas solo salen si tienen contenido).
+  let numeroSeccion = 0;
+  const seccion = titulo => `${++numeroSeccion} · ${titulo}`;
   // Tabla con cabecera gris; las filas saltan de línea y de página (repitiendo la cabecera).
+  // Cada celda es un texto o { texto, color }: en negrita y en ese color (p. ej. el estado de una indicación).
   const tabla = (columnas, filas) => {
     const pad = 1.6, pt = 8.5, lh = altoLinea(pt);
+    const destacada = celda => Boolean(celda) && typeof celda === 'object';
+    const fuenteCelda = celda => (destacada(celda) ? letra('bold', pt, celda.color || PDF.NEGRO) : letra('normal', pt, PDF.NEGRO));
     const cabecera = () => {
       pdf.setFillColor(240, 240, 240);
       pdf.rect(M, y, anchoUtil, 6.5, 'F');
@@ -2981,12 +3548,14 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     asegurar(6.5 + 6.5);
     cabecera();
     for (const fila of filas) {
-      letra('normal', pt, PDF.NEGRO);
-      const celdas = fila.map((texto, i) => pdf.splitTextToSize(textoPDF(texto) || '—', columnas[i].ancho - 2 * pad));
+      const celdas = fila.map((celda, i) => {
+        fuenteCelda(celda);                       // se mide con la letra con la que se escribe
+        return pdf.splitTextToSize(textoPDF(destacada(celda) ? celda.texto : celda) || '—', columnas[i].ancho - 2 * pad);
+      });
       const alto = Math.max(...celdas.map(c => c.length)) * lh + 2.6;
-      if (y + alto > LIMITE) { nuevaPagina(); cabecera(); letra('normal', pt, PDF.NEGRO); }
+      if (y + alto > LIMITE) { nuevaPagina(); cabecera(); }
       let x = M;
-      celdas.forEach((lineas, i) => { pdf.text(lineas, x + pad, y + 4); x += columnas[i].ancho; });
+      celdas.forEach((lineas, i) => { fuenteCelda(fila[i]); pdf.text(lineas, x + pad, y + 4); x += columnas[i].ancho; });
       pdf.setDrawColor(225, 225, 225);
       pdf.setLineWidth(0.25);
       pdf.line(M, y + alto, M + anchoUtil, y + alto);
@@ -3001,44 +3570,78 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   pdf.text(FORMATO_SGC.nombre.toUpperCase(), M, y);
   y += 7;
 
-  // ── 1 · Datos generales (los valores largos saltan de línea) ──
-  banda('1 · DATOS GENERALES', 16);
+  // ── Datos generales (los valores largos saltan de línea) ──
+  banda(seccion('DATOS GENERALES'), 16);
   y += 4;
+  const condiciones = textoCondiciones(acta);
   const filas = [
     ['Nº de acta', `${d.actaNum} · Rev. ${acta.revision}`],
     ['Técnico', d.tecnico],
     ['Expediente', d.expediente],
     ['Objeto', d.descripcion || '—'],
     ['Fecha y hora', `${fechaES(d.fecha)}${d.hora ? ` · ${d.hora}` : ''}`],
-    ['Localización GPS', textoUbicacion(acta, true)],
+    ...(condiciones ? [['Condiciones', condiciones]] : []),
+    ['Localización GPS', textoUbicacion(acta, true), conEnlaces ? enlaceMapa(acta) : null],
   ];
   const xValor = M + 50, anchoValor = W - M - xValor - 2;
-  filas.forEach(([etiqueta, valor], i) => {
+  const VER_MAPA = 'Ver en el mapa', SEPARADOR = '  ·  ';
+  filas.forEach(([etiqueta, valor, url], i) => {
     letra('normal', 9, PDF.NEGRO);
     const lineas = pdf.splitTextToSize(textoPDF(valor) || '—', anchoValor);
-    const alto = 8 + (lineas.length - 1) * altoLinea(9);
+    const ultima = lineas[lineas.length - 1];
+    // «Ver en el mapa» sigue a la ubicación: en su última línea si cabe; si no, en la siguiente.
+    const enLinea = Boolean(url) && pdf.getTextWidth(ultima + SEPARADOR + VER_MAPA) <= anchoValor;
+    const alto = 8 + (lineas.length - 1 + (url && !enLinea ? 1 : 0)) * altoLinea(9);
     asegurar(alto);
     if (i % 2 === 0) { pdf.setFillColor(250, 250, 250); pdf.rect(M, y - 4, anchoUtil, alto, 'F'); }
     letra('bold', 8, PDF.GRIS);
     pdf.text(etiqueta.toUpperCase(), M + 2, y + 1);
     letra('normal', 9, PDF.NEGRO);
     pdf.text(lineas, xValor, y + 1);
+    if (url) {
+      let x = xValor, yEnlace = y + 1 + (lineas.length - 1) * altoLinea(9);
+      if (enLinea) {
+        x += pdf.getTextWidth(ultima);
+        pdf.text(SEPARADOR, x, yEnlace);
+        x += pdf.getTextWidth(SEPARADOR);
+      } else {
+        yEnlace += altoLinea(9);
+      }
+      enlace(VER_MAPA, x, yEnlace, url);
+    }
     y += alto;
   });
   y += 2;
 
-  // ── 2 · Asistentes ──
+  // ── Asistentes ──
   const firmantes = firmantesDelActa(acta);
-  banda('2 · ASISTENTES', 13);
+  banda(seccion('ASISTENTES'), 13);
   tabla([{ titulo: 'Nombre', ancho: 62 }, { titulo: 'Empresa', ancho: 45 }, { titulo: 'Cargo', ancho: 55 }, { titulo: 'Firma', ancho: 18 }],
     firmantes.map(f => [f.nombre || '—', f.empresa || '—', f.cargo || '—', f.imagen ? 'Sí' : 'No']));
 
-  // ── 3 · Observaciones generales ──
-  banda('3 · OBSERVACIONES GENERALES', 8);
+  // ── Observaciones generales ──
+  banda(seccion('OBSERVACIONES GENERALES'), 8);
   parrafo(acta.observaciones.trim() || 'Sin observaciones.');
 
-  // ── 4 · Indicaciones ──
-  banda('4 · INDICACIONES', 13);
+  // ── Seguimiento de indicaciones anteriores (solo si las hay) ──
+  if (acta.seguimiento.length) {
+    const r = resumenSeguimiento(acta);
+    const COLOR = { cumplida: PDF.VERDE, pendiente: PDF.AMBAR, vencida: PDF.ROJO, anulada: PDF.GRIS };
+    banda(seccion('SEGUIMIENTO DE INDICACIONES ANTERIORES'), 22);
+    parrafo(`${plural(r.total, 'indicación', 'indicaciones')} de actas anteriores: ${textoResumenSeguimiento(r)}`);
+    tabla([{ titulo: 'Origen', ancho: 20 }, { titulo: 'Indicación', ancho: 58 }, { titulo: 'Responsable', ancho: 32 },
+      { titulo: 'Plazo', ancho: 22 }, { titulo: 'Estado', ancho: 22 }, { titulo: 'Comentario', ancho: 26 }],
+    acta.seguimiento.map(s => {
+      const [estado, clase] = estadoSeguimiento(s, acta);
+      const plazo = s.plazo ? fechaES(s.plazo) : '—';
+      return [origenCorto(s.origen, d.expediente), s.texto, s.responsable || '—',
+        s.estado === 'pendiente' && s.nuevoPlazo ? `${plazo} · nuevo ${fechaES(s.nuevoPlazo)}` : plazo,
+        { texto: estado, color: COLOR[clase] }, s.comentario.trim() || '—'];
+    }));
+  }
+
+  // ── Indicaciones ──
+  banda(seccion('INDICACIONES'), 13);
   if (acta.indicaciones.length) {
     tabla([{ titulo: 'Nº', ancho: 10 }, { titulo: 'Indicación', ancho: 95 }, { titulo: 'Responsable', ancho: 47 }, { titulo: 'Plazo', ancho: 28 }],
       acta.indicaciones.map((ind, i) => [String(i + 1), ind.texto, ind.responsable || '—', ind.plazo ? fechaES(ind.plazo) : '—']));
@@ -3046,7 +3649,7 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     parrafo('Sin indicaciones.');
   }
 
-  // ── 5 · Reportaje fotográfico: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
+  // ── Reportaje fotográfico: 2 por fila, encajadas sin deformar, con hora/GPS y comentario completo ──
   const fotos = acta.fotos;
   if (fotos.length) {
     const imagenes = await Promise.all(fotos.map(async f => new Uint8Array(await blobs.get(f.id).arrayBuffer())));
@@ -3060,14 +3663,14 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     for (let i = 0; i < fotos.length; i += 2) {
       const celdas = fotos.slice(i, i + 2).map((foto, j) => ({
         foto, imagen: imagenes[i + j], numero: i + j + 1,
-        meta: textoPDF(textoMetaFoto(foto, true, acta)),
+        meta: partesMetaFoto(foto, acta),
         pie: pdf.splitTextToSize(textoPDF(foto.comentario) || '(Sin comentario)', anchoCelda),
       }));
       const lineasPie = Math.max(...celdas.map(c => c.pie.length));
       filasFotos.push({ celdas, alto: altoCaja + altoMeta + altoPie + (lineasPie - 1) * altoPie + 7 });
     }
 
-    banda(`5 · REPORTAJE FOTOGRÁFICO (${fotos.length})`, filasFotos[0].alto);
+    banda(seccion(`REPORTAJE FOTOGRÁFICO (${fotos.length})`), filasFotos[0].alto);
     let colocadas = 0;
     for (const fila of filasFotos) {
       asegurar(fila.alto);
@@ -3086,8 +3689,18 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
         pdf.roundedRect(xi + 2, yi + 2, 14, 6, 1, 1, 'F');
         letra('bold', 7, PDF.BLANCO);
         pdf.text(`Foto ${numero}`, xi + 9, yi + 6.5, { align: 'center' });
+        // Hora y posición; las coordenadas, en rojo y subrayadas, abren la foto en el mapa.
         letra('normal', ptMeta, PDF.GRIS);
-        pdf.text(pdf.splitTextToSize(meta, anchoCelda)[0], x, y + altoCaja + altoMeta);
+        const yMeta = y + altoCaja + altoMeta, textoMeta = meta.antes + meta.coordenadas + meta.despues;
+        if (!conEnlaces || !meta.url || pdf.getTextWidth(textoMeta) > anchoCelda) {
+          pdf.text(pdf.splitTextToSize(textoMeta.trim(), anchoCelda)[0], x, yMeta);
+        } else {
+          pdf.text(meta.antes, x, yMeta);
+          let xMeta = x + pdf.getTextWidth(meta.antes);
+          xMeta += enlace(meta.coordenadas, xMeta, yMeta, meta.url);
+          letra('normal', ptMeta, PDF.GRIS);
+          if (meta.despues) pdf.text(meta.despues, xMeta, yMeta);
+        }
         letra('italic', ptPie, [60, 60, 60]);
         pdf.text(pie, x, y + altoCaja + altoMeta + altoPie);
       });
@@ -3098,11 +3711,11 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     }
   }
 
-  // ── 6 · Firmas: rejilla de 2 columnas ──
+  // ── Firmas: rejilla de 2 columnas ──
   const anchoFirma = 70, altoFirma = 28, altoFirmante = altoFirma + 12;
   const anchoColumna = (anchoUtil - 6) / 2;
   y += 2;
-  banda('6 · FIRMAS', altoFirmante);
+  banda(seccion('FIRMAS'), altoFirmante);
   for (let i = 0; i < firmantes.length; i += 2) {
     asegurar(altoFirmante + 4);
     firmantes.slice(i, i + 2).forEach((f, j) => {
@@ -3130,9 +3743,9 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
     y += altoFirmante + 4;
   }
 
-  // ── 7 · Control de revisiones ──
+  // ── Control de revisiones ──
   y += 2;
-  banda('7 · CONTROL DE REVISIONES', 13);
+  banda(seccion('CONTROL DE REVISIONES'), 13);
   tabla([{ titulo: 'Rev.', ancho: 14 }, { titulo: 'Fecha', ancho: 28 }, { titulo: 'Motivo', ancho: 138 }],
     acta.revisiones.map(r => [String(r.rev), fechaES(fechaLocal(new Date(r.rev === acta.revision ? emision : (r.fecha || emision)))), r.motivo]));
 
@@ -3208,6 +3821,7 @@ async function emitirActa(emision) {
   const acta = state.acta;
   acta.estado = 'emitida';
   acta.emitida = emision;
+  acta.versionEmision = VERSION;      // las emitidas antes de la v3.0 no lo tienen: su PDF se rehace como entonces
   acta.modificada = emision;
   acta.revisiones[acta.revisiones.length - 1].fecha = emision;
   state.persistida = true;
@@ -3327,8 +3941,11 @@ async function corregirActa(id) {
   copia.revisiones = [...origen.revisiones.map(r => ({ ...r })), { rev: copia.revision, fecha: null, motivo: motivo.trim() }];
   copia.gps = origen.gps ? { ...origen.gps } : null;
   copia.sinGps = { ...origen.sinGps };
+  copia.condiciones = { meteo: [...origen.condiciones.meteo], temperatura: origen.condiciones.temperatura };
   copia.asistentes = origen.asistentes.map(a => ({ ...a }));
   copia.observaciones = origen.observaciones;
+  copia.seguimiento = origen.seguimiento.map(s => ({ ...s, origen: { ...s.origen } }));
+  copia.seguimientoOrigen = origen.seguimientoOrigen ? { ...origen.seguimientoOrigen } : null;
   copia.indicaciones = origen.indicaciones.map(ind => ({ ...ind }));
   copia.corrigeA = origen.id;
   try {
@@ -3423,7 +4040,7 @@ const Zip = (() => {
       this.total++;
     }
 
-    blob() {
+    blob(tipo = 'application/zip') {
       const tamano = this.central.reduce((n, p) => n + p.byteLength, 0);
       const fin = new DataView(new ArrayBuffer(22));
       fin.setUint32(0, 0x06054b50, true);
@@ -3431,7 +4048,7 @@ const Zip = (() => {
       fin.setUint16(10, this.total, true);
       fin.setUint32(12, tamano, true);
       fin.setUint32(16, this.posicion, true);
-      return new Blob([...this.partes, ...this.central, fin], { type: 'application/zip' });
+      return new Blob([...this.partes, ...this.central, fin], { type: tipo });
     }
   }
 
@@ -3486,6 +4103,241 @@ const Zip = (() => {
 
   return { Escritor, abrir };
 })();
+
+// ═══════════════════════════════════
+//  XLSX (sin librerías): libro de Excel mínimo sobre Zip.Escritor para el registro de actas.
+//  Texto en línea (inlineStr), fechas reales (con formato dd/mm/aaaa), fila 1 fija y autofiltro.
+//  Cada hoja: { nombre, columnas: [{ titulo, ancho, tipo }], filas: [[valor, …]] }, con tipo
+//  'texto' | 'numero' | 'fecha' ('aaaa-mm-dd') | 'fechaHora' (ISO) | 'estado' ([texto, color]).
+// ═══════════════════════════════════
+const Xlsx = (() => {
+  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
+  const TIPO = 'application/vnd.openxmlformats-officedocument.spreadsheetml';
+  const ESTILO = { cabecera: 1, texto: 2, fecha: 3, fechaHora: 4, numero: 5, verde: 6, ambar: 7, rojo: 8, gris: 9 };
+  const COLORES = { verde: 'FF1E7A3D', ambar: 'FF8A5A00', rojo: 'FFCC2222', gris: 'FF6B6B6B' };
+  // Texto apto para XML: sin caracteres de control (no admitidos) y con & < > " escapados.
+  const xml = t => String(t ?? '').replace(/\r\n?/g, '\n')
+    .replace(/[^\t\n -퟿-�\u{10000}-\u{10FFFF}]/gu, '')
+    .replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const columna = n => {            // 0 → A, 25 → Z, 26 → AA
+    let letras = '';
+    for (let k = n + 1; k > 0; k = Math.floor((k - 1) / 26)) letras = String.fromCharCode(65 + ((k - 1) % 26)) + letras;
+    return letras;
+  };
+  const ORIGEN = Date.UTC(1899, 11, 30);   // día 0 de las fechas de Excel
+  const serialDia = v => {
+    if (!fechaValida(v)) return null;
+    const [a, m, d] = v.split('-').map(Number);
+    return (Date.UTC(a, m - 1, d) - ORIGEN) / 86400000;
+  };
+  const serialMomento = v => {      // hora local del teléfono, al minuto
+    const d = new Date(v || NaN);
+    if (Number.isNaN(d.getTime()) || d.getFullYear() < 1900 || d.getFullYear() > 2999) return null;
+    return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()) - ORIGEN) / 60000) / 1440;
+  };
+
+  function celda(ref, tipo, valor) {
+    if (valor === null || valor === undefined || valor === '') return '';
+    if (tipo === 'numero') return Number.isFinite(valor) ? `<c r="${ref}" s="${ESTILO.numero}"><v>${valor}</v></c>` : '';
+    if (tipo === 'fecha' || tipo === 'fechaHora') {
+      const n = tipo === 'fecha' ? serialDia(valor) : serialMomento(valor);
+      return n === null ? '' : `<c r="${ref}" s="${ESTILO[tipo]}"><v>${n}</v></c>`;
+    }
+    const [texto, color] = tipo === 'estado' && Array.isArray(valor) ? valor : [valor, null];
+    if (texto === '' || texto === null || texto === undefined) return '';
+    const contenido = String(texto).slice(0, 32767);    // máximo de una celda de Excel
+    return `<c r="${ref}" t="inlineStr" s="${ESTILO[color] || ESTILO.texto}"><is><t xml:space="preserve">${xml(contenido)}</t></is></c>`;
+  }
+
+  const rango = h => `A1:${columna(h.columnas.length - 1)}${h.filas.length + 1}`;
+
+  function hoja(h) {
+    const cabecera = `<row r="1" ht="30" customHeight="1">${h.columnas.map((c, i) =>
+      `<c r="${columna(i)}1" t="inlineStr" s="${ESTILO.cabecera}"><is><t>${xml(c.titulo)}</t></is></c>`).join('')}</row>`;
+    const filas = h.filas.map((fila, f) => `<row r="${f + 2}">${h.columnas.map((c, i) =>
+      celda(`${columna(i)}${f + 2}`, c.tipo, fila[i])).join('')}</row>`).join('');
+    return `${XML}<worksheet xmlns="${NS}" xmlns:r="${NS_R}"><dimension ref="${rango(h)}"/>`
+      + '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>'
+      + '<selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews>'
+      + '<sheetFormatPr defaultRowHeight="15"/>'
+      + `<cols>${h.columnas.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.ancho}" customWidth="1"/>`).join('')}</cols>`
+      + `<sheetData>${cabecera}${filas}</sheetData><autoFilter ref="${rango(h)}"/></worksheet>`;
+  }
+
+  function estilos() {
+    const fuente = (negrita, color) => `<font>${negrita ? '<b/>' : ''}<sz val="11"/>${color ? `<color rgb="${color}"/>` : ''}<name val="Calibri"/><family val="2"/></font>`;
+    const xf = (numFmt, font, alineacion, relleno = 0, borde = 0) => `<xf numFmtId="${numFmt}" fontId="${font}" fillId="${relleno}" borderId="${borde}" xfId="0"`
+      + `${numFmt ? ' applyNumberFormat="1"' : ''}${font ? ' applyFont="1"' : ''}${relleno ? ' applyFill="1"' : ''}${borde ? ' applyBorder="1"' : ''}`
+      + ` applyAlignment="1"><alignment ${alineacion}/></xf>`;
+    const arriba = 'vertical="top"', izquierda = 'horizontal="left" vertical="top"';
+    return `${XML}<styleSheet xmlns="${NS}">`
+      + '<numFmts count="2"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="dd/mm/yyyy hh:mm"/></numFmts>'
+      + `<fonts count="6">${fuente(false)}${fuente(true)}${fuente(true, COLORES.verde)}${fuente(true, COLORES.ambar)}${fuente(true, COLORES.rojo)}${fuente(false, COLORES.gris)}</fonts>`
+      + '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
+      + '<fill><patternFill patternType="solid"><fgColor rgb="FFE8E8E8"/><bgColor indexed="64"/></patternFill></fill></fills>'
+      + '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'
+      + '<border><left/><right/><top/><bottom style="thin"><color rgb="FF999999"/></bottom><diagonal/></border></borders>'
+      + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+      + '<cellXfs count="10"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+      + xf(0, 1, 'vertical="center" wrapText="1"', 2, 1)           // 1 cabecera: negrita, fondo gris y borde inferior
+      + xf(0, 0, 'vertical="top" wrapText="1"')                    // 2 texto, con salto de línea
+      + xf(164, 0, izquierda) + xf(165, 0, izquierda)              // 3 fecha · 4 fecha y hora
+      + xf(0, 0, izquierda)                                        // 5 número
+      + xf(0, 2, arriba) + xf(0, 3, arriba) + xf(0, 4, arriba) + xf(0, 5, arriba)   // 6-9 estados: verde, ámbar, rojo, gris
+      + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  }
+
+  // Libro con las hojas indicadas, como Blob .xlsx.
+  function libro(hojas, { titulo = '', autor = '' } = {}) {
+    const zip = new Zip.Escritor();
+    const ahora = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    zip.anadir('[Content_Types].xml', `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+      + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+      + '<Default Extension="xml" ContentType="application/xml"/>'
+      + `<Override PartName="/xl/workbook.xml" ContentType="${TIPO}.sheet.main+xml"/>`
+      + hojas.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="${TIPO}.worksheet+xml"/>`).join('')
+      + `<Override PartName="/xl/styles.xml" ContentType="${TIPO}.styles+xml"/>`
+      + '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>');
+    zip.anadir('_rels/.rels', `${XML}<Relationships xmlns="${NS_REL}">`
+      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+      + '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'
+      + '</Relationships>');
+    zip.anadir('docProps/core.xml', `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" `
+      + 'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+      + `<dc:title>${xml(titulo)}</dc:title><dc:creator>${xml(autor)}</dc:creator>`
+      + `<dcterms:created xsi:type="dcterms:W3CDTF">${ahora}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${ahora}</dcterms:modified>`
+      + '</cp:coreProperties>');
+    zip.anadir('xl/workbook.xml', `${XML}<workbook xmlns="${NS}" xmlns:r="${NS_R}"><bookViews><workbookView/></bookViews><sheets>`
+      + hojas.map((h, i) => `<sheet name="${xml(h.nombre)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')
+      + '</sheets><definedNames>'
+      + hojas.map((h, i) => {
+        const [desde, hasta] = rango(h).split(':').map(r => r.replace(/^([A-Z]+)(\d+)$/, '$$$1$$$2'));
+        return `<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">'${xml(h.nombre)}'!${desde}:${hasta}</definedName>`;
+      }).join('')
+      + '</definedNames></workbook>');
+    zip.anadir('xl/_rels/workbook.xml.rels', `${XML}<Relationships xmlns="${NS_REL}">`
+      + hojas.map((_, i) => `<Relationship Id="rId${i + 1}" Type="${NS_R}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')
+      + `<Relationship Id="rId${hojas.length + 1}" Type="${NS_R}/styles" Target="styles.xml"/></Relationships>`);
+    zip.anadir('xl/styles.xml', estilos());
+    hojas.forEach((h, i) => zip.anadir(`xl/worksheets/sheet${i + 1}.xml`, hoja(h)));
+    return zip.blob(`${TIPO}.sheet`);
+  }
+
+  return { libro };
+})();
+
+// ═══════════════════════════════════
+//  REGISTRO DE ACTAS (EXCEL)
+//  · Actas: todas las del teléfono, con su estado.
+//  · Indicaciones: las de las actas emitidas (y no sustituidas), en orden de visita, con el estado
+//    que les dio el último seguimiento.
+// ═══════════════════════════════════
+const ordenNumeros = (a, b) => String(a).localeCompare(String(b), 'es', { numeric: true });
+
+function hojaActasRegistro(actas) {
+  const estado = a => (a.sustituidaPor ? [`Sustituida (Rev. ${a.sustituidaRev})`, 'gris']
+    : a.estado === 'emitida' ? ['Emitida', 'verde'] : ['Borrador', 'ambar']);
+  return {
+    nombre: 'Actas',
+    columnas: [
+      { titulo: 'Nº de acta', ancho: 24, tipo: 'texto' }, { titulo: 'Rev.', ancho: 6, tipo: 'numero' },
+      { titulo: 'Estado', ancho: 17, tipo: 'estado' }, { titulo: 'Fecha', ancho: 12, tipo: 'fecha' },
+      { titulo: 'Hora', ancho: 8, tipo: 'texto' }, { titulo: 'Expediente', ancho: 18, tipo: 'texto' },
+      { titulo: 'Objeto', ancho: 40, tipo: 'texto' }, { titulo: 'Técnico', ancho: 26, tipo: 'texto' },
+      { titulo: 'Condiciones', ancho: 22, tipo: 'texto' }, { titulo: 'Ubicación', ancho: 34, tipo: 'texto' },
+      { titulo: 'Asistentes', ancho: 44, tipo: 'texto' }, { titulo: 'Fotos', ancho: 7, tipo: 'numero' },
+      { titulo: 'Indicaciones', ancho: 12, tipo: 'numero' }, { titulo: 'Seguimiento: cumplidas', ancho: 13, tipo: 'numero' },
+      { titulo: 'Seguimiento: pendientes', ancho: 13, tipo: 'numero' }, { titulo: 'Seguimiento: anuladas', ancho: 13, tipo: 'numero' },
+      { titulo: 'Emitida', ancho: 17, tipo: 'fechaHora' },
+    ],
+    filas: [...actas].sort(ordenActas).map(a => {
+      const d = recogerDatos(a), r = resumenSeguimiento(a);
+      const asistentes = a.asistentes.filter(x => x.nombre.trim())
+        .map(x => `${x.nombre.trim()}${empresaCargo(x.empresa, x.cargo) ? ` (${empresaCargo(x.empresa, x.cargo)})` : ''}`).join('; ');
+      const ubicacion = textoUbicacion(a, false);
+      return [d.actaNum, a.revision, estado(a), d.fecha, d.hora, d.expediente, d.descripcion, d.tecnico, textoCondiciones(a),
+        ubicacion === '—' ? '' : ubicacion, asistentes, a.fotos.length, a.indicaciones.length,
+        r.total ? r.cumplidas : null, r.total ? r.pendientes : null, r.total ? r.anuladas : null, a.estado === 'emitida' ? a.emitida : ''];
+    }),
+  };
+}
+
+function indicacionesRegistro(actas) {
+  const oficiales = actas.filter(a => a.estado === 'emitida' && !a.sustituidaPor).sort(ordenVisitas);
+  const porId = new Map();
+  for (const a of oficiales) {
+    a.indicaciones.forEach((ind, i) => {
+      if (porId.has(ind.id)) return;
+      porId.set(ind.id, {
+        expediente: a.datos.expediente.trim(), origen: { acta: a.datos.actaNum.trim(), rev: a.revision, n: i + 1, fecha: a.datos.fecha },
+        texto: ind.texto.trim(), responsable: ind.responsable.trim(), plazo: ind.plazo || '', plazoInicial: ind.plazo || '',
+        estado: 'pendiente', revisada: null, comentario: '',
+      });
+    });
+  }
+  for (const a of oficiales) {             // en orden de visita: gana el último seguimiento
+    for (const s of a.seguimiento) {
+      let fila = porId.get(s.id);
+      if (!fila) {                         // el acta de origen ya no está en el teléfono: se usa lo que guarda el seguimiento
+        fila = { expediente: a.datos.expediente.trim(), origen: { ...s.origen }, texto: s.texto, responsable: s.responsable,
+          plazo: s.plazo, plazoInicial: s.plazoInicial, estado: 'pendiente', revisada: null, comentario: '' };
+        porId.set(s.id, fila);
+      }
+      fila.estado = s.estado;
+      fila.plazo = s.estado === 'pendiente' && s.nuevoPlazo ? s.nuevoPlazo : s.plazo;
+      fila.revisada = { acta: a.datos.actaNum.trim(), rev: a.revision };
+      fila.comentario = s.comentario.trim();
+    }
+  }
+  return [...porId.values()].sort((x, y) => String(x.origen.fecha).localeCompare(String(y.origen.fecha))
+    || ordenNumeros(x.origen.acta, y.origen.acta) || x.origen.rev - y.origen.rev || x.origen.n - y.origen.n);
+}
+
+function hojaIndicacionesRegistro(lista, hoy) {
+  const ESTADOS = { pendiente: ['Pendiente', 'ambar'], cumplida: ['Cumplida', 'verde'], anulada: ['Anulada', 'gris'] };
+  return {
+    nombre: 'Indicaciones',
+    columnas: [
+      { titulo: 'Expediente', ancho: 18, tipo: 'texto' }, { titulo: 'Acta', ancho: 14, tipo: 'texto' },
+      { titulo: 'Nº', ancho: 5, tipo: 'numero' }, { titulo: 'Fecha', ancho: 12, tipo: 'fecha' },
+      { titulo: 'Indicación', ancho: 50, tipo: 'texto' }, { titulo: 'Responsable', ancho: 30, tipo: 'texto' },
+      { titulo: 'Plazo', ancho: 12, tipo: 'fecha' }, { titulo: 'Plazo inicial', ancho: 12, tipo: 'fecha' },
+      { titulo: 'Estado actual', ancho: 14, tipo: 'estado' }, { titulo: 'Vencida', ancho: 9, tipo: 'estado' },
+      { titulo: 'Revisada en', ancho: 13, tipo: 'texto' }, { titulo: 'Comentario', ancho: 40, tipo: 'texto' },
+    ],
+    filas: lista.map(f => {
+      const vencida = f.estado === 'pendiente' && Boolean(f.plazo) && f.plazo < hoy;
+      return [f.expediente, origenCorto({ acta: f.origen.acta, rev: f.origen.rev }, f.expediente), f.origen.n, f.origen.fecha,
+        f.texto, f.responsable, f.plazo, f.plazoInicial, ESTADOS[f.estado] || ESTADOS.pendiente,
+        vencida ? ['Sí', 'rojo'] : ['No', null], f.revisada ? origenCorto(f.revisada, f.expediente) : '', f.comentario];
+    }),
+  };
+}
+
+// Registro en Excel de las actas del teléfono (se guarda en Descargas: Chrome no deja compartir .xlsx).
+async function descargarRegistro() {
+  await guardarYa();
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ }
+  if (!actas.length) return aviso('📊', 'Sin actas', 'Todavía no hay actas guardadas en este teléfono.');
+  const ahora = new Date();
+  const nombre = `Registro_actas_TBC_${fechaLocal(ahora)}_${horaLocal(ahora).replace(':', '')}.xlsx`;
+  const indicaciones = indicacionesRegistro(actas);
+  try {
+    await conCarga('Preparando el registro…', async () => {
+      const blob = Xlsx.libro([hojaActasRegistro(actas), hojaIndicacionesRegistro(indicaciones, fechaLocal(ahora))], {
+        titulo: `Registro de actas de visita · ${EMPRESA}`, autor: `Acta de Visita de Campo v${VERSION} · ${EMPRESA}`,
+      });
+      descargarBlob(blob, nombre);
+    });
+  } catch (e) {
+    return aviso('❌', 'No se ha podido crear el registro', e.message || 'Inténtalo de nuevo.');
+  }
+  aviso('📊', 'Registro guardado en Descargas', `Archivo «${nombre}»: ${plural(actas.length, 'acta', 'actas')} y ${plural(indicaciones.length, 'indicación', 'indicaciones')}. Ábrelo con Excel o con Hojas de cálculo de Google; para enviarlo, compártelo desde la app Archivos (Descargas).`);
+}
 
 // ═══════════════════════════════════
 //  COPIA DE SEGURIDAD, EXPORTAR E IMPORTAR
@@ -3635,6 +4487,8 @@ async function importarActas(entrada) {
     const acta = await Almacen.leerActa(state.acta.id).catch(() => null);
     if (acta) await abrirActa(acta);
   }
+  // Puede haber llegado un acta emitida posterior del mismo expediente que el borrador en pantalla.
+  const seguimientoCambiado = await revisarSeguimientoEnPantalla();
   await abrirMisActas();
   const partes = [
     r.nuevas && `${r.nuevas} acta(s) nueva(s)`,
@@ -3645,6 +4499,7 @@ async function importarActas(entrada) {
   ].filter(Boolean);
   let mensaje = `${partes.join(' · ')}.`;
   if (r.repetidos.length) mensaje += ` Atención, número repetido en actas distintas: ${r.repetidos.join(', ')}.`;
+  if (seguimientoCambiado) mensaje += ' El seguimiento de indicaciones del acta en pantalla ha cambiado: revísalo en Acuerdos antes de emitirla.';
   aviso(r.invalidas ? '⚠️' : '📥', 'Importación terminada', mensaje);
 }
 
@@ -3736,7 +4591,8 @@ function actaDesdeArchivo(contenido) {
   const texto = (v, max = 500) => (typeof v === 'string' ? v.slice(0, max) : '');
   const ident = v => (typeof v === 'string' && /^[\w.-]{1,80}$/.test(v) ? v : null);
   const iso = v => (typeof v === 'string' && v.length <= 40 && !Number.isNaN(Date.parse(v)) ? v : null);
-  const dia = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '');
+  const dia = v => (fechaValida(v) ? v : '');
+  const hhmm = v => (typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : '');
   const entero = (v, min, max, defecto = null) => (Number.isInteger(v) && v >= min && v <= max ? v : defecto);
   const objeto = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
   const objetos = (v, max) => (Array.isArray(v) ? v.slice(0, max).map(objeto).filter(Boolean) : []);
@@ -3758,6 +4614,9 @@ function actaDesdeArchivo(contenido) {
   acta.estado = o.estado === 'emitida' ? 'emitida' : 'borrador';
   acta.emitida = acta.estado === 'emitida' ? iso(o.emitida) : null;
   if (acta.estado === 'emitida' && !acta.emitida) throw new Error('Acta emitida sin fecha de emisión.');
+  if (acta.estado === 'emitida' && typeof o.versionEmision === 'string' && /^\d{1,3}(\.\d{1,3}){1,2}$/.test(o.versionEmision)) {
+    acta.versionEmision = o.versionEmision;
+  }
   acta.creada = iso(o.creada) || acta.creada;
   acta.modificada = iso(o.modificada) || acta.emitida || acta.creada;
   acta.fase = entero(o.fase, 1, ULTIMA_FASE, 1);
@@ -3771,13 +4630,19 @@ function actaDesdeArchivo(contenido) {
     actaNum: texto(d.actaNum, 120), numAuto: false,       // el número ya está asignado: no se recalcula
     tecnico: texto(d.tecnico), cargoTecnico: texto(d.cargoTecnico), expediente: texto(d.expediente),
     descripcion: texto(d.descripcion, 2000), fecha: dia(d.fecha),
-    hora: typeof d.hora === 'string' && /^\d{2}:\d{2}$/.test(d.hora) ? d.hora : '',
+    hora: hhmm(d.hora),
   };
   const g = objeto(o.gps);
   const lat = g && coordenada(g.lat, 90), lng = g && coordenada(g.lng, 180);
   acta.gps = lat && lng ? { lat, lng, acc: Math.max(0, Math.round(Number(g.acc) || 0)), hora: iso(g.hora) } : null;
   const s = objeto(o.sinGps) || {};
   acta.sinGps = { activo: s.activo === true && !acta.gps, referencia: texto(s.referencia), lat: texto(s.lat, 30), lng: texto(s.lng, 30) };
+  const c = objeto(o.condiciones) || {};
+  const meteo = Array.isArray(c.meteo) ? c.meteo : [];
+  acta.condiciones = {
+    meteo: METEO.map(m => m.clave).filter(clave => meteo.includes(clave)),
+    temperatura: typeof c.temperatura === 'string' && typeof temperaturaValida(c.temperatura) === 'number' ? c.temperatura.trim() : '',
+  };
 
   const vistos = new Set();
   acta.asistentes = objetos(o.asistentes, 100).map(a => {
@@ -3790,6 +4655,42 @@ function actaDesdeArchivo(contenido) {
   acta.indicaciones = objetos(o.indicaciones, 200).map(i => ({
     id: ident(i.id) || nuevoId('ind'), texto: texto(i.texto, MAX_INDICACION), responsable: texto(i.responsable), plazo: dia(i.plazo),
   }));
+  // Seguimiento: cada indicación una sola vez (por su id), con un estado conocido y fechas que existen.
+  const estados = new Set(ESTADOS_SEGUIMIENTO.map(e => e.clave));
+  const listaSeguimiento = v => {
+    const ids = new Set();
+    return objetos(v, 200).map(x => {
+      const id = ident(x.id);
+      if (!id || ids.has(id)) return null;
+      ids.add(id);
+      const og = objeto(x.origen) || {};
+      const estado = estados.has(x.estado) ? x.estado : 'pendiente';
+      return {
+        id, origen: { acta: texto(og.acta, 120), rev: entero(og.rev, 0, 99, 0), n: entero(og.n, 1, 999, 1), fecha: dia(og.fecha) },
+        texto: texto(x.texto, MAX_INDICACION), responsable: texto(x.responsable), plazo: dia(x.plazo), plazoInicial: dia(x.plazoInicial),
+        estado, nuevoPlazo: estado === 'pendiente' ? dia(x.nuevoPlazo) : '', comentario: texto(x.comentario, MAX_COMENTARIO_SEGUIMIENTO),
+      };
+    }).filter(Boolean);
+  };
+  const origenSeguimiento = v => {
+    const so = objeto(v), id = so && ident(so.actaId);
+    return id ? {
+      expediente: texto(so.expediente), actaId: id, acta: texto(so.acta, 120), rev: entero(so.rev, 0, 99, 0),
+      fecha: dia(so.fecha), hora: hhmm(so.hora),
+    } : null;
+  };
+  acta.seguimiento = listaSeguimiento(o.seguimiento);
+  acta.seguimientoOrigen = origenSeguimiento(o.seguimientoOrigen);
+  const guardado = objeto(o.seguimientoGuardado), origenGuardado = guardado && origenSeguimiento(guardado.origen);
+  acta.seguimientoGuardado = origenGuardado ? { origen: origenGuardado, lista: listaSeguimiento(guardado.lista) } : null;
+  const idsNotas = new Set(acta.seguimiento.map(s => s.id));
+  acta.seguimientoNotas = objetos(o.seguimientoNotas, 200).map(n => {
+    const id = ident(n.id);
+    if (!id || idsNotas.has(id)) return null;
+    idsNotas.add(id);
+    const estado = estados.has(n.estado) ? n.estado : 'pendiente';
+    return { id, estado, nuevoPlazo: estado === 'pendiente' ? dia(n.nuevoPlazo) : '', comentario: texto(n.comentario, MAX_COMENTARIO_SEGUIMIENTO) };
+  }).filter(Boolean);
   acta.fotos = objetos(o.fotos, MAX_FOTOS).map(f => {
     const archivo = typeof f.archivo === 'string' && /^fotos\/[\w.-]{1,60}\.jpe?g$/i.test(f.archivo) ? f.archivo : null;
     const ancho = entero(f.ancho, 1, 20000), alto = entero(f.alto, 1, 20000);

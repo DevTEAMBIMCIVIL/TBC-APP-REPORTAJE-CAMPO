@@ -2,7 +2,7 @@
  * Guarda en el teléfono todos los archivos de la versión publicada para que la app
  * se abra y genere el PDF sin cobertura.
  * AL PUBLICAR UNA VERSIÓN NUEVA: cambiar VERSION aquí y en index.html (deben coincidir). */
-const VERSION = '2.3';
+const VERSION = '3.0';
 const CACHE = `acta-tbc-v${VERSION}`;
 const ARCHIVOS = [
   './',
@@ -16,11 +16,13 @@ const ARCHIVOS = [
   './icons/apple-touch-icon.png',
 ];
 
-// Instalación: descarga la versión completa (sin pasar por la caché HTTP del navegador).
+// Instalación: descarga la versión completa sin pasar por la caché HTTP del navegador y con «?v=<VERSION>»,
+// para que ninguna caché intermedia (la de GitHub Pages incluida) sirva archivos de la versión anterior.
+// Las peticiones de la app no llevan «?v=»: se encuentran igual porque se buscan con ignoreSearch.
 self.addEventListener('install', evento => {
   evento.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(ARCHIVOS.map(url => new Request(url, { cache: 'reload' }))))
+      .then(cache => cache.addAll(ARCHIVOS.map(url => new Request(`${url}?v=${VERSION}`, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
