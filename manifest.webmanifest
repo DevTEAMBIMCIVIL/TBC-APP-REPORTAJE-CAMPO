@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Acta de Visita de Campo · TEAMBIMCIVIL",
+  "name": "Acta de Campo · TEAMBIMCIVIL",
   "short_name": "Acta TBC",
-  "description": "Actas de visita de campo con GPS, fotos, firma y PDF. Funciona sin cobertura.",
+  "description": "Actas de campo con GPS, fotos, firma y PDF. Funciona sin cobertura.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",

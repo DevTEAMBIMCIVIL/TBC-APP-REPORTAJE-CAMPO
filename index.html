@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icono-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<title>Acta de Visita · TeamBIMCivil</title>
+<title>Acta de Campo · TeamBIMCivil</title>
 <!-- Librerías locales (sin CDN): jsPDF 4.2.1 y fuente ActaSans para el PDF -->
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/fuentes-pdf.js"></script>
@@ -1112,9 +1112,9 @@
   .review-seg-estado.vencida { color: var(--rojo); }
   .review-seg-estado.anulada { color: #4F4F4F; }
   /* ── v3.1 · CABECERA EN GRIS CORPORATIVO Y LISTAS DESPLEGABLES ── */
-  /* Sobre el gris, los textos pequeños van en negro (5:1) y el logotipo, en su recuadro oscuro. */
+  /* Sobre el gris, todos los textos van en negro (4,9:1) y el logotipo, en su recuadro oscuro. */
   .logo-mark { background: var(--negro); border-radius: 8px; padding: 3px; }
-  .header-text h1 { color: white; font-size: 15px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+  .header-text h1 { color: var(--negro); font-size: 15px; font-weight: 800; }
   .header-text p { color: var(--negro); font-weight: 600; }
   .estado-guardado, .estado-guardado.ok, .estado-guardado.lectura { color: var(--negro); font-weight: 600; }
   .estado-guardado.error { color: #5C0000; }
@@ -1146,7 +1146,7 @@
   </svg>
   <div class="header-text">
     <h1>TeamBIMCivil</h1>
-    <p>Acta de Visita de Campo</p>
+    <p>Acta de Campo</p>
     <div class="estado-guardado" id="estadoGuardado"></div>
   </div>
   <div class="header-acta-num" id="headerActaNum">Nueva Acta</div>
@@ -1525,7 +1525,7 @@
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
-//  ACTA DE VISITA DE CAMPO · TEAMBIMCIVIL · v3.1
+//  ACTA DE CAMPO · TEAMBIMCIVIL · v3.1.1
 //  · 8 fases: cada fase declara alEntrar(), alSalir() y validar().
 //  · Autoguardado en el teléfono (IndexedDB) e historial «Mis actas».
 //    Las actas emitidas (PDF compartido o descargado) son de solo lectura;
@@ -1540,12 +1540,16 @@
 //  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '3.1';
+const VERSION = '3.1.1';
+const NOMBRE_APP = 'Acta de Campo';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
 const EMPRESA = 'TEAMBIMCIVIL';
 // Formato del sistema de gestión de calidad (ISO 9001): su nombre es el título del PDF y figura en el
 // bloque de control de cada página. Si el formato llega a tener código y revisión, se añaden aquí.
-const FORMATO_SGC = { nombre: 'Acta de Visita de Inspección', codigo: '', revision: '' };
+// Desde la v3.1.1, «Acta de Campo» con cabecera y pie en gris. Un acta emitida conserva el formato con el que se
+// emitió: las emitidas antes de la v3.1.1 vuelven a generar exactamente el PDF que se distribuyó.
+const FORMATO_SGC = { nombre: 'Acta de Campo', codigo: '', revision: '', marco: 'gris', palabraClave: 'acta de campo', desde: '3.1.1' };
+const FORMATO_SGC_ANTERIOR = { nombre: 'Acta de Visita de Inspección', codigo: '', revision: '', marco: 'negro', palabraClave: 'acta de visita' };
 // Listas desplegables de la app. Se cambian aquí, sin tocar el resto del código.
 // · Técnicos de TEAMBIMCIVIL (la app los muestra en orden alfabético).
 const TECNICOS = ['Alberto de Álava', 'Ana Cascajosa', 'Ángel García', 'Blas González', 'Francisco S. Ortiz', 'José A. Gómez', 'José L. Gutiérrez'];
@@ -1872,7 +1876,7 @@ function indicarGuardado(estado) {
 //  INICIO
 // ═══════════════════════════════════
 window.addEventListener('DOMContentLoaded', async () => {
-  document.querySelector('.header-text p').textContent = `Acta de Visita de Campo · v${VERSION}`;
+  document.querySelector('.header-text p').textContent = `${NOMBRE_APP} · v${VERSION}`;
   $('photoMax').textContent = MAX_FOTOS;
   $('photoMaxSub').textContent = MAX_FOTOS;
   $('observaciones').maxLength = MAX_OBSERVACIONES;
@@ -3594,12 +3598,33 @@ async function compartirPDF() {
   await emitirActa(listo.emision);
 }
 
+// Compara versiones de la app («3.0», «3.1», «3.0.1»): negativo si `a` es anterior a `b`.
+function compararVersiones(a, b) {
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diferencia = (pa[i] || 0) - (pb[i] || 0);
+    if (diferencia) return diferencia;
+  }
+  return 0;
+}
+
+// Acta emitida con una versión anterior a `version` (las emitidas antes de la v3.0 no guardan versionEmision).
+// Un acta emitida vuelve a generar el PDF que se distribuyó: sin lo que llegó después.
+function emitidaAntesDe(acta, version) {
+  return acta.estado === 'emitida' && compararVersiones(acta.versionEmision || '0', version) < 0;
+}
+
+// Formato del SGC del acta: el vigente, o el anterior si se emitió antes de la v3.1.1.
+function formatoSGC(acta) {
+  return emitidaAntesDe(acta, FORMATO_SGC.desde) ? FORMATO_SGC_ANTERIOR : FORMATO_SGC;
+}
+
 // Texto que acompaña al PDF (cuerpo del correo o mensaje de WhatsApp, si la app de destino lo admite).
 function textoCompartir(acta = state.acta) {
   const d = recogerDatos(acta);
   const objeto = d.descripcion.length > 140 ? `${d.descripcion.slice(0, 137)}…` : d.descripcion;
   return [
-    `${FORMATO_SGC.nombre} ${d.actaNum} · Rev. ${acta.revision}`,
+    `${formatoSGC(acta).nombre} ${d.actaNum} · Rev. ${acta.revision}`,
     `Expediente: ${d.expediente}`,
     objeto && `Objeto: ${objeto}`,
     `Visita: ${fechaES(d.fecha)}${d.hora ? ` ${d.hora}` : ''} · Técnico: ${d.tecnico}`,
@@ -3632,7 +3657,15 @@ const PDF = {
   SUPERIOR: 40,                   // inicio del contenido bajo la cabecera, en las páginas 2 y siguientes
   LIMITE: 297 - 12 - 4,           // límite inferior del contenido: pie de 12 mm y 4 mm de aire
   ROJO: [204, 34, 34], NEGRO: [26, 26, 26], GRIS: [107, 107, 107], BLANCO: [255, 255, 255],
-  VERDE: [30, 122, 61], AMBAR: [138, 90, 0],
+  VERDE: [30, 122, 61], AMBAR: [138, 90, 0], GRIS_CORPORATIVO: [136, 136, 136],   // #888888, el de la pantalla
+};
+// Marco de cada página (cabecera con el bloque de control y pie), según el formato del SGC del acta:
+// gris corporativo con texto negro desde la v3.1.1; negro, como se distribuyeron, en las emitidas antes.
+const MARCOS_PDF = {
+  gris: { fondo: PDF.GRIS_CORPORATIVO, marca: PDF.NEGRO, lema: PDF.NEGRO, caja: PDF.NEGRO, numero: PDF.NEGRO,
+          control: PDF.NEGRO, pie: PDF.NEGRO, pieActa: PDF.NEGRO },
+  negro: { fondo: PDF.NEGRO, marca: PDF.ROJO, lema: [200, 200, 200], caja: [90, 90, 90], numero: PDF.BLANCO,
+           control: [200, 200, 200], pie: [150, 150, 150], pieActa: PDF.ROJO },
 };
 const INTERLINEADO = 1.2;
 const altoLinea = pt => pt * 0.3528 * INTERLINEADO;     // mm por línea de texto
@@ -3649,9 +3682,10 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   const { W, H, M, SUPERIOR, LIMITE } = PDF;
   const d = recogerDatos(acta);
   const anchoUtil = W - 2 * M;
-  // Enlaces al mapa: en los borradores y en las actas emitidas desde la v3.0. Un acta emitida antes vuelve a
-  // generar exactamente el PDF que se distribuyó.
-  const conEnlaces = acta.estado !== 'emitida' || Boolean(acta.versionEmision);
+  // Un acta emitida vuelve a generar exactamente el PDF que se distribuyó: enlaces al mapa en los borradores y en
+  // las emitidas desde la v3.0; formato del SGC y marco de las páginas según la versión con la que se emitió.
+  const conEnlaces = !emitidaAntesDe(acta, '3.0');
+  const formatoActa = formatoSGC(acta), marco = MARCOS_PDF[formatoActa.marco];
   let y = M;
 
   const letra = (estilo, pt, color) => { pdf.setFont(fuente, estilo); pdf.setFontSize(pt); pdf.setTextColor(...color); };
@@ -3725,7 +3759,7 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   // ── Título: el nombre del formato del SGC ──
   y = 42;
   letra('bold', 16, PDF.NEGRO);
-  pdf.text(FORMATO_SGC.nombre.toUpperCase(), M, y);
+  pdf.text(formatoActa.nombre.toUpperCase(), M, y);
   y += 7;
 
   // ── Datos generales (los valores largos saltan de línea) ──
@@ -3909,49 +3943,49 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
 
   // ── Cabecera con bloque de control y pie, en todas las páginas ──
   const paginas = pdf.getNumberOfPages();
-  const codigo = FORMATO_SGC.codigo.trim()
-    ? `${FORMATO_SGC.codigo.trim()}${FORMATO_SGC.revision.trim() ? ` Rev. ${FORMATO_SGC.revision.trim()}` : ''}` : '';
-  const formato = [FORMATO_SGC.nombre, codigo].filter(Boolean).join(' · ');
+  const codigo = formatoActa.codigo.trim()
+    ? `${formatoActa.codigo.trim()}${formatoActa.revision.trim() ? ` Rev. ${formatoActa.revision.trim()}` : ''}` : '';
+  const formato = [formatoActa.nombre, codigo].filter(Boolean).join(' · ');
   const anchoControl = 87, xControl = W - M - anchoControl;
   for (let p = 1; p <= paginas; p++) {
     pdf.setPage(p);
-    pdf.setFillColor(...PDF.NEGRO);
+    pdf.setFillColor(...marco.fondo);
     pdf.rect(0, 0, W, 28, 'F');
     pdf.setFillColor(...PDF.ROJO);
     pdf.rect(0, 28, W, 4, 'F');
-    letra('bold', 14, PDF.ROJO);
+    letra('bold', 14, marco.marca);
     pdf.text('TEAMBIMCIVIL', M, 13);
-    letra('bold', 8, [200, 200, 200]);
+    letra('bold', 8, marco.lema);
     pdf.text('ENGINEERING, TRAINING & CONSULTANCY', M, 20);
-    pdf.setDrawColor(90, 90, 90);
+    pdf.setDrawColor(...marco.caja);
     pdf.setLineWidth(0.3);
     pdf.rect(xControl, 6, anchoControl, 16);
     pdf.line(xControl, 13.5, xControl + anchoControl, 13.5);
     pdf.line(xControl + anchoControl / 2, 13.5, xControl + anchoControl / 2, 22);
-    letra('bold', 10, PDF.BLANCO);
+    letra('bold', 10, marco.numero);
     pdf.text(pdf.splitTextToSize(textoPDF(`Nº ${d.actaNum} · Rev. ${acta.revision}`), anchoControl - 4)[0], xControl + 2, 11.6);
-    letra('normal', 6.8, [200, 200, 200]);
+    letra('normal', 6.8, marco.control);
     const lineasFormato = pdf.splitTextToSize(textoPDF(formato), anchoControl / 2 - 3).slice(0, 2);   // hasta 2 líneas
     pdf.text(lineasFormato, xControl + 2, lineasFormato.length > 1 ? 17.3 : 19);
     pdf.text(`Emitida ${fechaES(fechaLocal(new Date(emision)))} · Pág. ${p} de ${paginas}`, xControl + anchoControl / 2 + 2, 19);
 
-    pdf.setFillColor(...PDF.NEGRO);
+    pdf.setFillColor(...marco.fondo);
     pdf.rect(0, H - 12, W, 12, 'F');
-    letra('normal', 7, [150, 150, 150]);
+    letra('normal', 7, marco.pie);
     pdf.text('TeamBIMCivil · Engineering, Training & Consultancy', M, H - 5);
     pdf.text(`Pág. ${p} / ${paginas}`, W - M, H - 5, { align: 'right' });
-    pdf.setTextColor(...PDF.ROJO);
+    pdf.setTextColor(...marco.pieActa);
     pdf.text(textoPDF(`Acta ${d.actaNum} · Rev. ${acta.revision}`), W / 2, H - 5, { align: 'center' });
   }
 
   // Propiedades del documento, para encontrarlo en Drive, en Windows o en un gestor documental.
   const info = t => textoPDF(t).replace(/[^\x20-\x7E -ÿ]/g, '');
   pdf.setProperties({
-    title: info(`${FORMATO_SGC.nombre} ${d.actaNum} · Rev. ${acta.revision}`),
+    title: info(`${formatoActa.nombre} ${d.actaNum} · Rev. ${acta.revision}`),
     subject: info(`Expediente ${d.expediente} · Visita del ${fechaES(d.fecha)}${d.descripcion ? ` · ${d.descripcion}` : ''}`),
     author: info(`${d.tecnico} · ${EMPRESA}`),
-    keywords: info([d.expediente, d.actaNum, 'acta de visita', EMPRESA].filter(Boolean).join(', ')),
-    creator: info(`Acta de Visita de Campo v${VERSION} · ${EMPRESA}`),
+    keywords: info([d.expediente, d.actaNum, formatoActa.palabraClave, EMPRESA].filter(Boolean).join(', ')),
+    creator: info(`${NOMBRE_APP} v${VERSION} · ${EMPRESA}`),
   });
 
   const nombre = `Acta_${nombreSeguro(d.actaNum)}${acta.revision ? `_Rev${acta.revision}` : ''}_${d.fecha}.pdf`;
@@ -4489,7 +4523,7 @@ async function descargarRegistro() {
   try {
     await conCarga('Preparando el registro…', async () => {
       const blob = Xlsx.libro([hojaActasRegistro(actas), hojaIndicacionesRegistro(indicaciones, fechaLocal(ahora))], {
-        titulo: `Registro de actas de visita · ${EMPRESA}`, autor: `Acta de Visita de Campo v${VERSION} · ${EMPRESA}`,
+        titulo: `Registro de actas de campo · ${EMPRESA}`, autor: `${NOMBRE_APP} v${VERSION} · ${EMPRESA}`,
       });
       descargarBlob(blob, nombre);
     });
@@ -4570,7 +4604,7 @@ async function anadirActaAlZip(zip, acta, carpeta) {
 
 function textoLeeme(numero) {
   return `﻿${[
-    `Actas de visita de ${EMPRESA}: ${numero} acta(s), exportadas el ${fechaHoraES(new Date().toISOString())} con la app v${VERSION}.`,
+    `Actas de campo de ${EMPRESA}: ${numero} acta(s), exportadas el ${fechaHoraES(new Date().toISOString())} con la app ${NOMBRE_APP} v${VERSION}.`,
     '',
     'Cada carpeta es un acta: acta.json (datos, asistentes, acuerdos y firmas) y fotos/ (sus fotografías).',
     'Para recuperarlas en un teléfono o en el PC: abre la app, pulsa Mis actas > Importar y elige este archivo .zip.',
@@ -4883,8 +4917,8 @@ function actaDesdeArchivo(contenido) {
 // Comparte la dirección oficial de la app (nunca el archivo: así funcionan el GPS y la instalación).
 async function compartirApp() {
   const datos = {
-    title: `Acta de Visita · ${EMPRESA}`,
-    text: `App de actas de visita de ${EMPRESA}. Ábrela siempre desde este enlace; en «Mis actas» se puede instalar en el teléfono.`,
+    title: `${NOMBRE_APP} · ${EMPRESA}`,
+    text: `App «${NOMBRE_APP}» de ${EMPRESA}. Ábrela siempre desde este enlace; en «Mis actas» se puede instalar en el teléfono.`,
     url: URL_OFICIAL,
   };
   if (navigator.share) {

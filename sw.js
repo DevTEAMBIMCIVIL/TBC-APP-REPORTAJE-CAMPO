@@ -1,8 +1,8 @@
-/* Service worker de «Acta de Visita de Campo» (TEAMBIMCIVIL).
+/* Service worker de «Acta de Campo» (TEAMBIMCIVIL).
  * Guarda en el teléfono todos los archivos de la versión publicada para que la app
  * se abra y genere el PDF sin cobertura.
  * AL PUBLICAR UNA VERSIÓN NUEVA: cambiar VERSION aquí y en index.html (deben coincidir). */
-const VERSION = '3.1';
+const VERSION = '3.1.1';
 const CACHE = `acta-tbc-v${VERSION}`;
 const ARCHIVOS = [
   './',
