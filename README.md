@@ -17,9 +17,12 @@ App web para el móvil que guía al técnico en 8 fases (identificación, asiste
 - **Compartir el PDF:** en la fase de Emisión el PDF se prepara solo; «📤 Compartir PDF» abre el menú del teléfono (WhatsApp, correo, Drive, Teams…) con el PDF adjunto y un texto con el número, el expediente, la fecha y el técnico. «📥 Descargar PDF» lo guarda en Descargas. Si el navegador no permite compartir archivos, solo aparece «Descargar PDF».
 - **Mis actas (📂):** borradores y actas emitidas del teléfono. Un acta queda **emitida** al compartir o descargar su PDF y desde entonces es de solo lectura. «Corregir» crea la **revisión siguiente con el mismo número** (Rev. 1, 2…), pide el motivo y hay que volver a recoger las firmas; al emitirla, la anterior queda «Sustituida». «Nueva visita» crea un acta con el mismo técnico, expediente y asistentes.
 - **Registro de actas (Excel):** «Mis actas → 📊 Descargar registro (.xlsx)» guarda en Descargas un libro con dos hojas: **Actas** (todas las del teléfono, con su estado, condiciones, ubicación, asistentes y recuento del seguimiento) e **Indicaciones** (las de las actas emitidas vigentes, con el estado que les dio el último seguimiento, el plazo vigente y el inicial, si está vencida y en qué acta se revisó). Fechas reales, fila de títulos fija y filtros. Se abre con Excel o con Hojas de cálculo de Google.
-- **Copia de seguridad:** «Mis actas → 💾 Hacer copia» guarda en Descargas un `.zip` con todas las actas (datos, firmas y fotos). Para que sirva si se pierde el teléfono, hay que guardarlo fuera de él (Drive, correo o el PC). Mis actas muestra la fecha de la última copia y avisa, con un punto rojo en 📂, si pasan más de 7 días con cambios sin copiar.
+- **Copia de seguridad:** «Mis actas → 💾 Hacer copia» guarda en Descargas un `.zip` con todas las actas (datos, firmas y fotos). Para que sirva si se pierde el teléfono, hay que guardarlo fuera de él (Drive, correo o el PC). Mis actas muestra la fecha de la última copia y avisa, con un punto rojo en 📂, el mismo día en que hay actas emitidas que no están en ninguna copia (con solo borradores cambiados, a los 7 días). Tras emitir, la fase de Emisión ofrece «💾 Hacer copia ahora». La app anota qué versión de cada acta lleva la última copia, así que el aviso no depende del reloj del teléfono.
 - **Exportar e importar:** «📤 Exportar» en cada acta crea un `.zip` para pasarla a otro teléfono o al PC; «📥 Importar» lo abre, y también restaura una copia de seguridad. Si el acta ya está en el teléfono, se conserva la versión más reciente y una emitida nunca se sobrescribe. Al importar una revisión emitida, la anterior queda «Sustituida». La app avisa si una importada repite el número de otra acta.
 - **Compartir la app:** «Mis actas → 🔗 Compartir el enlace de la app» envía la dirección oficial (nunca el archivo).
+- **Dónde se guardan las actas:** en el navegador con el que se abre la app, y solo allí. Mis actas dice cuántas hay en ese navegador. La app avisa si se abre en Android con un navegador que no es Chrome (Samsung Internet, Mi Browser, Firefox, Brave…) y, en el iPhone, de que Safari y el icono de la pantalla de inicio guardan las actas por separado. Conviene abrirla siempre desde el mismo sitio.
+- **Varias ventanas:** si la app está abierta a la vez en dos pestañas, o en una pestaña y en el icono, avisa de que está abierta dos veces. Cada ventana guarda solo sus cambios y nunca pisa lo que otra ha guardado después: si otra ventana ha emitido, cambiado o borrado el acta en pantalla, se muestra la versión guardada y se explica. Un acta emitida no se pisa nunca, y al emitir se guarda justo la del PDF distribuido, con sus fotos, aunque otra ventana la haya cambiado o borrado mientras tanto. Al volver a una ventana, su acta se pone al día.
+- **Un PDF no se puede importar:** el PDF es el documento, no los datos. Si se elige un PDF (o un `.zip` de PDF) en «Importar», la app explica cómo pasar el acta. Si un acta ya no está en ningún teléfono pero queda su PDF, se puede reconstruir con `tools/reconstruir-desde-pdf.py` (ver «Recuperar actas desde sus PDF»).
 - **Sin señal GPS** (interior, sótano, túnel): marca «Sin cobertura GPS» e indica una referencia (PK, dirección o estancia) y, si se quiere, coordenadas manuales.
 - **Prueba en el PC:** ejecuta `python -m http.server 8000` en la raíz del repo y abre http://localhost:8000.
 
@@ -40,7 +43,7 @@ App web para el móvil que guía al técnico en 8 fases (identificación, asiste
 | `lib/jspdf.umd.min.js` | jsPDF 4.2.1 (licencia MIT), en local para no depender de un CDN |
 | `lib/fuentes-pdf.js` | Fuente «ActaSans» del PDF, con acentos, símbolos (Ø ≥ ± ² °) y letras griegas |
 | `lib/OFL.txt` | Licencia de la fuente: SIL Open Font License 1.1 (derivada de Liberation Sans 2.1.5) |
-| `tools/` | Generadores de la fuente (`pip install fonttools`) y de los iconos (`pip install pillow`) |
+| `tools/` | Generadores de la fuente (`pip install fonttools`) y de los iconos (`pip install pillow`); reconstructor de actas desde sus PDF |
 | `tests/` | Pruebas automáticas de extremo a extremo en un móvil emulado |
 
 **Archivos ZIP de la app:** una carpeta por acta (`<número>_Rev<N>/`) con `acta.json` (datos, condiciones, asistentes, acuerdos, seguimiento y firmas; `"formato": "tbc-acta"`) y `fotos/01.jpg…`, más un `LEEME.txt`. Al importar, la app comprueba el CRC de cada archivo y valida cada campo; un acta dañada o manipulada se descarta sin afectar a las demás. Un teléfono con una versión anterior rechaza las actas guardadas con una versión más nueva (`esquema` mayor): conviene que todos los teléfonos estén actualizados antes de pasarse actas.
@@ -58,13 +61,26 @@ pip install playwright pypdf pillow openpyxl
 python -m playwright install chromium
 python tests/e2e_acta.py          # flujo completo y PDF (23 comprobaciones)
 python tests/e2e_campo.py         # robustez en campo y uso sin cobertura (35 comprobaciones)
-python tests/e2e_contenido.py     # numeración, asistentes, acuerdos, firmas, revisiones y migración (32 comprobaciones)
-python tests/e2e_distribucion.py  # compartir el PDF, copia de seguridad, exportar e importar (41 comprobaciones)
+python tests/e2e_contenido.py     # numeración, asistentes, acuerdos, firmas, revisiones y migración (31 comprobaciones)
+python tests/e2e_distribucion.py  # compartir el PDF, copia de seguridad, exportar e importar (42 comprobaciones)
 python tests/e2e_seguimiento.py   # condiciones, seguimiento de indicaciones, enlaces al mapa, registro Excel, migración y service worker (64 comprobaciones)
 python tests/e2e_identificacion.py  # cabecera, nombre de la app, orden de la identificación, listas desplegables, cargos, formato del PDF, actas de la v3.0 y de la v3.1 (32 comprobaciones)
+python tests/e2e_proteccion.py    # varias ventanas (emitir, corregir, fotos, compartir, importar), teléfono sin espacio, copia el mismo día, aviso de navegador, importar un PDF (36 comprobaciones)
+python tests/e2e_reconstruccion.py  # actas reconstruidas desde sus PDF: mismo PDF y mismo registro (17 comprobaciones; pip install pdfplumber scikit-image)
 ```
 
 Recorren la app en un Pixel 7 emulado (GPS simulado, fotos horizontales, verticales, cuadradas y con datos de cámara; Web Share simulado como en Chrome para Android) y analizan los PDF, los ZIP y el Excel generados. Dejan los PDF, los ZIP y las capturas en `tests/salida/`.
+
+## Recuperar actas desde sus PDF
+
+Si un acta ya no está en ningún teléfono (ni en sus copias) pero queda su PDF, `tools/reconstruir-desde-pdf.py` la rehace en el formato de «Exportar», para importarla con «Mis actas → Importar»:
+
+```
+pip install pdfplumber pypdf pillow numpy scikit-image
+python tools/reconstruir-desde-pdf.py salida/ Acta_2_Rev1_2026-10-23.pdf Acta_4_2026-10-23.pdf …
+```
+
+Crea `Actas_reconstruidas.zip` (todas) y un `.zip` por acta. Lee los PDF de la v2.3 en adelante. Toma del PDF todos los datos, las fotos tal como van incrustadas y las firmas, que se redibujan desde su imagen; el acta queda emitida con la versión con la que se emitió, así que la app vuelve a generar el mismo PDF. Si se reconstruyen juntas las actas de un expediente, el seguimiento queda enlazado entre ellas y las revisiones marcan «Sustituida» la anterior. El PDF original sigue siendo el documento oficial.
 
 ## Versiones
 
@@ -78,7 +94,8 @@ Recorren la app en un Pixel 7 emulado (GPS simulado, fotos horizontales, vertica
 | v3.0 | **Seguimiento de indicaciones entre visitas:** al entrar en Acuerdos se cargan las indicaciones abiertas de la última acta emitida del expediente (pendiente con nuevo plazo, cumplida o anulada con motivo; «vencida»), sin perder lo anotado al corregir fecha o expediente, y se vuelven a comprobar en Revisión, antes de emitir y al importar. **Registro de actas en Excel** (.xlsx sin librerías: hojas Actas e Indicaciones). **Enlaces al mapa** en el PDF (ubicación y coordenadas de cada foto). **Condiciones de la visita** (tiempo y temperatura). PDF con secciones numeradas según su contenido. Service worker con `?v=<VERSION>`. Actas en `esquema` 3, con migración de las de la v2.3. |
 | v3.1 | **Mejoras de la prueba en campo:** cabecera en gris corporativo (#888888); el expediente es el primer campo, con sugerencias de los ya usados en el teléfono; técnico (en orden alfabético), cargo (también el de los asistentes, con «Otro») y objeto de la visita (con detalle opcional, obligatorio con «Otro») de listas desplegables; el teléfono recuerda el último técnico y cargo. Registro en Excel con columnas Objeto, Detalle y Cargo del técnico. Actas en `esquema` 4, con migración de las de la v3.0. |
 | v3.1.1 | **Ajustes de la v3.1:** todos los textos de la cabecera en negro sobre el gris, también el título; cabecera y pie de cada página del PDF en el gris corporativo con texto negro; la app y el formato del SGC pasan a llamarse «Acta de Campo». Las actas emitidas antes de la v3.1.1 vuelven a generar su PDF como se distribuyó («Acta de Visita de Inspección», cabecera y pie en negro). Mismo `esquema` 4 que la v3.1. |
+| v3.1.2 | **Protección de las actas:** corregido un fallo que venía de la v2.1: con la app abierta en dos ventanas del mismo navegador, la que se quedaba atrás guardaba su copia antigua al ocultarse y pisaba lo que la otra había guardado (un acta emitida volvía a borrador sin fotos ni firma). Ahora cada ventana guarda solo sus cambios, nunca pisa una versión más nueva ni un acta emitida, las ventanas se avisan y la app advierte de que está abierta dos veces; al emitir se guarda la del PDF distribuido, con sus fotos (también si otra ventana la había cambiado o borrado), y la imagen de una foto quitada solo se borra al guardarse el acta sin ella. Copia de seguridad el mismo día en que se emiten actas. Aviso de navegador y recuento de actas en Mis actas. Importar un PDF lo explica. Las actas emitidas antes de la v3.0 conservan la numeración de secciones de entonces también sin fotos. Reconstructor de actas desde sus PDF (`tools/reconstruir-desde-pdf.py`). Mismo `esquema` 4. |
 
 ## Fuera de alcance
 
-El plan v2 está completo (bloques A a E), y también la v3.0 y la v3.1 (con sus ajustes de la v3.1.1). Queda para la v3.2: anotar fotos (flechas, círculos, texto y trazos) y listas de comprobación por tipo de visita. Quedan fuera, porque necesitan un servidor o cuentas de empresa configuradas: la subida automática a Drive o SharePoint, el envío a destinatarios fijos y una numeración compartida entre teléfonos (hoy cada teléfono numera con sus actas y las importadas).
+El plan v2 está completo (bloques A a E), y también la v3.0 y la v3.1 (con sus ajustes de la v3.1.1 y la v3.1.2). Queda para la v3.2: anotar fotos (flechas, círculos, texto y trazos) y listas de comprobación por tipo de visita. Quedan fuera, porque necesitan un servidor o cuentas de empresa configuradas: la subida automática a Drive o SharePoint, el envío a destinatarios fijos y una numeración compartida entre teléfonos (hoy cada teléfono numera con sus actas y las importadas).

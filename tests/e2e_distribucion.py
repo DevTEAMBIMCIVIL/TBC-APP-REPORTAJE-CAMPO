@@ -312,9 +312,11 @@ def main():
         # ── D2 · Copia de seguridad ──
         abrir_panel(pa)
         estado = pa.text_content("#copiaEstado")
-        r.comprobar("D2 · Mis actas indica que aún no hay copia (sin aviso si las actas son de hoy)",
+        r.comprobar("D2 · El mismo día: Mis actas avisa de las actas emitidas sin copia, con punto rojo en 📂 (v3.1.2)",
                     "Aún no se ha hecho ninguna copia de las 3 acta(s)" in estado
-                    and "aviso" not in pa.get_attribute("#copiaCard", "class"), estado)
+                    and estado.startswith("⚠️ 2 actas emitidas sin copia de seguridad")
+                    and "aviso" in pa.get_attribute("#copiaCard", "class")
+                    and pa.evaluate("document.querySelector('.header-btn').classList.contains('pendiente')"), estado)
         pa.evaluate("localStorage.setItem('tbc-ultima-copia', new Date(Date.now() - 10 * 86400000).toISOString())")
         pa.evaluate("cerrarMisActas()")
         pa.evaluate("actualizarAvisoCopia()")
@@ -458,9 +460,13 @@ def main():
 
         # ══ Teléfono E: archivos que no son actas, dañados o manipulados ══
         ctx_e, pe, _ = telefono(p, navegador, externas, errores, web_share=False)
-        aviso = importar(pe, SALIDA / "D-compartido.pdf")
+        (SALIDA / "D-no-zip.dat").write_bytes(b"esto no es un zip ni un pdf" * 40)
+        aviso = importar(pe, SALIDA / "D-no-zip.dat")
         r.comprobar("D3 · Un archivo que no es ZIP se rechaza con un aviso claro",
                     "No se ha podido importar" in (aviso or "") and "no es un ZIP" in (aviso or ""), aviso)
+        aviso = importar(pe, SALIDA / "D-compartido.pdf")
+        r.comprobar("D3 · Un PDF de acta: explica que no se puede importar y cómo pasar el acta (v3.1.2)",
+                    "Un PDF no se puede importar" in (aviso or "") and "Hacer copia" in (aviso or "") and "Exportar" in (aviso or ""), aviso)
         with zipfile.ZipFile(SALIDA / "D-vacio.zip", "w") as z:
             z.writestr("hola.txt", "nada")
         aviso = importar(pe, SALIDA / "D-vacio.zip")

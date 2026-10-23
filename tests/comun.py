@@ -1,6 +1,7 @@
 """Utilidades compartidas por las pruebas de extremo a extremo."""
 import functools
 import http.server
+import json
 import pathlib
 import re
 import threading
@@ -56,13 +57,23 @@ def servidor():
     return srv
 
 
-def contexto_movil(p, navegador, permisos=("geolocation",), gps=GPS_SEVILLA, **extra):
+# Chrome de Android declara la marca «Google Chrome» (navigator.userAgentData); el Chromium de las pruebas, la suya
+# («HeadlessChrome»). Las pruebas se hacen como en Chrome salvo que se pidan otras marcas (o ninguna: marcas=None).
+MARCAS_CHROME = ("Google Chrome", "Chromium", "Not_A Brand")
+
+
+def contexto_movil(p, navegador, permisos=("geolocation",), gps=GPS_SEVILLA, marcas=MARCAS_CHROME, **extra):
     opciones = dict(p.devices["Pixel 7"], locale="es-ES", timezone_id="Europe/Madrid", accept_downloads=True)
     if gps:
         opciones["geolocation"] = gps
     opciones["permissions"] = list(permisos)
     opciones.update(extra)
-    return navegador.new_context(**opciones)
+    contexto = navegador.new_context(**opciones)
+    if marcas:
+        lista = json.dumps([{"brand": m, "version": "141"} for m in marcas])
+        contexto.add_init_script(f"""Object.defineProperty(Navigator.prototype, 'userAgentData', {{ configurable: true,
+          get: () => ({{ brands: {lista}, mobile: true, platform: 'Android' }}) }});""")
+    return contexto
 
 
 def vigilar_red(contexto, externas):
