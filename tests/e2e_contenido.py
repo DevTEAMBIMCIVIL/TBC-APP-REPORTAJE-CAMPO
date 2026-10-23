@@ -13,7 +13,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (SALIDA, Resultados, abrir, abrir_mis_actas, avanzar_hasta, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
+from comun import (SALIDA, TECNICO, Resultados, abrir, abrir_mis_actas, avanzar_hasta, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
                    contexto_movil, esperar_fotos, firmar, normalizar, servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar  # noqa: E402
 
@@ -56,21 +56,23 @@ def main():
         cdp = ctx.new_cdp_session(pg)
 
         # ── C1 · Numeración automática por expediente ──
-        pg.fill("#tecnico", "Blas González González")
         pg.fill("#expediente", EXP)
         pg.wait_for_function(f"state.acta.datos.actaNum === '{EXP}-AV-01'", timeout=5000)
         r.comprobar("Número automático al indicar el expediente",
                     pg.input_value("#actaNum") == f"{EXP}-AV-01" and "1.ª acta" in pg.text_content("#numAyuda"),
                     pg.text_content("#numAyuda"))
+        pg.select_option("#tecnico", TECNICO)
+        pg.select_option("#cargoTecnico", "__otro")                  # cargo que no está en la lista
+        pg.fill("#cargoTecnicoOtro", "Dirección facultativa")
+        pg.select_option("#objeto", "tajos")
         pg.fill("#descripcion", "Inspección de cimentación y forjados")
         pg.click("#gpsBtn")
         pg.wait_for_selector("#gpsStatus.ok", timeout=15000)
         pg.click("#btnNext")
         r.comprobar("Fase 2: asistentes, con el técnico ya incluido",
-                    pg.evaluate("state.fase") == 2 and pg.text_content("#tecnicoNombreAsist") == "Blas González González")
+                    pg.evaluate("state.fase") == 2 and pg.text_content("#tecnicoNombreAsist") == TECNICO)
 
         # ── C2 · Asistentes ──
-        pg.fill("#cargoTecnico", "Dirección facultativa")
         pg.click("button:has-text('Añadir asistente')")
         pg.click("#btnNext")
         r.comprobar("Asistente sin nombre: se avisa", "Falta un nombre" in (cerrar_aviso(pg) or ""))
@@ -81,7 +83,8 @@ def main():
                 pg.click("button:has-text('Añadir asistente')")
             pg.fill(f"#asNombre{i}", nombre)
             pg.fill(f"#asEmpresa{i}", empresa)
-            pg.fill(f"#asCargo{i}", cargo)
+            pg.select_option(f"#asCargo{i}", "__otro")
+            pg.fill(f"#asCargoOtro{i}", cargo)
         pg.uncheck("[data-asistente='1'] input[data-campo='firma']")
         asistentes = pg.evaluate("state.acta.asistentes.map(a => [a.nombre, a.firma])")
         r.comprobar("Tres asistentes con su marca de firma",
@@ -184,9 +187,9 @@ def main():
         pg.click("#panelActas button:has-text('Nueva acta')")
         pg.wait_for_selector("#panelActas", state="hidden")            # la nueva acta ya está en pantalla
         pg.wait_for_function("state.persistida === false && state.acta.datos.expediente === ''")
-        pg.fill("#tecnico", "Blas González González")
         pg.fill("#expediente", EXP)
         pg.wait_for_function(f"state.acta.datos.actaNum === '{EXP}-AV-03'", timeout=5000)
+        pg.select_option("#objeto", "inventario")      # técnico y cargo: los recordados del acta anterior
         pg.click("#gpsBtn")
         pg.wait_for_selector("#gpsStatus.ok", timeout=15000)
         pg.click("#btnNext")

@@ -11,7 +11,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (RAIZ, SALIDA, Resultados, abrir, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
+from comun import (RAIZ, SALIDA, TECNICO, Resultados, abrir, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
                    contexto_movil, desviacion_maxima, esperar_fotos, firmar, rellenar_identificacion,
                    servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar, generar_con_exif  # noqa: E402
@@ -68,7 +68,7 @@ def main():
             imagenes: document.querySelectorAll('#commentsContainer img').length })""")
         r.comprobar("Tras recargar, el acta sigue donde estaba (fase, datos, GPS, fotos y notas)", restaurada == {
             "fase": 4, "fotos": 2, "gps": True, "comentario": "Comentario que debe sobrevivir a la recarga",
-            "tecnico": "Blas González González", "imagenes": 2}, str(restaurada))
+            "tecnico": TECNICO, "imagenes": 2}, str(restaurada))
 
         # ── Emisión y solo lectura ──
         emitir(ctx, pg, SALIDA / "acta-B-001.pdf")
@@ -107,7 +107,7 @@ def main():
         visita = pg.evaluate("""({ num: state.acta.datos.actaNum, tecnico: state.acta.datos.tecnico,
             expediente: state.acta.datos.expediente, fotos: state.acta.fotos.length, gps: state.acta.gps })""")
         r.comprobar("«Nueva visita» copia técnico y expediente y numera sola (sin fotos ni GPS)", visita == {
-            "num": "425_2026.CON-AV-01", "tecnico": "Blas González González", "expediente": "425_2026.CON",
+            "num": "425_2026.CON-AV-01", "tecnico": TECNICO, "expediente": "425_2026.CON",
             "fotos": 0, "gps": None}, str(visita))
         r.comprobar("Mis actas: 3 actas", contar_actas(pg) == 3)
         pg.once("dialog", lambda dialogo: dialogo.accept())

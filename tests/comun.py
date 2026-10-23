@@ -13,6 +13,8 @@ SALIDA = RAIZ / "tests" / "salida"
 PUERTO = 8765
 URL = f"http://localhost:{PUERTO}/index.html"
 GPS_SEVILLA = {"latitude": 37.389210, "longitude": -5.984460, "accuracy": 8}
+TECNICO = "Blas González"            # de la lista de técnicos de la app
+CARGO = "Director de Obra"            # de la lista de cargos
 DESCRIPCION_LARGA = (
     "Inspección de estructura existente para legalización de vivienda unifamiliar, revisión de "
     "cimentación, forjados y cubierta, con toma de fotografías de patologías")
@@ -137,11 +139,20 @@ def firmar(cdp, pagina, desplazamiento=0, lienzo=None):
     cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
 
 
+def identificar(pagina, expediente="425_2026.CON", acta=None, tecnico=TECNICO, cargo=CARGO, objeto="tajos", detalle=None):
+    """Rellena la identificación en el orden de la app: expediente, nº (si se da), técnico, cargo y objeto."""
+    pagina.fill("#expediente", expediente)
+    if acta:
+        pagina.fill("#actaNum", acta)
+    pagina.select_option("#tecnico", tecnico)
+    pagina.select_option("#cargoTecnico", cargo)
+    pagina.select_option("#objeto", objeto)
+    if detalle is not None:
+        pagina.fill("#descripcion", detalle)
+
+
 def rellenar_identificacion(pagina, acta="TBC-2026-0042", gps=True, avanzar=True):
-    pagina.fill("#actaNum", acta)
-    pagina.fill("#tecnico", "Blas González González")
-    pagina.fill("#expediente", "425_2026.CON")
-    pagina.fill("#descripcion", DESCRIPCION_LARGA)
+    identificar(pagina, acta=acta, detalle=DESCRIPCION_LARGA)
     if gps:
         pagina.click("#gpsBtn")
         pagina.wait_for_selector("#gpsStatus.ok", timeout=15000)

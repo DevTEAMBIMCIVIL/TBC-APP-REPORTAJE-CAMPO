@@ -17,8 +17,8 @@ from pypdf import PdfReader
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (SALIDA, Resultados, abrir, avanzar_hasta, cerrar_aviso, contexto_movil,  # noqa: E402
-                   esperar_fotos, firmar, servidor, texto_pdf, vigilar_red)
+from comun import (SALIDA, TECNICO, Resultados, abrir, avanzar_hasta, cerrar_aviso, contexto_movil,  # noqa: E402
+                   esperar_fotos, firmar, identificar, servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar  # noqa: E402
 
 EXP = "425_2026.CON"
@@ -75,9 +75,7 @@ def telefono(p, navegador, externas, errores, web_share=True, permisos=("geoloca
 
 def crear_acta(pg, cdp, fotos, hasta=8):
     """Acta numerada por expediente, con un asistente; avanza hasta la fase indicada (8 = lista para emitir)."""
-    pg.fill("#tecnico", "Blas González González")
-    pg.fill("#expediente", EXP)
-    pg.fill("#descripcion", "Inspección de forjados y cubierta")
+    identificar(pg, EXP, detalle="Inspección de forjados y cubierta")
     pg.wait_for_function("state.acta.datos.actaNum.includes('-AV-')")
     pg.click("#gpsBtn")
     pg.wait_for_selector("#gpsStatus.ok", timeout=15000)
@@ -255,7 +253,7 @@ def main():
         texto_msg = compartido["text"] or ""
         r.comprobar("D1 · Texto que acompaña al PDF: formato, nº, expediente, visita, técnico e indicaciones",
                     f"{FORMATO} {num0} · Rev. 0" in texto_msg and f"Expediente: {EXP}" in texto_msg
-                    and "Técnico: Blas González González" in texto_msg and "Indicaciones: 1" in texto_msg
+                    and f"Técnico: {TECNICO}" in texto_msg and "Indicaciones: 1" in texto_msg
                     and compartido["title"] == f"Acta {num0} · Rev. 0", texto_msg.replace("\n", " | "))
         r.comprobar("D1 · El acta queda emitida al compartir", pa.evaluate("state.acta.estado") == "emitida")
 
@@ -271,7 +269,7 @@ def main():
         meta = lector.metadata or {}
         r.comprobar("D1 · Propiedades del PDF (título, autor, asunto, palabras clave) con acentos",
                     meta.get("/Title") == f"{FORMATO} {num0} · Rev. 0"
-                    and meta.get("/Author") == "Blas González González · TEAMBIMCIVIL"
+                    and meta.get("/Author") == f"{TECNICO} · TEAMBIMCIVIL"
                     and f"Expediente {EXP}" in (meta.get("/Subject") or "")
                     and num0 in (meta.get("/Keywords") or "") and f"v{version}" in (meta.get("/Creator") or ""),
                     f"{meta.get('/Title')} | {meta.get('/Author')}")
@@ -441,7 +439,7 @@ def main():
                     and despues.get("sustituidaRev") == 1 and "Sustituida (Rev. 1)" in tarjeta, aviso)
         pc.evaluate("nuevaActa()")                     # otra acta con el mismo número, escrito a mano
         pc.fill("#actaNum", f"{EXP}-AV-02")
-        pc.fill("#tecnico", "Otro técnico")
+        pc.select_option("#tecnico", "Ana Cascajosa")
         pc.evaluate("guardarYa()")
         aviso = importar(pc, SALIDA / "D-av02.zip")
         r.comprobar("D3 · Avisa si un acta importada repite el número de otra del teléfono",
