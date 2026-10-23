@@ -83,6 +83,22 @@ def texto_pdf(ruta_pdf):
     return normalizar(" ".join(pagina.extract_text() for pagina in PdfReader(str(ruta_pdf)).pages))
 
 
+# Relleno de la cabecera y del pie de las páginas del PDF (jsPDF escribe el gris como «g»).
+MARCO_GRIS = ("0.53 g", "0.53 g")     # #888888, desde la v3.1
+MARCO_NEGRO = ("0.1 g", "0.1 g")      # actas emitidas antes de la v3.1
+
+
+def marco_pdf(ruta_pdf):
+    """[(relleno de la cabecera, relleno del pie)] de cada página: el color que precede a cada banda."""
+    salida = []
+    for pagina in PdfReader(str(ruta_pdf)).pages:
+        contenido = pagina.get_contents().get_data().decode("latin-1")
+        cabecera = re.search(r"([\d.]+ g)\n0\. 841\.\d+ 595\.\d+ -79\.\d+ re", contenido)
+        pie = re.search(r"([\d.]+ g)\n0\. 34\.\d+ 595\.\d+ -34\.\d+ re", contenido)
+        salida.append((cabecera and cabecera[1], pie and pie[1]))
+    return salida
+
+
 def colocaciones_de_imagenes(ruta_pdf):
     """[(página, nombre, ancho_pt, alto_pt, ancho_px, alto_px, filtro, bytes)] de cada imagen dibujada."""
     lector, salida = PdfReader(str(ruta_pdf)), []

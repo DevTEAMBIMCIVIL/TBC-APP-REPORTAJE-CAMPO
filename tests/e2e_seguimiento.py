@@ -20,8 +20,8 @@ from pypdf import PdfReader
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (SALIDA, TECNICO, Resultados, abrir, abrir_mis_actas, avanzar_hasta, cerrar_aviso, contexto_movil,  # noqa: E402
-                   esperar_fotos, firmar, servidor, texto_pdf, vigilar_red)
+from comun import (MARCO_NEGRO, SALIDA, TECNICO, Resultados, abrir, abrir_mis_actas, avanzar_hasta,  # noqa: E402
+                   cerrar_aviso, contexto_movil, esperar_fotos, firmar, marco_pdf, servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar  # noqa: E402
 
 EXP = "EXP-SEG"
@@ -578,6 +578,10 @@ def main():
                     all(s in texto_v23 for s in SECCIONES_V23) and "SEGUIMIENTO" not in texto_v23 and "CONDICIONES" not in texto_v23
                     and "Ver en el mapa" not in texto_v23 and "Emitida 01/10/2026" in texto_v23
                     and enlaces(SALIDA / "S-v23-migrada.pdf") == [], ", ".join(s for s in SECCIONES_V23 if s not in texto_v23))
+        marco_v23 = marco_pdf(SALIDA / "S-v23-migrada.pdf")
+        r.comprobar("…con el formato de entonces: «Acta de Visita de Inspección», cabecera y pie en negro",
+                    "ACTA DE VISITA DE INSPECCIÓN" in texto_v23 and "Acta de Campo" not in texto_v23
+                    and marco_v23 == [MARCO_NEGRO] * len(marco_v23), str(marco_v23))
 
         # ── Un borrador que se abre directamente en Emisión comprueba el seguimiento antes de preparar el PDF ──
         pc.evaluate("""async () => {

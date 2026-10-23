@@ -1,7 +1,8 @@
-"""Pruebas de la v3.1 en un Pixel 7 emulado: cabecera en gris corporativo, orden de la identificación (expediente
-primero), técnico, cargo y objeto de listas desplegables (con «Otro» y detalle), cargo de los asistentes, sugerencias
-de expedientes, técnico y cargo recordados en el teléfono, revisión, PDF, texto compartido y registro en Excel,
-migración de las actas de la v3.0 (esquema 3) e importación.
+"""Pruebas de la v3.1 y la v3.1.1 en un Pixel 7 emulado: cabecera en gris corporativo con texto negro, orden de la
+identificación (expediente primero), técnico, cargo y objeto de listas desplegables (con «Otro» y detalle), cargo de
+los asistentes, sugerencias de expedientes, técnico y cargo recordados en el teléfono, revisión, PDF con el formato
+«Acta de Campo» (cabecera y pie en gris, v3.1.1), texto compartido y registro en Excel, migración de las actas de la
+v3.0 (esquema 3), actas emitidas con la v3.0 y la v3.1 que conservan el formato con el que se emitieron, e importación.
 
 Uso (desde la raíz del repo, con los mismos requisitos que e2e_seguimiento.py):
     python tests/e2e_identificacion.py
@@ -13,10 +14,11 @@ import sys
 
 from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright
+from pypdf import PdfReader
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from comun import (RAIZ, SALIDA, Resultados, abrir, abrir_mis_actas, cerrar_aviso, contexto_movil,  # noqa: E402
-                   esperar_fotos, firmar, servidor, texto_pdf, vigilar_red)
+from comun import (MARCO_GRIS, MARCO_NEGRO, RAIZ, SALIDA, Resultados, abrir, abrir_mis_actas,  # noqa: E402
+                   cerrar_aviso, contexto_movil, esperar_fotos, firmar, marco_pdf, servidor, texto_pdf, vigilar_red)
 from generar_fotos import generar  # noqa: E402
 
 TECNICOS = ["Alberto de Álava", "Ana Cascajosa", "Ángel García", "Blas González", "Francisco S. Ortiz",
@@ -30,7 +32,9 @@ LOSA = "Hormigonado de la losa de planta 1"
 OPCIONES = "id => Array.from(document.getElementById(id).options).map(o => [o.value, o.textContent])"
 ESTILOS = """(() => { const c = s => getComputedStyle(document.querySelector(s));
   return { cabecera: c('.app-header').backgroundColor, pasos: c('.stepper').backgroundColor,
-           titulo: c('.header-text h1').color, subtitulo: c('.header-text p').color, guardado: c('.estado-guardado').color,
+           titulo: c('.header-text h1').color, sombra: c('.header-text h1').textShadow,
+           subtitulo: c('.header-text p').color, guardado: c('.estado-guardado').color,
+           nombre: document.querySelector('.header-text p').textContent, pestana: document.title,
            paso: c('.step-item:not(.active) .step-label').color, activo: c('.step-item.active .step-label').color,
            tema: document.querySelector('meta[name=theme-color]').content }; })()"""
 
@@ -78,9 +82,14 @@ def main():
                     estilos["cabecera"] == GRIS and estilos["pasos"] == GRIS and estilos["tema"].lower() == "#888888"
                     and manifiesto["theme_color"].lower() == "#888888", str({k: estilos[k] for k in ("cabecera", "pasos", "tema")}))
         contrastes = {k: round(contraste(estilos[k], GRIS), 2) for k in ("titulo", "subtitulo", "guardado", "paso", "activo")}
-        r.comprobar("Sobre el gris, los textos pequeños se leen (≥ 4,5:1) y el título blanco en negrita (≥ 3:1)",
-                    all(contrastes[k] >= 4.5 for k in ("subtitulo", "guardado", "paso", "activo")) and contrastes["titulo"] >= 3,
-                    str(contrastes))
+        r.comprobar("Sobre el gris, todos los textos en negro (≥ 4,5:1), también el título y sin sombra",
+                    all(v >= 4.5 for v in contrastes.values()) and rgb(estilos["titulo"]) == [26, 26, 26]
+                    and estilos["sombra"] == "none", str(contrastes))
+        version = pg.evaluate("VERSION")
+        r.comprobar("La app se llama «Acta de Campo»: cabecera, pestaña del navegador y app instalada",
+                    estilos["nombre"] == f"Acta de Campo · v{version}" and estilos["pestana"] == "Acta de Campo · TeamBIMCivil"
+                    and manifiesto["name"] == "Acta de Campo · TEAMBIMCIVIL" and "visita" not in manifiesto["description"].lower(),
+                    f"{estilos['nombre']} | {estilos['pestana']} | {manifiesto['name']}")
         abrir_mis_actas(pg)
         panel = pg.evaluate("""[getComputedStyle(document.querySelector('.panel-header')).backgroundColor,
                                 getComputedStyle(document.querySelector('.panel-title')).color]""")
@@ -186,6 +195,15 @@ def main():
         r.comprobar("PDF: técnico, objeto descrito y cargos de la lista o escritos",
                     f"OBJETO {DAÑOS}" in texto1 and "Otro ·" not in texto1 and "TÉCNICO Ana Cascajosa" in texto1
                     and all(s in texto1 for s in ("Jefe de equipo", "Encargado", "Redactor de Estudio")) and f"Objeto: {DAÑOS}" in mensaje)
+        lector1 = PdfReader(str(ruta1))
+        paginas1, meta1 = len(lector1.pages), lector1.metadata or {}
+        r.comprobar("Formato del SGC «Acta de Campo»: título, bloque de control de cada página, propiedades y texto al compartir",
+                    "ACTA DE CAMPO" in texto1 and texto1.count("Acta de Campo") == paginas1 and "de Inspección" not in texto1
+                    and "DE INSPECCIÓN" not in texto1 and meta1.get("/Title") == f"Acta de Campo {EXP}-AV-01 · Rev. 0"
+                    and "acta de campo" in (meta1.get("/Keywords") or "") and (meta1.get("/Creator") or "").startswith("Acta de Campo v")
+                    and mensaje.startswith(f"Acta de Campo {EXP}-AV-01 · Rev. 0"), f"{meta1.get('/Title')} | {mensaje[:40]}")
+        r.comprobar("PDF: cabecera y pie en gris #888888 en todas las páginas",
+                    paginas1 >= 2 and marco_pdf(ruta1) == [MARCO_GRIS] * paginas1, str(marco_pdf(ruta1)))
         r.comprobar("Un acta emitida: técnico, cargo y objeto bloqueados",
                     pg.evaluate("['tecnico', 'cargoTecnico', 'cargoTecnicoOtro', 'objeto', 'descripcion'].every(id => document.getElementById(id).disabled)"))
 
@@ -254,6 +272,10 @@ def main():
               versionEmision: '3.0', fase: 8, revisiones: [{ rev: 0, fecha: '2026-10-20T10:00:00.000Z', motivo: 'Emisión inicial' }] });
             await Almacen.guardarActa({ ...base, id: 'acta-v30-borrador', estado: 'borrador', emitida: null, fase: 1,
               revisiones: [{ rev: 0, fecha: null, motivo: 'Emisión inicial' }], datos: { ...base.datos, actaNum: 'V30-AV-02' } });
+            await Almacen.guardarActa({ ...base, esquema: 4, id: 'acta-v31-emitida', estado: 'emitida', emitida: '2026-10-23T16:00:00.000Z',
+              versionEmision: '3.1', fase: 8, revisiones: [{ rev: 0, fecha: '2026-10-23T16:00:00.000Z', motivo: 'Emisión inicial' }],
+              datos: { ...base.datos, actaNum: 'V31-AV-01', expediente: 'V31', tecnico: 'Blas González', cargoTecnico: 'Director de Obra',
+                       objeto: 'tajos', descripcion: 'Losa de planta 2', fecha: '2026-10-23', hora: '17:30' } });
             localStorage.setItem('tbc-acta-actual', 'acta-v30-borrador');
         }""")
         pc.reload()
@@ -278,6 +300,24 @@ def main():
         r.comprobar("Un acta emitida con la v3.0 genera su PDF como entonces (objeto con su texto, técnico y cargo)",
                     "OBJETO Texto libre de la v3.0" in texto_v30 and "TÉCNICO Blas González González" in texto_v30
                     and "Dirección facultativa" in texto_v30)
+        lector_v30 = PdfReader(str(SALIDA / "S31-v30-emitida.pdf"))
+        paginas_v30, marco_v30 = len(lector_v30.pages), marco_pdf(SALIDA / "S31-v30-emitida.pdf")
+        r.comprobar("…y con su formato: «Acta de Visita de Inspección», cabecera y pie en negro, también al compartir",
+                    "ACTA DE VISITA DE INSPECCIÓN" in texto_v30 and texto_v30.count("Acta de Visita de Inspección") == paginas_v30
+                    and "Acta de Campo" not in texto_v30 and "ACTA DE CAMPO" not in texto_v30 and marco_v30 == [MARCO_NEGRO] * paginas_v30
+                    and (lector_v30.metadata or {}).get("/Title") == "Acta de Visita de Inspección V30-AV-01 · Rev. 0"
+                    and pc.evaluate("textoCompartir()").startswith("Acta de Visita de Inspección V30-AV-01 · Rev. 0"), str(marco_v30))
+        # La v3.1 (publicada el 23/10/2026) emitía con el formato anterior: sus actas lo conservan en la v3.1.1.
+        pc.evaluate("abrirActaGuardada('acta-v31-emitida')")
+        pc.wait_for_function("state.acta.id === 'acta-v31-emitida' && state.fase === 8")
+        pc.wait_for_function("document.getElementById('emitPdfEstado').textContent.startsWith('PDF listo')", timeout=60000)
+        descargar(pc, "#btnDescargar", SALIDA / "S31-v31-emitida.pdf")
+        texto_v31, marco_v31 = texto_pdf(SALIDA / "S31-v31-emitida.pdf"), marco_pdf(SALIDA / "S31-v31-emitida.pdf")
+        r.comprobar("Un acta emitida con la v3.1 conserva su PDF: «Acta de Visita de Inspección», marco negro y enlaces al mapa",
+                    "ACTA DE VISITA DE INSPECCIÓN" in texto_v31 and "Acta de Campo" not in texto_v31 and "ACTA DE CAMPO" not in texto_v31
+                    and marco_v31 == [MARCO_NEGRO] * len(marco_v31) and "Ver en el mapa" in texto_v31
+                    and "OBJETO Inspección de Tajos de Obra · Losa de planta 2" in texto_v31
+                    and pc.evaluate("textoCompartir()").startswith("Acta de Visita de Inspección V31-AV-01 · Rev. 0"), str(marco_v31))
         importado = pc.evaluate("""(() => {
             const ficha = { formato: 'tbc-acta', acta: { id: 'acta-imp-1', estado: 'borrador', datos: { objeto: 'patologia' }, fotos: [] } };
             const valido = actaDesdeArchivo(ficha).datos.objeto;

@@ -23,7 +23,7 @@ from generar_fotos import generar  # noqa: E402
 
 EXP = "425_2026.CON"
 URL_OFICIAL = "https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/"
-FORMATO = "Acta de Visita de Inspección"
+FORMATO = "Acta de Campo"                  # formato del SGC desde la v3.1
 ASISTENTE = {"nombre": "Juan Pérez Gómez", "empresa": "Construcciones del Sur", "cargo": "Jefe de obra"}
 INDICACION = {"texto": "Picado y reparación de la viga del eje 3",
               "responsable": "Construcciones del Sur · Jefe de obra", "plazo": "2026-11-05"}
@@ -262,9 +262,9 @@ def main():
         texto = texto_pdf(pdf_compartido)
         lector = PdfReader(str(pdf_compartido))
         paginas = len(lector.pages)
-        r.comprobar("Formato SGC · Título del PDF «ACTA DE VISITA DE INSPECCIÓN»",
-                    "ACTA DE VISITA DE INSPECCIÓN" in texto and "visita de campo" not in texto.lower())
-        r.comprobar("Formato SGC · «Acta de Visita de Inspección» en el bloque de control de cada página",
+        r.comprobar("Formato SGC · Título del PDF «ACTA DE CAMPO»",
+                    "ACTA DE CAMPO" in texto and "visita de inspección" not in texto.lower())
+        r.comprobar("Formato SGC · «Acta de Campo» en el bloque de control de cada página",
                     texto.count(FORMATO) == paginas, f"{texto.count(FORMATO)} de {paginas} páginas")
         meta = lector.metadata or {}
         r.comprobar("D1 · Propiedades del PDF (título, autor, asunto, palabras clave) con acentos",
@@ -348,13 +348,14 @@ def main():
                     and len(fotos_zip) == fotos_a and jpeg and enlazadas, ", ".join(carpetas))
         r.comprobar("D2 · acta.json identifica formato, versión y app; LEEME.txt explica cómo recuperarla",
                     all(f["formato"] == "tbc-acta" and f["version"] == 1 and f["app"] == version for f in fichas.values())
-                    and leeme.startswith("﻿") and "Importar" in leeme and URL_OFICIAL in leeme)
+                    and leeme.startswith("﻿") and "Importar" in leeme and URL_OFICIAL in leeme and "Acta de Campo" in leeme)
 
         # ── D4 · Compartir el enlace de la app (con Web Share) ──
         abrir_panel(pa)
         enlace = compartir(pa, ".panel-enlace")
-        r.comprobar("D4 · «Compartir el enlace de la app» envía la dirección oficial (no el archivo)",
-                    enlace["url"] == URL_OFICIAL and not enlace["archivos"], enlace["url"])
+        r.comprobar("D4 · «Compartir el enlace de la app» envía la dirección oficial (no el archivo), con el nombre de la app",
+                    enlace["url"] == URL_OFICIAL and not enlace["archivos"] and enlace["title"] == "Acta de Campo · TEAMBIMCIVIL"
+                    and "«Acta de Campo»" in (enlace["text"] or ""), enlace["url"])
         pa.evaluate("cerrarMisActas()")
 
         # ══ Teléfono B: sin Web Share; restaura la copia ══
