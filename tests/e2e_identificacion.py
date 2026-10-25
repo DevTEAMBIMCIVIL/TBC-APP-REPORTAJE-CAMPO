@@ -34,6 +34,7 @@ EXP = "EXP-ID"
 GRIS = "rgb(136, 136, 136)"                                     # #888888
 DATOS_V312 = pathlib.Path(__file__).parent / "datos" / "v312"     # actas exportadas con la v3.1.2 (ver su LEEME.md)
 DATOS_V313 = pathlib.Path(__file__).parent / "datos" / "v313"     # actas emitidas y exportadas con la v3.1.3 (ver su LEEME.md)
+DATOS_V314 = pathlib.Path(__file__).parent / "datos" / "v314"     # ídem con la v3.1.4: UTM y fotos de la galería
 # Fase de Acuerdos en la página: la 5 en la v3.1.x y FASE.ACUERDOS (6) desde la v3.2, con la fase Comprobaciones.
 ACUERDOS = "(typeof FASE !== 'undefined' ? FASE.ACUERDOS : 5)"
 # Actas emitidas para inyectar en el almacén de la app: [{ id, num, expediente, momento, asistentes, indicaciones, … }]
@@ -474,8 +475,8 @@ def revision_v313(p, navegador, r, externas, errores, foto):
                     and "versión más nueva" in aviso2 and pg.evaluate("state.acta.id") != "s5-nueva", f"{al_abrir} | {aviso2[:40]}")
     caso(S5, s5)
 
-    # ── PDF de las actas emitidas con la v3.1.2 y con la v3.1.3: idéntico al que se distribuyó ──
-    for version, datos in (("3.1.2", DATOS_V312), ("3.1.3", DATOS_V313)):
+    # ── PDF de las actas emitidas con la v3.1.2, la v3.1.3 y la v3.1.4: idéntico al que se distribuyó ──
+    for version, datos in (("3.1.2", DATOS_V312), ("3.1.3", DATOS_V313), ("3.1.4", DATOS_V314)):
         nombre = f"Actas emitidas con la v{version}: su PDF es idéntico al que se distribuyó (texto y contenido de cada página)"
 
         def pdf_iguales(datos=datos, version=version, nombre=nombre):

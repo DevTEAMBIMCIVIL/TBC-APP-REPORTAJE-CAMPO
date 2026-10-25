@@ -93,8 +93,8 @@ def main():
             firma: Boolean(document.querySelector('#reviewFirma img')),
             contador: document.getElementById('reviewPhotoCount').textContent,
             texto: document.getElementById('reviewPhotos').innerText })""")
-        r.comprobar("Revisión completa al entrar (7 campos, 3 fotos, firma)",
-                    revision["campos"] == 7 and revision["fotos"] == 3 and revision["firma"] and revision["contador"] == "3",
+        r.comprobar("Revisión completa al entrar (8 campos, con la UTM de la v3.1.4; 3 fotos, firma)",
+                    revision["campos"] == 8 and revision["fotos"] == 3 and revision["firma"] and revision["contador"] == "3",
                     str({k: v for k, v in revision.items() if k != "texto"}))
         r.comprobar("Texto del usuario escapado (sin HTML inyectado)",
                     pagina.evaluate("window.__xss === undefined") and "<img src=x" in revision["texto"])

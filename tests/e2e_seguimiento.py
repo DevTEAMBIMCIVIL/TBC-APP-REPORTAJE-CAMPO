@@ -414,18 +414,21 @@ def main():
                     str([(f[0], f[1], f[2]) for f in filas]))
         r.comprobar("Hoja Actas: fechas reales (dd/mm/aaaa y dd/mm/aaaa hh:mm), condiciones, ubicación y asistentes",
                     isinstance(filas[0][3], datetime.datetime) and filas[0][3].date() == datetime.date(2026, 10, 8)
-                    and hoja["D2"].number_format == "dd/mm/yyyy" and isinstance(filas[0][18], datetime.datetime)
-                    and hoja["S2"].number_format == "dd/mm/yyyy hh:mm" and filas[3][18] is None
+                    and hoja["D2"].number_format == "dd/mm/yyyy" and isinstance(filas[0][21], datetime.datetime)
+                    and hoja["V2"].number_format == "dd/mm/yyyy hh:mm" and filas[3][21] is None
                     and filas[0][10] == "Nuboso, viento · 14,5 °C" and filas[0][11] == "37.389210, -5.984460 (±8 m)"
-                    and filas[0][12] == "Juan Pérez Gómez (Constructora Sur · Jefe de obra)", str(filas[0][:13]))
+                    and filas[0][15] == "Juan Pérez Gómez (Constructora Sur · Jefe de obra)", str(filas[0][:16]))
+        r.comprobar("Hoja Actas: huso y coordenadas UTM ETRS89 de la visita tras la ubicación, como números (v3.1.4)",
+                    [c.value for c in hoja[1]][12:15] == ["Huso UTM", "UTM X", "UTM Y"]
+                    and all(f[12:15] == (30, 235782, 4142231) for f in filas), str([f[12:15] for f in filas]))
         r.comprobar("Hoja Actas: objeto (tipo) y detalle en columnas propias, técnico y su cargo",
                     filas[0][6:10] == ("Inspección de Tajos de Obra", "Revisión de la estructura de planta primera", TECNICO,
                                        "Director de Obra"), str(filas[0][6:10]))
         r.comprobar("Hoja Actas: fotos, indicaciones y recuento del seguimiento",
-                    [f[13:18] for f in filas] == [(1, 3, None, None, None), (1, 1, 1, 1, 1), (1, 1, 1, 1, 1), (1, 0, 1, 1, 0)],
-                    str([f[13:18] for f in filas]))
+                    [f[16:21] for f in filas] == [(1, 3, None, None, None), (1, 1, 1, 1, 1), (1, 1, 1, 1, 1), (1, 0, 1, 1, 0)],
+                    str([f[16:21] for f in filas]))
         r.comprobar("Hoja Actas: fila 1 fija, autofiltro, cabecera destacada y estado en color",
-                    hoja.freeze_panes == "A2" and hoja.auto_filter.ref == "A1:S5" and hoja["A1"].font.b
+                    hoja.freeze_panes == "A2" and hoja.auto_filter.ref == "A1:V5" and hoja["A1"].font.b
                     and hoja["A1"].fill.fgColor.rgb == "FFE8E8E8" and hoja["C2"].font.color.rgb == "FF1E7A3D",
                     f"{hoja.freeze_panes} · {hoja.auto_filter.ref}")
         hoja = libro["Indicaciones"]

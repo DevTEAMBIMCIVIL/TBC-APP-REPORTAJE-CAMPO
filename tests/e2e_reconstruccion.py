@@ -132,6 +132,30 @@ INYECTAR = r"""async ({ fotos }) => {
       gps: { lat: '37.401000', lng: '-5.990000', acc: 20, hora: '2026-10-24T08:01:00.000Z' }, sinGps: vacia,
       condiciones: sinCondiciones, observaciones: '',
       asistentes: [{ id: 'asis-a7-1', nombre: 'Sebastián Gil', empresa: 'TEAMBIMCIVIL S.L.', cargo: 'Redactor de Estudio', firma: false }] },
+    // v3.1.4: UTM de la visita (huso 29, Aljarafe) y de las fotos con GPS, todas en ese huso (la 3, al este del meridiano
+    // 6° O); una foto de la galería sin GPS en la misma fila que una con GPS
+    { ...comun, id: 'rec-a8', creada: '2026-10-26T08:00:00.000Z', modificada: '2026-10-26T09:00:00.000Z', emitida: '2026-10-26T09:00:00.000Z',
+      versionEmision: '3.1.4', revision: 0, revisiones: [{ rev: 0, fecha: '2026-10-26T09:00:00.000Z', motivo: 'Emisión inicial' }],
+      datos: { actaNum: 'EXP-UTM-AV-01', numAuto: true, tecnico: 'Blas González', cargoTecnico: 'Director de Obra', expediente: 'EXP-UTM',
+               objeto: 'tajos', descripcion: 'Urbanización en el Aljarafe', fecha: '2026-10-26', hora: '10:00' },
+      gps: { lat: '37.383000', lng: '-6.120000', acc: 7, hora: '2026-10-26T08:01:00.000Z' }, sinGps: vacia,
+      condiciones: sinCondiciones, observaciones: 'Coordenadas UTM en el huso 29.',
+      fotos: [
+        { id: 'foto-a8-1', clave: 'h', ancho: 1200, alto: 900, hora: '2026-10-26 10:05', horaFuente: 'movil',
+          comentario: ['Vial de acceso:', ...Array.from({ length: 18 }, (_, i) => `- Punto ${i + 1}: revisado`)].join('\n'),
+          gps: { lat: '37.383100', lng: '-6.119900', acc: 5, fuente: 'movil' } },
+        { id: 'foto-a8-2', clave: 'v', ancho: 900, alto: 1200, hora: '2026-10-25 17:40', horaFuente: 'camara',
+          comentario: 'Foto de la galería: llega sin GPS', gps: null },
+        { id: 'foto-a8-3', clave: 'c', ancho: 1200, alto: 1200, hora: '2026-10-26 10:20', horaFuente: 'camara', comentario: '',
+          gps: { lat: '37.390000', lng: '-5.995000', fuente: 'camara' } },
+      ] },
+    // v3.1.4 sin cobertura, con coordenadas manuales (huso 30)
+    { ...comun, id: 'rec-a9', creada: '2026-10-27T07:00:00.000Z', modificada: '2026-10-27T08:00:00.000Z', emitida: '2026-10-27T08:00:00.000Z',
+      versionEmision: '3.1.4', revision: 0, revisiones: [{ rev: 0, fecha: '2026-10-27T08:00:00.000Z', motivo: 'Emisión inicial' }],
+      datos: { actaNum: 'EXP-UTM-AV-02', numAuto: true, tecnico: 'Blas González', cargoTecnico: 'Director de Obra', expediente: 'EXP-UTM',
+               objeto: 'tajos', descripcion: 'Galería de servicios', fecha: '2026-10-27', hora: '09:00' },
+      gps: null, sinGps: { activo: true, referencia: 'Galería de servicios, PK 0+450', lat: '37.410888', lng: '-5.950000' },
+      condiciones: sinCondiciones, observaciones: '' },
   ];
   for (const a of actas) {
     for (const f of a.fotos) { await Almacen.guardarFoto(f.id, a.id, blobs[f.clave]); delete f.clave; }
@@ -223,28 +247,46 @@ def main():
             originales[(numero, rev)] = (acta_id, ruta, descargar_pdf(pa, acta_id, ruta))
         registro(pa, DIR / "registro-A.xlsx")
         textos_a = {k: texto_pdf(v[1]) for k, v in originales.items()}
-        r.comprobar("Teléfono A: 8 actas de la v2.3 a la v3.1.3 con sus PDF (formatos «Acta de Campo» y anterior, con y sin enlaces)",
-                    len(originales) == 8 and sum("ACTA DE CAMPO" in t for t in textos_a.values()) == 4
+        r.comprobar("Teléfono A: 10 actas de la v2.3 a la v3.1.4 con sus PDF (formatos «Acta de Campo» y anterior, con y sin enlaces)",
+                    len(originales) == 10 and sum("ACTA DE CAMPO" in t for t in textos_a.values()) == 6
                     and "María Quinta TEAMBIMCIVIL S.L. Inspector de Campo" in textos_a[("EXP-OTRO-AV-02", 0)]
                     and "Blas González TEAMBIMCIVIL Director de Obra" in textos_a[("EXP-REC-AV-01", 1)]
                     and "6 · FIRMAS" in textos_a[("V23-2", 0)] and "5 · FIRMAS" in textos_a[("EXP-OTRO-AV-01", 0)]
                     and len(enlaces(originales[("EXP-OTRO-AV-01", 0)][1])) == 1 and not enlaces(originales[("V23-1", 0)][1]),
                     "; ".join(f"{k[0]} Rev. {k[1]}" for k in originales))
+        t8, t9 = textos_a[("EXP-UTM-AV-01", 0)], textos_a[("EXP-UTM-AV-02", 0)]
+        r.comprobar("v3.1.4: UTM ETRS89 de la visita y de cada foto con GPS, en el huso de la visita (29, también la foto al este "
+                    "del meridiano 6° O); la foto sin GPS, sin UTM; las emitidas antes, sin UTM",
+                    "UTM ETRS89 Huso 29 · X 754989 · Y 4141254" in t8
+                    and "UTM ETRS89 · Huso 29 · X 754997 · Y 4141265" in t8 and "UTM ETRS89 · Huso 29 · X 766034 · Y 4142376" in t8
+                    and t8.count("UTM ETRS89") == 3 and "25/10/2026 17:40 · sin GPS" in t8
+                    and "Coord. manuales: 37.410888, -5.950000" in t9 and "UTM ETRS89 Huso 30 · X 238909 · Y 4144541" in t9
+                    and not any("UTM" in t for k, t in textos_a.items() if k[0] != "EXP-UTM-AV-01" and k[0] != "EXP-UTM-AV-02"),
+                    t8[t8.find("LOCALIZACIÓN"):][:160])
+        # Los comentarios de una fila de fotos quedan a la misma altura aunque solo una lleve la línea UTM
+        with pdfplumber.open(str(originales[("EXP-UTM-AV-01", 0)][1])) as pdf:
+            palabras = [w for pg in pdf.pages for w in pg.extract_words()]
+        alturas = {w["text"]: round(w["top"], 1) for w in palabras if w["text"] in ("Vial", "Foto", "galería:")}
+        r.comprobar("v3.1.4: en una fila de fotos, los comentarios quedan a la par aunque solo una lleve UTM",
+                    alturas.get("Vial") is not None and alturas.get("Vial") == alturas.get("galería:"), str(alturas))
         ctx.close()
 
         # ══ Reconstrucción desde los PDF ══
         salida = subprocess.run([sys.executable, str(HERRAMIENTA), str(DIR / "zip")] + [str(v[1]) for v in originales.values()],
                                 capture_output=True, text=True, timeout=600)
         print(salida.stdout.strip())
-        r.comprobar("La herramienta reconstruye los 8 PDF sin fallos", salida.returncode == 0 and "8 acta(s) reconstruida(s)" in salida.stdout,
+        r.comprobar("La herramienta reconstruye los 10 PDF sin fallos", salida.returncode == 0 and "10 acta(s) reconstruida(s)" in salida.stdout,
                     salida.stderr.strip()[-300:])
         with __import__("zipfile").ZipFile(DIR / "zip" / "Actas_reconstruidas.zip") as z:
             fichas = {json.loads(z.read(n))["acta"]["datos"]["actaNum"] + f" Rev. {json.loads(z.read(n))['acta']['revision']}": json.loads(z.read(n))["acta"]
                       for n in z.namelist() if n.endswith("acta.json")}
         versiones = {k: f.get("versionEmision") for k, f in fichas.items()}
-        r.comprobar("Versión de emisión deducida del contenido (no de la app que generó el PDF): «TEAMBIMCIVIL S.L.» desde la v3.1.3",
+        r.comprobar("Versión de emisión deducida del contenido (no de la app que generó el PDF): «TEAMBIMCIVIL S.L.» desde la v3.1.3 "
+                    "y UTM desde la v3.1.4 (con coordenadas y sin UTM, anterior)",
                     versiones["EXP-REC-AV-01 Rev. 0"] == versiones["EXP-REC-AV-02 Rev. 0"] == "3.1.2"
                     and versiones["EXP-OTRO-AV-02 Rev. 0"] == "3.1.3"
+                    and versiones["EXP-UTM-AV-01 Rev. 0"] == versiones["EXP-UTM-AV-02 Rev. 0"] == "3.1.4"
+                    and all(f["esquema"] == (5 if k.startswith("EXP-UTM") else 4) for k, f in fichas.items())
                     and versiones["EXP-OTRO-AV-01 Rev. 0"] == "3.1" and versiones["V30-7 Rev. 0"] in ("3.0", "3.1")
                     and versiones["V23-1 Rev. 0"] is None and versiones["V23-2 Rev. 0"] is None, str(versiones))
         a2 = fichas["EXP-REC-AV-02 Rev. 0"]
@@ -261,7 +303,7 @@ def main():
         pb.set_input_files("#importInput", str(DIR / "zip" / "Actas_reconstruidas.zip"))
         pb.wait_for_selector("#alertOverlay.open", timeout=60000)
         aviso = cerrar_aviso(pb) or ""
-        r.comprobar("Teléfono B: importa las 8 actas reconstruidas", "8 acta(s) nueva(s)" in aviso and "no válida" not in aviso, aviso)
+        r.comprobar("Teléfono B: importa las 10 actas reconstruidas", "10 acta(s) nueva(s)" in aviso and "no válida" not in aviso, aviso)
         en_b = {(a["datos"]["actaNum"], a["revision"]): a for a in pb.evaluate("Almacen.listarActas()")}
         for clave, (_, ruta_a, nombre_a) in originales.items():
             acta_b = en_b[clave]

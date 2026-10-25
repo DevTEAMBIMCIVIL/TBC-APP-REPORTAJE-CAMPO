@@ -36,6 +36,7 @@ from skimage.morphology import skeletonize
 MM = 72 / 25.4                       # puntos por mm
 EMPRESA = "TEAMBIMCIVIL"
 EMPRESA_TECNICO = "TEAMBIMCIVIL S.L."      # empresa del técnico en el PDF desde la v3.1.3
+UTM = "UTM ETRS89"                         # coordenadas UTM de la visita y de las fotos en el PDF desde la v3.1.4
 TITULOS = ("ACTA DE VISITA DE INSPECCIÓN", "ACTA DE CAMPO")
 # Deben coincidir con las listas de index.html (la prueba lo comprueba).
 METEO = {"Despejado": "despejado", "Nuboso": "nuboso", "Lluvia": "lluvia", "Viento": "viento", "Niebla": "niebla",
@@ -44,7 +45,7 @@ OBJETOS = {"Licitación de Obra": "licitacion", "Inspección de Tajos de Obra": 
            "Estudio de Patología": "patologia"}
 BANDA = re.compile(r"^(\d+) · (DATOS GENERALES|ASISTENTES|OBSERVACIONES GENERALES|SEGUIMIENTO DE INDICACIONES ANTERIORES|"
                    r"INDICACIONES|REPORTAJE FOTOGRÁFICO \((\d+)\)|FIRMAS|CONTROL DE REVISIONES)$")
-ETIQUETAS = ["Nº DE ACTA", "TÉCNICO", "EXPEDIENTE", "OBJETO", "FECHA Y HORA", "CONDICIONES", "LOCALIZACIÓN GPS"]
+ETIQUETAS = ["Nº DE ACTA", "TÉCNICO", "EXPEDIENTE", "OBJETO", "FECHA Y HORA", "CONDICIONES", "LOCALIZACIÓN GPS", UTM]
 ANCHO_PARRAFO = 178.0                # ancho al que jsPDF parte los párrafos (mm)
 ANCHO_VALOR = 128.0                  # ancho de los valores de Datos generales (mm)
 ANCHO_PIE = 87.0                     # ancho de la celda de cada foto (mm)
@@ -214,13 +215,17 @@ def parrafo(sec, tam=9.0):
 
 
 def fotos(sec, imagenes):
-    """Fotos con su hora/GPS y comentario, en el orden del reportaje (2 por fila)."""
+    """Fotos con su hora/GPS y comentario, en el orden del reportaje (2 por fila). Desde la v3.1.4, bajo la posición de
+    cada foto va su UTM, que la app vuelve a calcular: se cuenta (sec["utm"]) y no se toma como pie."""
     metas, pies = [], []
+    sec["utm"] = 0
     for linea in sec["lineas"]:
         if linea["size"] == 7.0 and not linea["texto"].strip().startswith("Foto"):
             for col, (x0, x1) in enumerate(((0, 104), (104, 211))):
                 c = celda(linea["chars"], x0, x1)
-                if c:
+                if c and c["texto"].startswith(UTM + " · "):
+                    sec["utm"] += 1
+                elif c:
                     metas.append({"pagina": linea["pagina"], "top": linea["top"], "col": col, "texto": c["texto"]})
         elif linea["size"] == 7.5:
             for col, (x0, x1) in enumerate(((0, 104), (104, 211))):
@@ -235,7 +240,7 @@ def fotos(sec, imagenes):
     for i, (img, meta) in enumerate(zip(imagenes, metas)):
         siguiente = metas[i + 2] if i + 2 < len(metas) else None
         lineas_pie = [p["celda"] for p in pies if p["pagina"] == meta["pagina"] and p["col"] == meta["col"]
-                      and meta["top"] < p["top"] < meta["top"] + 60
+                      and p["top"] > meta["top"]
                       and not (siguiente and siguiente["pagina"] == meta["pagina"] and p["top"] > siguiente["top"])]
         comentario = unir(lineas_pie, ANCHO_PIE)
         salida.append({"img": img, "meta": meta["texto"], "comentario": "" if comentario == "(Sin comentario)" else comentario})
@@ -306,6 +311,10 @@ def version_de_emision(info, hay_gps, sin_fotos):
     creador = version(info["creador"]) or (2, 3)
     marcas_v3 = info["enlaces"] > 0 or "SEGUIMIENTO DE INDICACIONES ANTERIORES" in info["secciones"] or info["con_condiciones"]
     if info["titulo"] == "ACTA DE CAMPO":                  # «Acta de Campo»: desde la v3.1.1
+        if info.get("con_utm"):                            # coordenadas UTM: desde la v3.1.4
+            creador = max(creador, (3, 1, 4))
+        elif info.get("con_coordenadas") and creador >= (3, 1, 4):
+            creador = (3, 1, 3)                            # con coordenadas y sin UTM: emitida antes de la v3.1.4
         if info.get("empresa_tecnico") == EMPRESA_TECNICO:
             creador = max(creador, (3, 1, 3))
         elif creador >= (3, 1, 3):
@@ -318,6 +327,11 @@ def version_de_emision(info, hay_gps, sin_fotos):
     if sin_fotos and info["secciones"]["FIRMAS"]["numero"] == 6:
         return None                                        # la v2.3 numeraba «6 · Firmas» aunque no hubiera fotos
     return "3.0"                                           # sin GPS ni marcas: el PDF sale igual
+
+
+def esquema_de(version_emision):
+    """Esquema del acta en el teléfono: 5 desde la v3.1.4 (su PDF lleva UTM y las versiones anteriores no deben importarla)."""
+    return 5 if version_emision and tuple(int(x) for x in version_emision.split(".")) >= (3, 1, 4) else 4
 
 
 def acta_desde_info(info):
@@ -426,10 +440,12 @@ def acta_desde_info(info):
     if not revisiones or revisiones[-1]["rev"] != revision:
         raise ValueError(f"el control de revisiones no acaba en la Rev. {revision}")
 
+    info["con_utm"] = UTM in dg or secc.get("REPORTAJE FOTOGRÁFICO", {}).get("utm", 0) > 0
+    info["con_coordenadas"] = bool(gps) or bool(sin_gps["lat"]) or any(f["gps"] for f in lista_fotos)
     version_emision = version_de_emision(info, bool(gps) or any(f["gps"] for f in lista_fotos), not lista_fotos)
     clave_objeto, detalle = objeto(dg["OBJETO"], con_tipos=bool(version_emision), siempre_tipo=info["titulo"] == "ACTA DE CAMPO")
     acta = {
-        "id": f"acta-rec-{info['sha256'][:12]}", "esquema": 4, "estado": "emitida", "emitida": emitida,
+        "id": f"acta-rec-{info['sha256'][:12]}", "esquema": esquema_de(version_emision), "estado": "emitida", "emitida": emitida,
         "creada": iso_utc(inicio_visita), "modificada": emitida, "fase": 8, "revision": revision, "revisiones": revisiones,
         "datos": {"actaNum": acta_num, "numAuto": False, "tecnico": dg["TÉCNICO"],
                   "cargoTecnico": "" if tecnico["cargo"] == "Técnico" else tecnico["cargo"], "expediente": dg["EXPEDIENTE"],
