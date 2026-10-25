@@ -67,6 +67,7 @@ python tests/e2e_contenido.py     # numeración, asistentes, acuerdos, firmas, r
 python tests/e2e_distribucion.py  # compartir el PDF, copia de seguridad, exportar e importar (42 comprobaciones)
 python tests/e2e_seguimiento.py   # condiciones, seguimiento de indicaciones, enlaces al mapa, registro Excel, migración y service worker (65 comprobaciones)
 python tests/e2e_identificacion.py  # cabecera, nombre de la app, orden de la identificación, listas desplegables (expediente, técnicos, cargos, asistentes, empresa y responsable), lo usado en el teléfono, formato del PDF, actas de la v3.0, la v3.1, la v3.1.2, la v3.1.3 y la v3.1.4 (58 comprobaciones)
+python tests/e2e_reconstruccion_lote.py  # reconstructor con un lote como el de una carpeta real: copias del mismo PDF, la misma acta compartida otra vez o rehecha desde su reconstrucción, PDF de la primera app, PDF que no son actas, PDF protegidos y archivos que no son PDF; importación sin actas repetidas (19 comprobaciones; pip install pdfplumber scikit-image)
 python tests/e2e_proteccion.py    # varias ventanas (emitir, corregir, fotos, compartir, importar), teléfono sin espacio, copia el mismo día, aviso de navegador, importar un PDF (36 comprobaciones)
 python tests/e2e_reconstruccion.py  # actas reconstruidas desde sus PDF: mismo PDF y mismo registro (22 comprobaciones; pip install pdfplumber scikit-image)
 python tests/e2e_ubicacion.py     # coordenadas UTM (comparadas con la Red Andaluza de Posicionamiento), huso, Identificación, Revisión, PDF y registro; fotos de la cámara o de la galería; esquema 5 frente a la v3.1.3 publicada (21 comprobaciones; usa el historial de git)
@@ -84,6 +85,8 @@ python tools/reconstruir-desde-pdf.py salida/ Acta_2_Rev1_2026-10-23.pdf Acta_4_
 ```
 
 Crea `Actas_reconstruidas.zip` (todas) y un `.zip` por acta. Lee los PDF de la v2.3 en adelante. Toma del PDF todos los datos, las fotos tal como van incrustadas y las firmas, que se redibujan desde su imagen; el acta queda emitida con la versión con la que se emitió, así que la app vuelve a generar el mismo PDF. Si se reconstruyen juntas las actas de un expediente, el seguimiento queda enlazado entre ellas y las revisiones marcan «Sustituida» la anterior. El PDF original sigue siendo el documento oficial.
+
+Cada acta se reconstruye una sola vez aunque la lista repita su PDF: una copia del mismo archivo (las «(1)» de las descargas) o la misma acta compartida otra vez (otro PDF con el mismo texto y las mismas fotos, también si se rehízo desde el acta reconstruida; se toma el más antiguo, el más cercano a la emisión), y la herramienta avisa de cada repetido (`REP`). De lo que no se puede reconstruir dice por qué (`NO`): los PDF de la primera app, hasta la v2.2 («Acta de Visita de Campo»), los que no son actas de la app, los protegidos (cifrados) y los archivos que no son PDF o están dañados. En Windows, para pasar todos los PDF de una carpeta (`cmd` no expande `*.pdf`), desde PowerShell: `python tools/reconstruir-desde-pdf.py salida (Get-ChildItem carpeta\*.pdf).FullName`.
 
 ## Versiones
 

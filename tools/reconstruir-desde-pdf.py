@@ -14,12 +14,18 @@ seguimiento sale igual en el PDF, pero el registro no la enlaza con la original.
 
 Uso:   python tools/reconstruir-desde-pdf.py <carpeta_salida> <pdf> [<pdf> …]
 Crea:  Actas_reconstruidas.zip (todas) y Acta_<nº>_Rev<N>_reconstruida.zip (una por acta), para «Mis actas → Importar».
+Repetidos: un PDF que repite otro de la lista (el mismo archivo, o la misma acta compartida otra vez: mismo texto y
+           mismas fotos) se reconstruye una sola vez, desde el más antiguo: el ZIP no lleva la misma acta dos veces.
+No se reconstruyen, y se dice por qué: los PDF de la v2.2 y anteriores, los que no son actas de la app, los protegidos
+(cifrados) y los archivos que no son PDF o están dañados.
 Requisitos: pip install pdfplumber pypdf pillow numpy scikit-image   (scikit-image trae scipy)
 """
 import datetime as dt
 import hashlib
 import io
 import json
+import logging
+import os
 import re
 import sys
 import unicodedata
@@ -32,6 +38,8 @@ from PIL import Image
 from pypdf import PdfReader
 from scipy import ndimage
 from skimage.morphology import skeletonize
+
+logging.getLogger("pypdf").setLevel(logging.ERROR)   # sin sus avisos en la consola: cada PDF dice su motivo
 
 MM = 72 / 25.4                       # puntos por mm
 EMPRESA = "TEAMBIMCIVIL"
@@ -115,11 +123,13 @@ def version(texto):
 
 
 def leer_pdf(ruta):
-    lector = PdfReader(str(ruta))
+    lector = abrir_pdf(ruta)
     meta = lector.metadata or {}
     creacion = str(meta.get("/CreationDate", ""))
     m = re.match(r"D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:([+-])(\d{2})'(\d{2})'|Z)?", creacion)
     if not m:
+        with pdfplumber.open(str(ruta)) as pdf:
+            comprobar_formato(pdf)               # si además no es un acta, se dice eso
         raise ValueError("el PDF no tiene fecha de creación")
     a, mes, d, h, mi, s, signo, th, tm = m.groups()
     zona = dt.timezone((1 if signo != "-" else -1) * dt.timedelta(hours=int(th or 0), minutes=int(tm or 0)))
@@ -131,6 +141,7 @@ def leer_pdf(ruta):
             "fotos_img": [], "firmas_img": [], "titulo": None, "emitida_dia": None, "separadores": {}}
     lineas = []
     with pdfplumber.open(str(ruta)) as pdf:
+        comprobar_formato(pdf)                   # un PDF de la v2.2 o anterior, o que no es un acta: se dice de entrada
         for n, pagina in enumerate(pdf.pages, 1):
             for linea in pagina.extract_text_lines(strip=False):        # bloque de control: «Emitida dd/mm/aaaa»
                 e = re.search(r"Emitida (\d{2})/(\d{2})/(\d{4})", linea["text"])
@@ -169,6 +180,46 @@ def leer_pdf(ruta):
     if info["titulo"] is None:
         raise ValueError("no es un acta de la app de la v2.3 o posterior (título no reconocido)")
     return info
+
+
+# Título de los PDF de la primera app (hasta la v2.2): otro formato, que no se puede reconstruir.
+TITULO_ANTIGUO = "ACTA DE VISITA DE CAMPO"
+
+
+def comprobar_formato(pdf):
+    """Que el PDF es un acta de la app de la v2.3 en adelante, por el título de su primera página. Si no lo es, se dice
+    por qué antes de leer sus secciones y sus imágenes."""
+    lineas = pdf.pages[0].extract_text_lines(return_chars=True, strip=False) if pdf.pages else []
+    textos = [texto_de([{"t": c["text"], "x0": c["x0"] / MM, "x1": c["x1"] / MM, "size": c["size"]}
+                        for c in linea["chars"]]).strip() for linea in lineas]
+    if any(t in TITULOS for t in textos):
+        return
+    if any(TITULO_ANTIGUO in t for t in textos):
+        raise ValueError("es de una versión de la app anterior a la v2.3 («Acta de Visita de Campo»): "
+                         "ese formato no se puede reconstruir")
+    raise ValueError("no es un acta de la app: no lleva el título «Acta de Campo» ni «Acta de Visita de Inspección»")
+
+
+def abrir_pdf(ruta):
+    """El PDF abierto, o el motivo por el que no se puede abrir, dicho con claridad."""
+    if not ruta.exists():
+        comodin = any(c in ruta.name for c in "*?")
+        raise ValueError("no existe ese archivo" + (": cmd no expande «*» ni «?»; en Windows, usa PowerShell "
+                                                    "(ver el README)" if comodin else ""))
+    if ruta.is_dir():
+        raise ValueError("es una carpeta: hay que pasar sus PDF "
+                         "(en PowerShell, (Get-ChildItem carpeta\\*.pdf).FullName)")
+    with open(ruta, "rb") as f:
+        cabecera = f.read(1024)
+    if b"%PDF-" not in cabecera:
+        raise ValueError("no es un PDF" + (" (el archivo está vacío)" if not cabecera else ""))
+    try:
+        lector = PdfReader(str(ruta))
+    except Exception:
+        raise ValueError("el PDF está dañado: no se puede abrir") from None
+    if lector.is_encrypted:                 # con contraseña o solo contra cambios: sus fotos van cifradas
+        raise ValueError("el PDF está protegido (cifrado): hace falta una copia sin protección")
+    return lector
 
 
 # ── Secciones ────────────────────────────────────────────────────────────────────────────────────
@@ -614,13 +665,99 @@ def carpeta_de(acta, usadas):
     return nombre
 
 
+# ── PDF repetidos ───────────────────────────────────────────────────────────────────────────────
+
+def creado_el(lector):
+    """Fecha de creación del PDF (la pone la app al generarlo), o None si no la lleva."""
+    m = re.match(r"D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:([+-])(\d{2})'(\d{2})'|Z)?",
+                 str((lector.metadata or {}).get("/CreationDate", "")))
+    if not m:
+        return None
+    a, mes, d, h, mi, s, signo, th, tm = m.groups()
+    zona = dt.timezone((1 if signo != "-" else -1) * dt.timedelta(hours=int(th or 0), minutes=int(tm or 0)))
+    return dt.datetime(int(a), int(mes), int(d), int(h), int(mi), int(s), tzinfo=zona)
+
+
+def contenido_de(datos):
+    """Huella de lo que se ve en el PDF: el texto de cada página y las fotos (sus bytes). Dos PDF de la misma acta
+    generados en momentos distintos (al compartirla otra vez) solo se diferencian en la fecha de creación y el
+    identificador del archivo. No cuentan las firmas, que la app vuelve a dibujar, ni el texto a la altura de las fotos:
+    su etiqueta y, en la v3.2, el de sus anotaciones («Foto n · anotada»; su texto puede salirse de la foto por los
+    lados), que la reconstrucción no recupera. Así, el PDF que se rehace desde un acta reconstruida es la misma acta."""
+    huella = hashlib.sha256()
+    with pdfplumber.open(io.BytesIO(datos)) as pdf:
+        for pagina in pdf.pages:
+            fotos = [im for im in pagina.images if tuple(im["srcsize"]) != (750, 300)]
+
+            def fuera_de_las_fotos(obj, fotos=fotos):
+                return obj.get("object_type") != "char" or not any(f["top"] - 3 * MM <= obj["top"] < f["bottom"] for f in fotos)
+
+            huella.update((pagina.filter(fuera_de_las_fotos).extract_text() or "").encode("utf-8") + b"\n\f\n")
+            for im in fotos:
+                huella.update(hashlib.sha256(im["stream"].get_rawdata()).digest())
+    return huella.hexdigest()
+
+
+def sin_repetidos(rutas):
+    """Quita de la lista los PDF repetidos: el mismo archivo (o la misma ruta dos veces) o la misma acta en otro PDF
+    (misma huella de contenido). De cada grupo queda el más antiguo, el más cercano a la emisión; entre copias del mismo
+    archivo, la de nombre más corto (la original y no la «(1)»). Se avisa de los demás. Devuelve las rutas que quedan,
+    en su orden, y cuántas se quitan."""
+    leidos = []
+    for orden, ruta in enumerate(rutas):
+        d = {"ruta": ruta, "orden": orden, "archivo": None, "contenido": None, "creado": None}
+        try:
+            datos = ruta.read_bytes()
+            d["archivo"] = hashlib.sha256(datos).hexdigest()
+            d["creado"] = creado_el(PdfReader(io.BytesIO(datos)))
+            d["contenido"] = contenido_de(datos)
+        except Exception:                 # un PDF que no se puede leer sigue en la lista: al leerlo se dirá por qué
+            pass
+        d["grupo"] = d["contenido"] or d["archivo"] or f"sin leer {orden}"
+        leidos.append(d)
+    nombres = [d["ruta"].name for d in leidos]
+    try:
+        comun = Path(os.path.commonpath([str(d["ruta"].resolve().parent) for d in leidos])) if leidos else None
+    except ValueError:                    # en Windows, rutas de unidades distintas
+        comun = None
+
+    def nombre(ruta):                     # con la carpeta si ese nombre de archivo se repite en la lista
+        if nombres.count(ruta.name) > 1 and comun is not None:
+            try:
+                return str(ruta.resolve().relative_to(comun))
+            except ValueError:
+                return str(ruta)
+        return ruta.name
+
+    lejano = dt.datetime.max.replace(tzinfo=dt.timezone.utc)
+    primero = {}
+    for d in sorted(leidos, key=lambda x: (x["creado"] or lejano, len(x["ruta"].name), x["orden"])):
+        primero.setdefault(d["grupo"], d)
+    quedan, quitados = [], 0
+    for d in leidos:
+        p = primero[d["grupo"]]
+        if p is d:
+            quedan.append(d["ruta"])
+            continue
+        quitados += 1
+        if d["ruta"].resolve() == p["ruta"].resolve():
+            motivo = "está dos veces en la lista"
+        elif d["archivo"] == p["archivo"]:
+            motivo = f"es una copia de {nombre(p['ruta'])} (el mismo archivo)"
+        else:
+            motivo = f"es la misma acta que {nombre(p['ruta'])} (mismo texto y mismas fotos), el PDF más antiguo"
+        print(f"REP  {nombre(d['ruta'])}: {motivo}: se reconstruye una sola vez")
+    return quedan, quitados
+
+
 def main():
     if len(sys.argv) < 3:
         sys.exit(__doc__)
     salida = Path(sys.argv[1])
     salida.mkdir(parents=True, exist_ok=True)
     lote, fallos = [], 0
-    for ruta in map(Path, sys.argv[2:]):
+    rutas, repetidos = sin_repetidos([Path(a) for a in sys.argv[2:]])
+    for ruta in rutas:
         try:
             info = leer_pdf(ruta)
             acta, firmas = acta_desde_info(info)
@@ -643,7 +780,9 @@ def main():
                 anadir_al_zip(una, acta, info, carpeta)
                 una.writestr("LEEME.txt", leeme([(acta, info)]))
         todas.writestr("LEEME.txt", leeme(lote))
-    print(f"{len(lote)} acta(s) reconstruida(s) en {salida}" + (f" · {fallos} PDF sin reconstruir" if fallos else ""))
+    print(f"{len(lote)} acta(s) reconstruida(s) en {salida}"
+          + (f" · {repetidos} PDF repetido(s), sin duplicar" if repetidos else "")
+          + (f" · {fallos} PDF sin reconstruir" if fallos else ""))
     return 1 if fallos else 0
 
 
