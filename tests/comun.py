@@ -166,9 +166,47 @@ def firmar(cdp, pagina, desplazamiento=0, lienzo=None):
     cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
 
 
+def escribir_expediente(pagina, expediente):
+    """Escribe el expediente. Con expedientes ya usados en el teléfono, la app muestra su desplegable: se elige
+    «➕ Nuevo expediente…» y se escribe (v3.1.3)."""
+    if pagina.is_visible("#expedienteLista") and not pagina.is_visible("#expediente"):
+        pagina.select_option("#expedienteLista", "__nuevo")
+    pagina.fill("#expediente", expediente)
+
+
+def _opciones(pagina, selector):
+    return pagina.evaluate(f"Array.from(document.querySelector('{selector}').options).map(o => o.value)")
+
+
+def anadir_asistente(pagina, opcion=None):
+    """«➕ Añadir asistente…»: «Persona nueva» o, con `opcion`, la que tiene ese texto («Ana Cascajosa · …»)."""
+    if opcion is None:
+        pagina.select_option("#anadirAsistenteLista", "__nueva")
+    else:
+        pagina.select_option("#anadirAsistenteLista", label=opcion)
+
+
+def escribir_empresa(pagina, i, empresa):
+    """Empresa del asistente i (desde 0): de su desplegable si está; si no, «Otra…» y se escribe."""
+    if empresa and empresa in _opciones(pagina, f"#asEmpresaLista{i}"):
+        pagina.select_option(f"#asEmpresaLista{i}", empresa)
+    else:
+        pagina.select_option(f"#asEmpresaLista{i}", "__otro")
+        pagina.fill(f"#asEmpresa{i}", empresa)
+
+
+def escribir_responsable(pagina, i, responsable):
+    """Responsable de la indicación i (desde 0): de su desplegable si está; si no, «Otro…» y se escribe."""
+    if responsable and responsable in _opciones(pagina, f"#indRespLista{i}"):
+        pagina.select_option(f"#indRespLista{i}", responsable)
+    else:
+        pagina.select_option(f"#indRespLista{i}", "__otro")
+        pagina.fill(f"#indResp{i}", responsable)
+
+
 def identificar(pagina, expediente="425_2026.CON", acta=None, tecnico=TECNICO, cargo=CARGO, objeto="tajos", detalle=None):
     """Rellena la identificación en el orden de la app: expediente, nº (si se da), técnico, cargo y objeto."""
-    pagina.fill("#expediente", expediente)
+    escribir_expediente(pagina, expediente)
     if acta:
         pagina.fill("#actaNum", acta)
     pagina.select_option("#tecnico", tecnico)

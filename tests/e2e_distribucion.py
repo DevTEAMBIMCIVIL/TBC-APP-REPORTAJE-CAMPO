@@ -19,6 +19,7 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from comun import (SALIDA, TECNICO, Resultados, abrir, avanzar_hasta, cerrar_aviso, contexto_movil,  # noqa: E402
                    esperar_fotos, firmar, identificar, servidor, texto_pdf, vigilar_red)
+from comun import escribir_expediente, escribir_responsable  # noqa: E402
 from generar_fotos import generar  # noqa: E402
 
 EXP = "425_2026.CON"
@@ -93,7 +94,7 @@ def crear_acta(pg, cdp, fotos, hasta=8):
     pg.fill("#observaciones", "Se revisan los forjados de planta primera.")
     pg.evaluate("anadirIndicacion()")
     pg.fill("#indTexto0", INDICACION["texto"])
-    pg.fill("#indResp0", INDICACION["responsable"])
+    escribir_responsable(pg, 0, INDICACION["responsable"])
     pg.fill("#indPlazo0", INDICACION["plazo"])
     pg.click("#btnNext")                       # acuerdos → firmas
     firmar_todos(cdp, pg)
@@ -269,7 +270,7 @@ def main():
         meta = lector.metadata or {}
         r.comprobar("D1 · Propiedades del PDF (título, autor, asunto, palabras clave) con acentos",
                     meta.get("/Title") == f"{FORMATO} {num0} · Rev. 0"
-                    and meta.get("/Author") == f"{TECNICO} · TEAMBIMCIVIL"
+                    and meta.get("/Author") == f"{TECNICO} · TEAMBIMCIVIL S.L."
                     and f"Expediente {EXP}" in (meta.get("/Subject") or "")
                     and num0 in (meta.get("/Keywords") or "") and f"v{version}" in (meta.get("/Creator") or ""),
                     f"{meta.get('/Title')} | {meta.get('/Author')}")
@@ -423,7 +424,7 @@ def main():
                     and "Enlace copiado" in (aviso or ""), aviso)
         pb.evaluate("cerrarMisActas()")
         pb.evaluate("nuevaActa()")
-        pb.fill("#expediente", EXP)
+        escribir_expediente(pb, EXP)
         pb.wait_for_function("state.acta.datos.actaNum.includes('-AV-')")
         r.comprobar("D3 · La numeración automática cuenta las actas importadas",
                     pb.evaluate("state.acta.datos.actaNum") == f"{EXP}-AV-03", pb.evaluate("state.acta.datos.actaNum"))

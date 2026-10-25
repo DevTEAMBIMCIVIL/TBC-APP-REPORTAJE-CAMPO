@@ -22,6 +22,7 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from comun import (MARCO_NEGRO, SALIDA, TECNICO, Resultados, abrir, abrir_mis_actas, avanzar_hasta,  # noqa: E402
                    cerrar_aviso, contexto_movil, esperar_fotos, firmar, marco_pdf, servidor, texto_pdf, vigilar_red)
+from comun import escribir_expediente, escribir_responsable  # noqa: E402
 from generar_fotos import generar  # noqa: E402
 
 EXP = "EXP-SEG"
@@ -124,7 +125,7 @@ def main():
         version, esquema = pg.evaluate("[VERSION, ESQUEMA]")
 
         # ══ AV-01 · Condiciones de la visita (mejora 5) ══
-        pg.fill("#expediente", EXP)
+        escribir_expediente(pg, EXP)
         pg.wait_for_function(f"state.acta.datos.actaNum === '{EXP}-AV-01'", timeout=5000)
         pg.select_option("#tecnico", TECNICO)
         pg.select_option("#cargoTecnico", "Director de Obra")
@@ -197,7 +198,7 @@ def main():
         for i, (texto, responsable, plazo) in enumerate(INDICACIONES_AV01):
             pg.click("button:has-text('Añadir indicación')")
             pg.fill(f"#indTexto{i}", texto)
-            pg.fill(f"#indResp{i}", responsable)
+            escribir_responsable(pg, i, responsable)
             if plazo:
                 pg.fill(f"#indPlazo{i}", plazo)
         pg.click("#btnNext")                               # → firmas
@@ -264,7 +265,7 @@ def main():
         pg.fill("#segPlazo1", "2026-11-05")
         pg.click("button:has-text('Añadir indicación')")
         pg.fill("#indTexto0", "Colocar testigos de yeso en la fisura.")
-        pg.fill("#indResp0", "Constructora Sur · Jefe de obra")
+        escribir_responsable(pg, 0, "Constructora Sur · Jefe de obra")
         pg.fill("#indPlazo0", "2026-10-20")
         seguimiento = pg.evaluate("state.acta.seguimiento.map(s => [s.estado, s.nuevoPlazo, s.comentario])")
         pastillas = pg.evaluate(PASTILLAS)

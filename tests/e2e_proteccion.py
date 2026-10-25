@@ -21,6 +21,7 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from comun import (SALIDA, Resultados, abrir, abrir_mis_actas, avanzar_hasta, cerrar_aviso, contexto_movil,  # noqa: E402
                    esperar_fotos, firmar, identificar, servidor, vigilar_red)
+from comun import escribir_expediente  # noqa: E402
 from generar_fotos import generar  # noqa: E402
 
 UA_SAMSUNG = ("Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -147,7 +148,7 @@ def main():
         pa.wait_for_timeout(700)
         r.comprobar("Sin aviso de la otra ventana: al ocultarse sin cambios pendientes no escribe nada",
                     pb.evaluate(ESTADO, acta_id) == ["emitida", 1, True, "EXP-SC"] and pa.evaluate("state.acta.estado") == "borrador")
-        pa.fill("#expediente", "EXP-SC-PISA")
+        escribir_expediente(pa, "EXP-SC-PISA")
         aviso = esperar_aviso(pa)
         r.comprobar("…y si escribe en la copia atrasada, no pisa la emitida: muestra esa versión y lo explica",
                     "ya se había emitido en otra ventana" in aviso and pa.evaluate("state.acta.estado") == "emitida"
@@ -160,14 +161,14 @@ def main():
         pa, acta_id = nueva_en_ventana(ctx, errores, "9", "EXP-BC")
         pb, _, _ = segunda_ventana(ctx, errores, pa, acta_id)
         pa.evaluate("canalVentanas.onmessage = null")
-        pb.fill("#expediente", "EXP-BC-B")
+        escribir_expediente(pb, "EXP-BC-B")
         pb.wait_for_function("!state.pendiente && state.acta.datos.expediente === 'EXP-BC-B'", timeout=5000)
         pa.fill("#descripcion", "Detalle escrito en la ventana atrasada")
         aviso = esperar_aviso(pa)
         r.comprobar("Borrador cambiado en otra ventana: no se pisa; se muestra la versión guardada y se explica",
                     "cambiada en otra ventana" in aviso and pa.evaluate("state.acta.datos.expediente") == "EXP-BC-B"
                     and pb.evaluate(ESTADO, acta_id)[3] == "EXP-BC-B", aviso)
-        pb.fill("#expediente", "EXP-BC-C")
+        escribir_expediente(pb, "EXP-BC-C")
         pb.wait_for_function("!state.pendiente && state.acta.datos.expediente === 'EXP-BC-C'", timeout=5000)
         pa.evaluate("document.dispatchEvent(new Event('visibilitychange'))")     # vuelve a primer plano
         pa.wait_for_function("state.acta.datos.expediente === 'EXP-BC-C'", timeout=5000)
@@ -386,7 +387,7 @@ def main():
             pa.evaluate("() => { compartirPDF(); }")                     # menú del teléfono abierto 1,5 s
             pa.wait_for_function("window.menuAbierto === true", timeout=5000)
             pb.evaluate("irAFase(1)")
-            pb.fill("#expediente", "EXP-COMPARTIR-B")
+            escribir_expediente(pb, "EXP-COMPARTIR-B")
             pb.wait_for_function("!state.pendiente && state.acta.datos.expediente === 'EXP-COMPARTIR-B'", timeout=5000)
             pa.wait_for_function("state.acta.estado === 'emitida'", timeout=10000)
             pb.wait_for_function("state.acta.estado === 'emitida'", timeout=5000)
@@ -442,7 +443,7 @@ def main():
             pa.set_input_files("#photoInput", [horizontal])
             pa.wait_for_function("typeof window.soltarFoto === 'function'", timeout=5000)
             pb.evaluate("irAFase(1)")
-            pb.fill("#expediente", "EXP-PROC-B")
+            escribir_expediente(pb, "EXP-PROC-B")
             pb.wait_for_function("!state.pendiente && state.acta.datos.expediente === 'EXP-PROC-B'", timeout=5000)
             pa.wait_for_function("state.acta.datos.expediente === 'EXP-PROC-B'", timeout=5000)   # A se ha puesto al día
             pa.evaluate("soltarFoto()")
@@ -495,7 +496,7 @@ def main():
             r.comprobar("Doble pulsación en Compartir: avisa de que el menú sigue abierto y no deja de esperar la emisión",
                         "Menú de compartir abierto" in aviso and pa.evaluate("emisionEnCurso === state.acta"), aviso)
             pb.evaluate("irAFase(1)")
-            pb.fill("#expediente", "EXP-COLGADO-B")
+            escribir_expediente(pb, "EXP-COLGADO-B")
             pb.wait_for_function("!state.pendiente && state.acta.datos.expediente === 'EXP-COLGADO-B'", timeout=5000)
             pa.wait_for_timeout(400)
             esperando = pa.evaluate("state.acta.datos.expediente") == "EXP-COLGADO"

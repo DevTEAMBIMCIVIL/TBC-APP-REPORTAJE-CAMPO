@@ -125,6 +125,13 @@ INYECTAR = r"""async ({ fotos }) => {
       datos: { actaNum: 'V23-2', numAuto: false, tecnico: 'BGG', cargoTecnico: '', expediente: '168_2022 OT AFORADORES',
                descripcion: 'Revisión del túnel', fecha: '2026-10-21', hora: '11:00' },
       gps: null, sinGps: { activo: true, referencia: 'Túnel, PK 1+200', lat: '', lng: '' }, observaciones: '' },
+    { ...comun, id: 'rec-a7', creada: '2026-10-24T08:00:00.000Z', modificada: '2026-10-24T09:00:00.000Z', emitida: '2026-10-24T09:00:00.000Z',
+      versionEmision: '3.1.3', revision: 0, revisiones: [{ rev: 0, fecha: '2026-10-24T09:00:00.000Z', motivo: 'Emisión inicial' }],
+      datos: { actaNum: 'EXP-OTRO-AV-02', numAuto: true, tecnico: 'María Quinta', cargoTecnico: 'Inspector de Campo', expediente: 'EXP-OTRO',
+               objeto: 'inventario', descripcion: '', fecha: '2026-10-24', hora: '10:00' },
+      gps: { lat: '37.401000', lng: '-5.990000', acc: 20, hora: '2026-10-24T08:01:00.000Z' }, sinGps: vacia,
+      condiciones: sinCondiciones, observaciones: '',
+      asistentes: [{ id: 'asis-a7-1', nombre: 'Sebastián Gil', empresa: 'TEAMBIMCIVIL S.L.', cargo: 'Redactor de Estudio', firma: false }] },
   ];
   for (const a of actas) {
     for (const f of a.fotos) { await Almacen.guardarFoto(f.id, a.id, blobs[f.clave]); delete f.clave; }
@@ -216,8 +223,10 @@ def main():
             originales[(numero, rev)] = (acta_id, ruta, descargar_pdf(pa, acta_id, ruta))
         registro(pa, DIR / "registro-A.xlsx")
         textos_a = {k: texto_pdf(v[1]) for k, v in originales.items()}
-        r.comprobar("Teléfono A: 7 actas de la v2.3 a la v3.1.2 con sus PDF (formatos «Acta de Campo» y anterior, con y sin enlaces)",
-                    len(originales) == 7 and sum("ACTA DE CAMPO" in t for t in textos_a.values()) == 3
+        r.comprobar("Teléfono A: 8 actas de la v2.3 a la v3.1.3 con sus PDF (formatos «Acta de Campo» y anterior, con y sin enlaces)",
+                    len(originales) == 8 and sum("ACTA DE CAMPO" in t for t in textos_a.values()) == 4
+                    and "María Quinta TEAMBIMCIVIL S.L. Inspector de Campo" in textos_a[("EXP-OTRO-AV-02", 0)]
+                    and "Blas González TEAMBIMCIVIL Director de Obra" in textos_a[("EXP-REC-AV-01", 1)]
                     and "6 · FIRMAS" in textos_a[("V23-2", 0)] and "5 · FIRMAS" in textos_a[("EXP-OTRO-AV-01", 0)]
                     and len(enlaces(originales[("EXP-OTRO-AV-01", 0)][1])) == 1 and not enlaces(originales[("V23-1", 0)][1]),
                     "; ".join(f"{k[0]} Rev. {k[1]}" for k in originales))
@@ -227,14 +236,15 @@ def main():
         salida = subprocess.run([sys.executable, str(HERRAMIENTA), str(DIR / "zip")] + [str(v[1]) for v in originales.values()],
                                 capture_output=True, text=True, timeout=600)
         print(salida.stdout.strip())
-        r.comprobar("La herramienta reconstruye los 7 PDF sin fallos", salida.returncode == 0 and "7 acta(s) reconstruida(s)" in salida.stdout,
+        r.comprobar("La herramienta reconstruye los 8 PDF sin fallos", salida.returncode == 0 and "8 acta(s) reconstruida(s)" in salida.stdout,
                     salida.stderr.strip()[-300:])
         with __import__("zipfile").ZipFile(DIR / "zip" / "Actas_reconstruidas.zip") as z:
             fichas = {json.loads(z.read(n))["acta"]["datos"]["actaNum"] + f" Rev. {json.loads(z.read(n))['acta']['revision']}": json.loads(z.read(n))["acta"]
                       for n in z.namelist() if n.endswith("acta.json")}
         versiones = {k: f.get("versionEmision") for k, f in fichas.items()}
-        r.comprobar("Versión de emisión deducida del contenido (no de la app que generó el PDF)",
+        r.comprobar("Versión de emisión deducida del contenido (no de la app que generó el PDF): «TEAMBIMCIVIL S.L.» desde la v3.1.3",
                     versiones["EXP-REC-AV-01 Rev. 0"] == versiones["EXP-REC-AV-02 Rev. 0"] == "3.1.2"
+                    and versiones["EXP-OTRO-AV-02 Rev. 0"] == "3.1.3"
                     and versiones["EXP-OTRO-AV-01 Rev. 0"] == "3.1" and versiones["V30-7 Rev. 0"] in ("3.0", "3.1")
                     and versiones["V23-1 Rev. 0"] is None and versiones["V23-2 Rev. 0"] is None, str(versiones))
         a2 = fichas["EXP-REC-AV-02 Rev. 0"]
@@ -251,7 +261,7 @@ def main():
         pb.set_input_files("#importInput", str(DIR / "zip" / "Actas_reconstruidas.zip"))
         pb.wait_for_selector("#alertOverlay.open", timeout=60000)
         aviso = cerrar_aviso(pb) or ""
-        r.comprobar("Teléfono B: importa las 7 actas reconstruidas", "7 acta(s) nueva(s)" in aviso and "no válida" not in aviso, aviso)
+        r.comprobar("Teléfono B: importa las 8 actas reconstruidas", "8 acta(s) nueva(s)" in aviso and "no válida" not in aviso, aviso)
         en_b = {(a["datos"]["actaNum"], a["revision"]): a for a in pb.evaluate("Almacen.listarActas()")}
         for clave, (_, ruta_a, nombre_a) in originales.items():
             acta_b = en_b[clave]

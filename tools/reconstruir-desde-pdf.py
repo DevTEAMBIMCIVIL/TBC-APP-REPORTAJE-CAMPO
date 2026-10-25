@@ -35,6 +35,7 @@ from skimage.morphology import skeletonize
 
 MM = 72 / 25.4                       # puntos por mm
 EMPRESA = "TEAMBIMCIVIL"
+EMPRESA_TECNICO = "TEAMBIMCIVIL S.L."      # empresa del técnico en el PDF desde la v3.1.3
 TITULOS = ("ACTA DE VISITA DE INSPECCIÓN", "ACTA DE CAMPO")
 # Deben coincidir con las listas de index.html (la prueba lo comprueba).
 METEO = {"Despejado": "despejado", "Nuboso": "nuboso", "Lluvia": "lluvia", "Viento": "viento", "Niebla": "niebla",
@@ -304,8 +305,12 @@ def version_de_emision(info, hay_gps, sin_fotos):
     """La versión con la que se emitió (no la que generó el PDF: un acta se puede volver a compartir más tarde)."""
     creador = version(info["creador"]) or (2, 3)
     marcas_v3 = info["enlaces"] > 0 or "SEGUIMIENTO DE INDICACIONES ANTERIORES" in info["secciones"] or info["con_condiciones"]
-    if info["titulo"] == "ACTA DE CAMPO":
-        return ".".join(map(str, creador))                 # «Acta de Campo»: desde la v3.1.1
+    if info["titulo"] == "ACTA DE CAMPO":                  # «Acta de Campo»: desde la v3.1.1
+        if info.get("empresa_tecnico") == EMPRESA_TECNICO:
+            creador = max(creador, (3, 1, 3))
+        elif creador >= (3, 1, 3):
+            creador = (3, 1, 2)                            # emitida antes de la v3.1.3 y compartida después
+        return ".".join(map(str, creador))
     if marcas_v3:
         return "3.0" if creador < (3, 1) else "3.1"         # enlaces, condiciones o seguimiento: v3.0 o v3.1
     if creador < (3, 0) or hay_gps:
@@ -341,8 +346,9 @@ def acta_desde_info(info):
     filas = tabla(secc["ASISTENTES"], [("nombre", 0, 77, 58.8), ("empresa", 77, 122, 41.8), ("cargo", 122, 177, 51.8),
                                        ("firma", 177, 211, 18)], info["separadores"])
     tecnico = filas[0]
-    if tecnico["empresa"] != EMPRESA or tecnico["nombre"] != dg["TÉCNICO"]:
+    if tecnico["empresa"] not in (EMPRESA, EMPRESA_TECNICO) or tecnico["nombre"] != dg["TÉCNICO"]:
         raise ValueError("la primera fila de asistentes no es el técnico")
+    info["empresa_tecnico"] = tecnico["empresa"]
 
     obs = parrafo(secc["OBSERVACIONES GENERALES"])
     indicaciones = []

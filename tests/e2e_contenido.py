@@ -15,6 +15,7 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from comun import (SALIDA, TECNICO, Resultados, abrir, abrir_mis_actas, avanzar_hasta, cerrar_aviso, colocaciones_de_imagenes,  # noqa: E402
                    contexto_movil, esperar_fotos, firmar, normalizar, servidor, texto_pdf, vigilar_red)
+from comun import anadir_asistente, escribir_empresa, escribir_expediente, escribir_responsable  # noqa: E402
 from generar_fotos import generar  # noqa: E402
 
 EXP = "425_2026.CON"
@@ -56,7 +57,7 @@ def main():
         cdp = ctx.new_cdp_session(pg)
 
         # ── C1 · Numeración automática por expediente ──
-        pg.fill("#expediente", EXP)
+        escribir_expediente(pg, EXP)
         pg.wait_for_function(f"state.acta.datos.actaNum === '{EXP}-AV-01'", timeout=5000)
         r.comprobar("Número automático al indicar el expediente",
                     pg.input_value("#actaNum") == f"{EXP}-AV-01" and "1.ª acta" in pg.text_content("#numAyuda"),
@@ -73,16 +74,16 @@ def main():
                     pg.evaluate("state.fase") == 2 and pg.text_content("#tecnicoNombreAsist") == TECNICO)
 
         # ── C2 · Asistentes ──
-        pg.click("button:has-text('Añadir asistente')")
+        anadir_asistente(pg)
         pg.click("#btnNext")
         r.comprobar("Asistente sin nombre: se avisa", "Falta un nombre" in (cerrar_aviso(pg) or ""))
         datos = [("Juan Pérez", "Constructora Sur", "Jefe de obra"), ("Marta Ruiz", "Propiedad", "Promotora"),
                  ("Luis Gómez", "CSS Ingeniería", "Coordinador de seguridad")]
         for i, (nombre, empresa, cargo) in enumerate(datos):
             if i:
-                pg.click("button:has-text('Añadir asistente')")
+                anadir_asistente(pg)
             pg.fill(f"#asNombre{i}", nombre)
-            pg.fill(f"#asEmpresa{i}", empresa)
+            escribir_empresa(pg, i, empresa)
             pg.select_option(f"#asCargo{i}", "__otro")
             pg.fill(f"#asCargoOtro{i}", cargo)
         pg.uncheck("[data-asistente='1'] input[data-campo='firma']")
@@ -101,14 +102,14 @@ def main():
         pg.click("#btnNext")
         r.comprobar("Indicación vacía: se avisa", "Indicación vacía" in (cerrar_aviso(pg) or ""))
         pg.fill("#indTexto0", "Picado, pasivado de armaduras y reparación con mortero R4 en la viga del eje 3.")
-        pg.fill("#indResp0", "Constructora Sur · Jefe de obra")
+        escribir_responsable(pg, 0, "Constructora Sur · Jefe de obra")
         pg.fill("#indPlazo0", "2026-11-05")
         pg.click("button:has-text('Añadir indicación')")
         pg.fill("#indTexto1", "Aportar el último ensayo de esclerometría.")
-        pg.fill("#indResp1", "Propiedad · Promotora")
-        opciones = pg.evaluate("Array.from(document.querySelectorAll('#responsablesLista option')).map(o => o.value)")
-        r.comprobar("Responsables sugeridos: técnico y asistentes", opciones == [
-            "TEAMBIMCIVIL · Dirección facultativa", "Constructora Sur · Jefe de obra", "Propiedad · Promotora",
+        escribir_responsable(pg, 1, "Propiedad · Promotora")
+        opciones = pg.evaluate("Array.from(document.getElementById('indRespLista1').options).map(o => o.value).filter(v => v && v !== '__otro')")
+        r.comprobar("Responsables en su desplegable: técnico y asistentes", opciones == [
+            "TEAMBIMCIVIL S.L. · Dirección facultativa", "Constructora Sur · Jefe de obra", "Propiedad · Promotora",
             "CSS Ingeniería · Coordinador de seguridad"], str(opciones))
         pg.screenshot(path=str(SALIDA / "c-acuerdos.png"), full_page=True)
         pg.click("#btnNext")
@@ -187,7 +188,7 @@ def main():
         pg.click("#panelActas button:has-text('Nueva acta')")
         pg.wait_for_selector("#panelActas", state="hidden")            # la nueva acta ya está en pantalla
         pg.wait_for_function("state.persistida === false && state.acta.datos.expediente === ''")
-        pg.fill("#expediente", EXP)
+        escribir_expediente(pg, EXP)
         pg.wait_for_function(f"state.acta.datos.actaNum === '{EXP}-AV-03'", timeout=5000)
         pg.select_option("#objeto", "inventario")      # técnico y cargo: los recordados del acta anterior
         pg.click("#gpsBtn")
