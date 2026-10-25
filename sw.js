@@ -2,7 +2,7 @@
  * Guarda en el teléfono todos los archivos de la versión publicada para que la app
  * se abra y genere el PDF sin cobertura.
  * AL PUBLICAR UNA VERSIÓN NUEVA: cambiar VERSION aquí y en index.html (deben coincidir). */
-const VERSION = '3.1.2';
+const VERSION = '3.1.3';
 const CACHE = `acta-tbc-v${VERSION}`;
 const ARCHIVOS = [
   './',

@@ -1125,6 +1125,21 @@
   .step-item.active .step-label { color: var(--negro); font-weight: 800; }
   .panel-title, .panel-close { color: var(--negro); }
   .campo-otro { margin-top: 8px; }
+  /* v3.1.3 · desplegables del expediente, de los asistentes y del responsable */
+  #expedienteLista:not(.hidden) + #expediente { margin-top: 8px; }
+  select.anadir-asistente {
+    border: 2px dashed var(--rojo);
+    background-color: #FFF5F5;
+    color: var(--rojo);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-align-last: center;
+    cursor: pointer;
+  }
+  select.anadir-asistente option, select.anadir-asistente optgroup { color: var(--negro); font-weight: 400; text-align: left; }
+  select.anadir-asistente optgroup { font-weight: 700; }
+  .ind-row select.field-input { padding-right: 28px; background-position: right 9px center; }
   .campo-detalle { margin-top: 12px; }
   .hidden { display: none !important; }
 
@@ -1207,9 +1222,9 @@
   <p class="phase-subtitle">Completa los datos generales de la visita de campo.</p>
 
   <div class="field-group">
-    <label class="field-label" for="expediente">Expediente del trabajo <span class="required">*</span></label>
-    <input type="text" class="field-input" id="expediente" list="expedientesLista" autocomplete="off" placeholder="Código / Nombre del proyecto">
-    <datalist id="expedientesLista"></datalist>
+    <label class="field-label" for="expediente" id="expedienteEtiqueta">Expediente del trabajo <span class="required">*</span></label>
+    <select class="field-input hidden" id="expedienteLista" aria-label="Expediente del trabajo"></select>
+    <input type="text" class="field-input" id="expediente" autocomplete="off" placeholder="Código / Nombre del proyecto">
   </div>
 
   <div class="field-group">
@@ -1310,7 +1325,7 @@
     <div class="asistente-sub" id="tecnicoCargoAsist">TEAMBIMCIVIL</div>
   </div>
   <div id="asistentesLista"></div>
-  <button class="add-photo-btn" onclick="anadirAsistente()">➕ Añadir asistente</button>
+  <select class="field-input anadir-asistente" id="anadirAsistenteLista" aria-label="Añadir asistente"></select>
   <div class="sugeridos hidden" id="asistentesSugeridos"></div>
 </section>
 
@@ -1360,7 +1375,6 @@
   <div class="field-label"><span id="indTitulo">Indicaciones</span> <span>(<span id="indCount">0</span>)</span></div>
   <div id="indicacionesLista"></div>
   <button class="add-photo-btn" onclick="anadirIndicacion()">➕ Añadir indicación</button>
-  <datalist id="responsablesLista"></datalist>
 </section>
 
 <!-- ═══════════════════════════════════════════
@@ -1548,10 +1562,13 @@
 //  · Copia de seguridad, exportación e importación de actas en ZIP (sin librerías).
 // ═══════════════════════════════════════════════════════════════
 
-const VERSION = '3.1.2';
+const VERSION = '3.1.3';
 const NOMBRE_APP = 'Acta de Campo';
 const URL_OFICIAL = 'https://devteambimcivil.github.io/TBC-APP-REPORTAJE-CAMPO/';
-const EMPRESA = 'TEAMBIMCIVIL';
+const EMPRESA = 'TEAMBIMCIVIL';      // la marca: cabecera del PDF, registro, copias y enlace de la app
+// Empresa del técnico en el acta (asistentes, firmas y PDF): la razón social desde la v3.1.3. Las actas emitidas antes
+// conservan «TEAMBIMCIVIL», como en el PDF que se distribuyó (empresaTecnico).
+const EMPRESA_TECNICO = { nombre: 'TEAMBIMCIVIL S.L.', anterior: EMPRESA, desde: '3.1.3' };
 // Formato del sistema de gestión de calidad (ISO 9001): su nombre es el título del PDF y figura en el
 // bloque de control de cada página. Si el formato llega a tener código y revisión, se añaden aquí.
 // Desde la v3.1.1, «Acta de Campo» con cabecera y pie en gris. Un acta emitida conserva el formato con el que se
@@ -1560,7 +1577,9 @@ const FORMATO_SGC = { nombre: 'Acta de Campo', codigo: '', revision: '', marco: 
 const FORMATO_SGC_ANTERIOR = { nombre: 'Acta de Visita de Inspección', codigo: '', revision: '', marco: 'negro', palabraClave: 'acta de visita' };
 // Listas desplegables de la app. Se cambian aquí, sin tocar el resto del código.
 // · Técnicos de TEAMBIMCIVIL (la app los muestra en orden alfabético).
-const TECNICOS = ['Alberto de Álava', 'Ana Cascajosa', 'Ángel García', 'Blas González', 'Francisco S. Ortiz', 'José A. Gómez', 'José L. Gutiérrez'];
+const TECNICOS = ['Alberto de Álava', 'Ana Cascajosa', 'Ángel García', 'Blas González', 'Francisco S. Ortiz', 'José A. Gómez',
+  'José L. Gutiérrez', 'Carlos Rubio', 'María Quinta', 'Francisco García', 'Olga Provincial', 'Beatriz Sánchez', 'Javier Gómez',
+  'Sebastián Gil'];
 // · Cargos o roles del técnico y de los asistentes; «Otro» permite escribir uno distinto.
 const CARGOS = ['Inspector de Campo', 'Redactor de Estudio', 'Director de Obra', 'Supervisor de Obra'];
 // · Objeto de la visita; «Otro» obliga a describirlo. Las claves se guardan en el acta: no cambiarlas.
@@ -1582,6 +1601,9 @@ const CLAVE_ACTA_ACTUAL = 'tbc-acta-actual';
 const CLAVE_ULTIMA_COPIA = 'tbc-ultima-copia';
 const CLAVE_CONTENIDO_COPIA = 'tbc-contenido-copia';   // versión («modificada») de cada acta en la última copia
 const CLAVE_ULTIMO_TECNICO = 'tbc-ultimo-tecnico';   // técnico y cargo que se proponen en un acta nueva
+// Expedientes y personas de las actas emitidas en el teléfono, para proponerlos aunque luego se borren las actas (v3.1.3).
+const CLAVE_RECORDADOS = 'tbc-recordados';
+const MAX_RECORDADOS = { expedientes: 100, personas: 300 };
 const DIAS_AVISO_COPIA = 7;           // aviso si pasan más días sin copia y hay cambios (con actas emitidas sin copia, el mismo día)
 const ESQUEMA = 4;                    // versión del registro del acta en el teléfono
 const FORMATO_EXPORTACION = 'tbc-acta';   // identifica los acta.json exportados por la app
@@ -2042,6 +2064,7 @@ function alMensajeVentana(m) {
     if (state.acta && m.id === state.acta.id) sincronizarActa();
     if ($('panelActas').classList.contains('open')) abrirMisActas();
     else actualizarAvisoCopia();
+    actualizarUsadosPronto();
   }
 }
 
@@ -2128,6 +2151,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') return guardarYa();
     sincronizarActa();                        // al volver: ¿ha cambiado el acta en otra ventana?
+    actualizarUsados();
     if (avisoVentanaPendiente) { avisoVentanaPendiente = false; avisarDobleVentana(); }
   });
   window.addEventListener('pagehide', () => { guardarYa(); });
@@ -2214,10 +2238,19 @@ async function cargarActaInicial() {
 }
 
 async function abrirActa(acta, { nueva = false } = {}) {
+  if (acta && acta.esquema > ESQUEMA) {     // guardada con una versión más nueva de la app (en otra ventana ya actualizada)
+    $('avisoVersion').classList.remove('hidden');
+    aviso('🔄', 'Versión nueva de la app', 'Esta acta se ha guardado con una versión más nueva de la app, abierta en otra ventana o '
+      + 'pestaña. Pulsa «Actualizar» (arriba) para abrirla con esa versión: con esta podrían perderse datos.');
+    if (state.acta && state.acta.id !== acta.id) return;     // se sigue con la que había en pantalla
+    acta = actaNueva(tecnicoRecordado());                     // era esa misma: en su lugar, una en blanco
+    nueva = true;
+  }
   detenerGPS();
   detenerGPSFotos();
   liberarFotos();
   state.acta = migrarActa(acta);
+  if (state.acta.estado !== 'emitida') razonSocialEnBorrador(state.acta);
   state.persistida = !nueva;
   state.pendiente = false;
   state.base = nueva ? null : (acta.modificada ?? null);   // la versión del teléfono que abre esta ventana
@@ -2232,8 +2265,15 @@ async function abrirActa(acta, { nueva = false } = {}) {
     recordarActaActual(acta.id);
   }
   pintarActa();
-  irAFase(soloLectura() ? ULTIMA_FASE : (acta.fase || 1), { guardar: false });
+  irAFase(soloLectura() ? ULTIMA_FASE : Math.min(acta.fase || 1, ULTIMA_FASE), { guardar: false });
   indicarGuardado(soloLectura() ? 'lectura' : (nueva ? 'nueva' : 'ok'));
+}
+
+// En un borrador, los asistentes y responsables de TEAMBIMCIVIL van con la razón social, como su técnico: también en uno
+// empezado con la v3.1.2. Un acta emitida no cambia nunca; el seguimiento (lo que dijeron otras actas) tampoco.
+function razonSocialEnBorrador(acta) {
+  for (const a of acta.asistentes) a.empresa = empresaActual(a.empresa);
+  for (const i of acta.indicaciones) i.responsable = responsableActual(i.responsable);
 }
 
 function liberarFotos() {
@@ -2253,6 +2293,7 @@ function pintarActa() {
   actualizarNumActa();
   pintarAyudaNumero();
   pintarListas();
+  actualizarUsados();
   pintarCondiciones();
   pintarGPS();
   pintarSinGps();
@@ -2263,7 +2304,7 @@ function pintarActa() {
 //  NAVEGACIÓN ENTRE FASES
 // ═══════════════════════════════════
 const FASES = {
-  1: { validar: validarIdentificacion },
+  1: { alEntrar: () => actualizarUsados(), validar: validarIdentificacion },
   2: { alEntrar: construirAsistentes, validar: validarAsistentes },
   3: { alEntrar: entrarFotos, alSalir: detenerGPSFotos, validar: validarFotos },
   4: { alEntrar: construirComentarios },
@@ -2419,7 +2460,8 @@ function pintarAyudaNumero() {
 function validarIdentificacion() {
   const d = state.acta.datos;
   const obligatorios = [
-    ['expediente', 'Introduce el expediente del trabajo.'],
+    ['expediente', $('expedienteLista').classList.contains('hidden') ? 'Introduce el expediente del trabajo.'
+      : 'Elige el expediente del trabajo, o «➕ Nuevo expediente…» y escríbelo.'],
     ['actaNum', 'Introduce el número de acta (se genera solo al indicar el expediente).'],
     ['tecnico', 'Elige el técnico responsable.'],
     ['cargoTecnico', 'Elige el cargo del técnico (o «Otro» y escríbelo).'],
@@ -2480,7 +2522,40 @@ function iniciarListas() {
     if (state.acta.datos.objeto === 'otro' && !$('descripcion').value.trim()) $('descripcion').focus();
     guardarPronto();
   });
-  $('expediente').addEventListener('focus', pintarExpedientes);
+  $('expedienteLista').addEventListener('change', () => {
+    if (soloLectura()) return;
+    const valor = $('expedienteLista').value, campo = $('expediente'), d = state.acta.datos;
+    modoExpediente.nuevo = valor === NUEVO;
+    const expediente = modoExpediente.nuevo ? '' : valor;
+    campo.classList.toggle('hidden', !modoExpediente.nuevo);
+    $('expedienteEtiqueta').htmlFor = modoExpediente.nuevo ? 'expediente' : 'expedienteLista';
+    if (modoExpediente.nuevo) campo.focus();
+    if (expediente === d.expediente) return;         // sin cambios: un acta nueva no se guarda solo por tocar la lista
+    d.expediente = expediente;
+    campo.value = expediente;
+    programarNumero();
+    guardarPronto();
+  });
+  const anadir = $('anadirAsistenteLista');
+  let porTeclado = false;
+  const aplicarAnadir = () => {
+    const valor = anadir.value;
+    anadir.value = '';
+    porTeclado = false;
+    if (soloLectura() || !valor) return;
+    if (valor === NUEVA_PERSONA) return anadirAsistente();
+    const x = candidatosAsistente[Number(valor)];
+    if (!x) return;
+    anadirAsistente({ nombre: x.nombre, empresa: empresaActual(x.empresa), cargo: x.cargo, firma: x.firma !== false });
+    anadir.blur();
+  };
+  anadir.addEventListener('keydown', e => {
+    if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key) || /^[\p{L}\p{N}]$/u.test(e.key)) porTeclado = true;
+    else if (e.key === 'Enter' && porTeclado) { e.preventDefault(); aplicarAnadir(); }
+    else if (e.key === 'Escape') { anadir.value = ''; porTeclado = false; }
+  });
+  anadir.addEventListener('change', () => { if (!porTeclado) aplicarAnadir(); });
+  anadir.addEventListener('blur', () => { if (porTeclado) aplicarAnadir(); });
 }
 
 function pintarListas() {
@@ -2502,18 +2577,153 @@ function pintarDetalleObjeto() {
   $('descripcion').placeholder = otro ? 'Qué se revisa en la visita' : 'p. ej. Hormigonado de la losa de planta 1';
 }
 
-// Sugerencias al escribir el expediente: los de las actas del teléfono, de la más reciente a la más antigua.
-async function pintarExpedientes() {
-  let actas = [];
-  try { actas = await Almacen.listarActas(); } catch (e) { return; }
-  const vistos = new Set(), lista = [];
-  for (const a of actas.sort((x, y) => String(y.modificada).localeCompare(String(x.modificada)))) {
-    const expediente = a.datos.expediente.trim();
-    if (!expediente || vistos.has(expediente.toLowerCase())) continue;
-    vistos.add(expediente.toLowerCase());
-    lista.push(expediente);
+// ── Lo ya usado en el teléfono (v3.1.3): expedientes, personas y empresas ──
+// Sale de las actas guardadas (borradores, emitidas e importadas) y de lo recordado al emitir (CLAVE_RECORDADOS), que
+// sigue aunque luego se borren las actas. Lo usan los desplegables del expediente, de los asistentes y de su empresa,
+// de lo más reciente a lo más antiguo. Las listas del navegador (datalist) no salen en Android: el teclado se las queda.
+const textoClave = v => String(v || '').trim().toLowerCase();
+const esTeambimcivil = empresa => /^team\s*bim\s*civil(\s*,?\s*s\.?\s*l\.?)?$/.test(textoClave(empresa));
+// En un acta nueva (revisión, «Nueva visita» o asistente propuesto), lo de TEAMBIMCIVIL pasa a la razón social.
+const empresaActual = empresa => (esTeambimcivil(empresa) ? EMPRESA_TECNICO.nombre : empresa);
+const responsableActual = responsable => {
+  const m = String(responsable || '').match(/^\s*team\s*bim\s*civil(?:\s*,?\s*s\.?\s*l\.?)?\s*(?:·\s*(.*))?$/i);
+  return m ? (m[1] ? `${EMPRESA_TECNICO.nombre} · ${m[1].trim()}` : EMPRESA_TECNICO.nombre) : responsable;
+};
+const clavePersona = p => `${textoClave(p.nombre)}|${esTeambimcivil(p.empresa) ? 'teambimcivil' : textoClave(p.empresa)}`;
+const MAX_EN_LISTA = { expedientes: 50, personas: 60, empresas: 50 };
+let usados = { expedientes: [], personas: [], empresas: [] };
+
+function leerRecordados() {
+  const vacio = { expedientes: [], personas: [] }, texto = v => typeof v === 'string';
+  try {
+    const r = JSON.parse(localStorage.getItem(CLAVE_RECORDADOS) || 'null');
+    if (!r || typeof r !== 'object') return vacio;
+    return {
+      expedientes: (Array.isArray(r.expedientes) ? r.expedientes : []).filter(e => e && texto(e.valor) && texto(e.fecha)),
+      personas: (Array.isArray(r.personas) ? r.personas : []).filter(x => x && texto(x.nombre) && texto(x.empresa) && texto(x.cargo)
+        && texto(x.fecha) && Array.isArray(x.expedientes) && x.expedientes.every(texto)),
+    };
+  } catch (e) { return vacio; }
+}
+
+// Al emitir, el expediente y los asistentes del acta quedan recordados (lo más reciente primero, sin repetir), con las
+// actas que los usan. Al emitir una revisión, lo que solo usaba el acta que corrige (un expediente o un nombre mal
+// escritos) deja de proponerse; lo que usaron otras actas, aunque ya no estén en el teléfono, se sigue proponiendo.
+function recordarDelActa(acta) {
+  const r = leerRecordados(), fecha = acta.emitida || new Date().toISOString(), expediente = acta.datos.expediente.trim();
+  const conActa = previo => [acta.id, ...(previo && Array.isArray(previo.actas) ? previo.actas : []).filter(id => id !== acta.id)].slice(0, 20);
+  if (expediente) {
+    const previo = r.expedientes.find(e => textoClave(e.valor) === textoClave(expediente));
+    r.expedientes = [{ valor: expediente, fecha, actas: conActa(previo) }, ...r.expedientes.filter(e => e !== previo)];
   }
-  $('expedientesLista').innerHTML = lista.slice(0, 50).map(e => `<option value="${esc(e)}"></option>`).join('');
+  for (const a of [...acta.asistentes].reverse()) {     // al revés: quedan en el orden del acta
+    if (!a.nombre.trim()) continue;
+    const persona = { nombre: a.nombre.trim(), empresa: a.empresa.trim(), cargo: a.cargo.trim(), firma: a.firma !== false, fecha };
+    const anterior = r.personas.find(x => clavePersona(x) === clavePersona(persona));
+    persona.expedientes = [...new Set([expediente, ...(anterior ? anterior.expedientes : [])].filter(e => typeof e === 'string' && e))].slice(0, 10);
+    persona.actas = conActa(anterior);
+    r.personas = [persona, ...r.personas.filter(x => x !== anterior)];
+  }
+  if (acta.corrigeA) sinActaCorregida(r, acta.corrigeA);
+  r.expedientes = r.expedientes.slice(0, MAX_RECORDADOS.expedientes);
+  r.personas = r.personas.slice(0, MAX_RECORDADOS.personas);
+  try { localStorage.setItem(CLAVE_RECORDADOS, JSON.stringify(r)); } catch (e) { /* sin almacenamiento local */ }
+}
+
+// Quita de lo recordado el acta corregida: lo que solo ella usaba (un expediente o un nombre mal escritos) se olvida.
+function sinActaCorregida(r, id) {
+  const quitar = x => (Array.isArray(x.actas) ? { ...x, actas: x.actas.filter(a => a !== id) } : x);
+  const sigue = x => !Array.isArray(x.actas) || x.actas.length > 0;
+  r.expedientes = r.expedientes.map(quitar).filter(sigue);
+  r.personas = r.personas.map(quitar).filter(sigue);
+  return r;
+}
+
+// Una revisión importada sustituye a un acta del teléfono: lo que solo esa acta usaba deja de proponerse.
+function olvidarCorregida(id) {
+  const antes = leerRecordados(), texto = JSON.stringify(antes), r = sinActaCorregida(JSON.parse(texto), id);
+  if (JSON.stringify(r) === texto) return;
+  try { localStorage.setItem(CLAVE_RECORDADOS, JSON.stringify(r)); } catch (e) { /* sin almacenamiento local */ }
+}
+
+async function cargarUsados() {
+  let actas = [];
+  try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén: solo lo recordado */ }
+  const r = leerRecordados(), expedientes = new Map(), personas = new Map(), empresas = new Map();
+  const masReciente = (mapa, k, item) => {          // la versión más reciente de cada uno (su forma de escribirlo)
+    const e = mapa.get(k);
+    if (!e || item.fecha > e.fecha) mapa.set(k, item);
+    return mapa.get(k);
+  };
+  const anotarExpediente = (valor, fecha) => {
+    if (textoClave(valor)) masReciente(expedientes, textoClave(valor), { valor: String(valor).trim(), fecha });
+  };
+  const anotarPersona = (x, enExpedientes, fecha) => {
+    if (!textoClave(x.nombre)) return;
+    const k = clavePersona(x), antes = personas.get(k);
+    const item = masReciente(personas, k, { nombre: String(x.nombre).trim(), empresa: String(x.empresa || '').trim(),
+      cargo: String(x.cargo || '').trim(), firma: x.firma !== false, fecha, expedientes: new Set() });
+    for (const e of [...(antes ? antes.expedientes : []), ...enExpedientes]) if (textoClave(e)) item.expedientes.add(textoClave(e));
+    if (textoClave(x.empresa) && !esTeambimcivil(x.empresa)) masReciente(empresas, textoClave(x.empresa), { valor: String(x.empresa).trim(), fecha });
+  };
+  for (const a of actas) {
+    if (a.sustituidaPor) continue;                   // una revisión posterior la corrige
+    const fecha = String(a.modificada || '');
+    anotarExpediente(a.datos.expediente, fecha);
+    for (const x of a.asistentes) anotarPersona(x, [a.datos.expediente], fecha);
+  }
+  // Lo recordado de actas que están todas en el teléfono y sustituidas por una revisión, no (la revisión manda).
+  const sustituidas = new Set(actas.filter(a => a.sustituidaPor).map(a => a.id));
+  const vale = x => !Array.isArray(x.actas) || !x.actas.length || !x.actas.every(id => sustituidas.has(id));
+  for (const e of r.expedientes) if (vale(e)) anotarExpediente(e.valor, e.fecha);
+  for (const x of r.personas) if (vale(x)) anotarPersona(x, x.expedientes, x.fecha);
+  const porFecha = (x, y) => String(y.fecha).localeCompare(String(x.fecha));
+  usados = {
+    expedientes: [...expedientes.values()].sort(porFecha).map(e => e.valor),
+    personas: [...personas.values()].sort(porFecha),
+    empresas: [...empresas.values()].sort(porFecha).map(e => e.valor),
+  };
+  return usados;
+}
+
+// Vuelve a leer lo usado y pone al día los desplegables del acta en pantalla (al abrir un acta, al entrar en
+// Identificación y en Asistentes, al cerrar Mis actas, tras importar, al volver a la app y cuando otra ventana guarda).
+// Un desplegable que se está usando no se toca.
+async function actualizarUsados() {
+  const acta = state.acta;
+  await cargarUsados();
+  if (!acta || state.acta !== acta) return;
+  pintarExpedientes({ desdeCarga: true });
+  pintarOpcionesAsistentes({ desdeCarga: true });
+}
+
+let temporizadorUsados = null;
+function actualizarUsadosPronto() {
+  clearTimeout(temporizadorUsados);
+  temporizadorUsados = setTimeout(actualizarUsados, 400);
+}
+
+// Expediente: desplegable con los ya usados en el teléfono y «➕ Nuevo expediente…» para escribir otro. Sin expedientes
+// usados, o en un acta de solo lectura, solo el campo de texto. Un expediente que no está en la lista sale como nuevo.
+const NUEVO = '__nuevo';
+let modoExpediente = { actaId: null, nuevo: false };
+
+function pintarExpedientes({ desdeCarga = false } = {}) {
+  const acta = state.acta, select = $('expedienteLista'), campo = $('expediente');
+  if (!acta || (desdeCarga && document.activeElement === select)) return;
+  if (modoExpediente.actaId !== acta.id) modoExpediente = { actaId: acta.id, nuevo: false };
+  const valor = acta.datos.expediente, propio = valor.trim(), bloqueado = soloLectura();
+  const lista = usados.expedientes.slice(0, MAX_EN_LISTA.expedientes).map(e => (propio && mismoTexto(e, propio) ? propio : e));
+  const enLista = propio ? lista.find(e => e === propio) || null : null;
+  const conLista = lista.length > 0 && !bloqueado;
+  const escribiendo = document.activeElement === campo && !campo.classList.contains('hidden');   // no se le quita el campo
+  const nuevo = conLista && (modoExpediente.nuevo || escribiendo || Boolean(valor.trim() && !enLista));
+  select.innerHTML = conLista ? opcion('', 'Elige el expediente', !nuevo && !enLista)
+    + lista.map(e => opcion(e, e, !nuevo && e === enLista)).join('') + opcion(NUEVO, '➕ Nuevo expediente…', nuevo) : '';
+  select.classList.toggle('hidden', !conLista);
+  select.disabled = bloqueado;
+  campo.classList.toggle('hidden', conLista && !nuevo);
+  $('expedienteEtiqueta').htmlFor = conLista && !nuevo ? 'expedienteLista' : 'expediente';
 }
 
 // El teléfono recuerda el último técnico y cargo elegidos y los propone en un acta nueva.
@@ -2764,9 +2974,83 @@ let sugeridos = [];
 function construirAsistentes() {
   const d = state.acta.datos;
   $('tecnicoNombreAsist').textContent = d.tecnico.trim() || '—';
-  $('tecnicoCargoAsist').textContent = empresaCargo(EMPRESA, d.cargoTecnico);
+  $('tecnicoCargoAsist').textContent = empresaCargo(empresaTecnico(state.acta), d.cargoTecnico);
   pintarAsistentes();
   pintarSugeridos();
+  pintarOpcionesAsistentes();
+  actualizarUsados();
+}
+
+// ── Desplegable «➕ Añadir asistente…» (v3.1.3) ──
+// Los técnicos de TEAMBIMCIVIL (menos el del acta) y las personas de actas anteriores del teléfono, primero las de este
+// expediente, con su empresa y cargo; «Persona nueva» añade una ficha para escribirla. No salen las que ya están.
+const NUEVA_PERSONA = '__nueva';
+let candidatosAsistente = [];
+
+function candidatosParaAsistente() {
+  const acta = state.acta, d = acta.datos, expediente = textoClave(d.expediente);
+  const presentes = new Set(acta.asistentes.filter(a => a.nombre.trim()).map(clavePersona));
+  const nombres = new Set([d.tecnico, ...acta.asistentes.map(a => a.nombre)].map(textoClave));
+  const esTecnico = x => esTeambimcivil(x.empresa) && TECNICOS.some(t => mismoTexto(t, x.nombre));
+  const deLaEmpresa = new Map(usados.personas.filter(esTecnico).map(x => [textoClave(x.nombre), x]));
+  const tecnicos = tecnicosOrdenados().filter(t => !nombres.has(textoClave(t))).map(t => {
+    const x = deLaEmpresa.get(textoClave(t));         // su cargo y su firma de la última vez que asistió
+    return { nombre: t, empresa: empresaTecnico(acta), cargo: x ? x.cargo : '', firma: x ? x.firma : true };
+  });
+  const personas = usados.personas.filter(x => !esTecnico(x) && !presentes.has(clavePersona(x)));
+  const delExpediente = expediente ? personas.filter(x => x.expedientes.has(expediente)) : [];
+  const otras = personas.filter(x => !delExpediente.includes(x)).slice(0, MAX_EN_LISTA.personas);
+  return { tecnicos, delExpediente: delExpediente.slice(0, MAX_EN_LISTA.personas), otras };
+}
+
+function pintarOpcionesAsistentes({ desdeCarga = false } = {}) {
+  const select = $('anadirAsistenteLista');
+  if (!state.acta) return;
+  if (desdeCarga && document.activeElement === select) return pintarOpcionesEmpresa();
+  const bloqueado = soloLectura();
+  select.classList.toggle('hidden', bloqueado);
+  select.disabled = bloqueado;
+  const { tecnicos, delExpediente, otras } = candidatosParaAsistente();
+  candidatosAsistente = [...tecnicos, ...delExpediente, ...otras];
+  let n = 0;
+  const grupo = (titulo, lista) => (lista.length ? `<optgroup label="${esc(titulo)}">${lista.map(x =>
+    opcion(String(n++), [x.nombre, empresaCargo(x.empresa, x.cargo)].filter(Boolean).join(' · '), false)).join('')}</optgroup>` : '');
+  select.innerHTML = opcion('', '➕ Añadir asistente…', true) + opcion(NUEVA_PERSONA, '✏️ Persona nueva (escribir)', false)
+    + grupo(empresaTecnico(state.acta), tecnicos) + grupo('De este expediente', delExpediente) + grupo('De otras actas', otras);
+  pintarOpcionesEmpresa();
+}
+
+// Empresa de cada asistente: desplegable con TEAMBIMCIVIL S.L. y las ya usadas, y «Otra…» para escribirla.
+function empresasDeLista() {
+  const lista = [EMPRESA_TECNICO.nombre], vistas = new Set([textoClave(EMPRESA_TECNICO.nombre)]);
+  const enActa = state.acta ? state.acta.asistentes.map(a => a.empresa) : [];     // las de las otras fichas, primero
+  for (const e of [...enActa, ...usados.empresas]) {
+    const k = textoClave(e);
+    if (!k || esTeambimcivil(e) || vistas.has(k)) continue;
+    vistas.add(k);
+    lista.push(String(e).trim());
+    if (lista.length > MAX_EN_LISTA.empresas) break;
+  }
+  return lista;
+}
+const empresaDeLista = valor => empresasDeLista().find(e => mismoTexto(e, valor)) || null;
+
+function opcionesEmpresa(valor) {
+  const deLista = empresaDeLista(valor), otra = Boolean(String(valor || '').trim()) && !deLista;
+  return opcion('', 'Elige la empresa', !deLista && !otra) + empresasDeLista().map(e => opcion(e, e, e === deLista)).join('')
+    + opcion(OTRO, 'Otra…', otra);
+}
+
+// Pone al día las opciones de empresa de cada ficha sin volver a pintarlas (no se pierde lo que se está escribiendo).
+function pintarOpcionesEmpresa({ excepto = -1 } = {}) {
+  state.acta.asistentes.forEach((a, i) => {
+    const select = $(`asEmpresaLista${i}`), campo = $(`asEmpresa${i}`);
+    if (i === excepto || !select || !campo || document.activeElement === campo || document.activeElement === select) return;
+    select.innerHTML = opcionesEmpresa(a.empresa);
+    const otra = select.value === OTRO;
+    campo.classList.toggle('hidden', !otra);
+    campo.value = otra ? a.empresa : '';
+  });
 }
 
 function pintarAsistentes() {
@@ -2779,7 +3063,8 @@ function pintarAsistentes() {
       <label class="field-label" for="asNombre${i}">Nombre y apellidos <span class="required">*</span></label>
       <input type="text" class="field-input" id="asNombre${i}" data-campo="nombre" value="${esc(a.nombre)}" placeholder="Nombre y apellidos">
       <div class="coord-row">
-        <div><label class="field-label" for="asEmpresa${i}">Empresa</label><input type="text" class="field-input" id="asEmpresa${i}" data-campo="empresa" value="${esc(a.empresa)}" placeholder="Empresa"></div>
+        <div><label class="field-label" for="asEmpresaLista${i}">Empresa</label><select class="field-input" id="asEmpresaLista${i}" data-campo="empresaLista">${opcionesEmpresa(a.empresa)}</select>
+          <input type="text" class="field-input campo-otro${empresaDeLista(a.empresa) || !a.empresa.trim() ? ' hidden' : ''}" id="asEmpresa${i}" data-campo="empresa" value="${esc(empresaDeLista(a.empresa) ? '' : a.empresa)}" placeholder="Escribe la empresa" aria-label="Otra empresa del asistente ${i + 2}"></div>
         <div><label class="field-label" for="asCargo${i}">Cargo</label><select class="field-input" id="asCargo${i}" data-campo="cargoLista">${opcionesCargo(a.cargo)}</select>
           <input type="text" class="field-input campo-otro${cargoDeLista(a.cargo) || !a.cargo.trim() ? ' hidden' : ''}" id="asCargoOtro${i}" data-campo="cargoOtro" maxlength="120" value="${esc(cargoDeLista(a.cargo) ? '' : a.cargo)}" placeholder="Escribe el cargo" aria-label="Otro cargo del asistente ${i + 2}"></div>
       </div>
@@ -2789,7 +3074,8 @@ function pintarAsistentes() {
 
 function alEditarAsistente(e) {
   const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-asistente]');
-  if (!campo || !tarjeta || soloLectura()) return;
+  // Un campo «Otro» que se acaba de ocultar (se eligió de la lista) avisa de su cambio al perder el foco: no manda.
+  if (!campo || !tarjeta || soloLectura() || e.target.classList.contains('hidden')) return;
   const i = Number(tarjeta.dataset.asistente), asistente = state.acta.asistentes[i];
   if (campo === 'cargoLista') {                  // cargo de la lista; con «Otro» se escribe en el campo de debajo
     if (e.type !== 'change') return;
@@ -2799,8 +3085,16 @@ function alEditarAsistente(e) {
     if (otro) campoOtro.focus();
   } else if (campo === 'cargoOtro') {
     asistente.cargo = e.target.value;
+  } else if (campo === 'empresaLista') {         // empresa de la lista; con «Otra» se escribe en el campo de debajo
+    if (e.type !== 'change') return;
+    const otra = e.target.value === OTRO, campoOtra = $(`asEmpresa${i}`);
+    if (otra) campoOtra.value = asistente.empresa;    // para corregirla, sin volver a escribirla
+    campoOtra.classList.toggle('hidden', !otra);
+    asistente.empresa = otra ? campoOtra.value : e.target.value;
+    if (otra) campoOtra.focus();
   } else {
     asistente[campo] = campo === 'firma' ? e.target.checked : e.target.value;
+    if (campo === 'empresa' && e.type === 'change') pintarOpcionesEmpresa({ excepto: i });   // se ofrece en las demás fichas
   }
   guardarPronto();
 }
@@ -2810,6 +3104,7 @@ function anadirAsistente(datos = {}) {
   state.acta.asistentes.push({ id: nuevoId('asis'), nombre: '', empresa: '', cargo: '', firma: true, ...datos });
   pintarAsistentes();
   pintarSugeridos();
+  pintarOpcionesAsistentes();
   guardarPronto();
   if (!datos.nombre) {
     const ultimo = $(`asNombre${state.acta.asistentes.length - 1}`);
@@ -2823,24 +3118,27 @@ function quitarAsistente(indice) {
   if (quitado) delete state.acta.firmasAsistentes[quitado.id];
   pintarAsistentes();
   pintarSugeridos();
+  pintarOpcionesAsistentes();
   guardarPronto();
 }
 
 // Asistentes de otras actas del mismo expediente que aún no están en esta.
 async function pintarSugeridos() {
   const acta = state.acta, expediente = acta.datos.expediente.trim().toLowerCase();
-  const clave = a => [a.nombre, a.empresa, a.cargo].map(v => String(v || '').trim().toLowerCase()).join('|');
   let actas = [];
   if (expediente) { try { actas = await Almacen.listarActas(); } catch (e) { /* sin almacén */ } }
   if (state.acta !== acta) return;
-  const presentes = new Set(acta.asistentes.map(clave));
+  const presentes = new Set(acta.asistentes.filter(a => a.nombre.trim()).map(clavePersona));
+  const esElTecnico = a => mismoTexto(a.nombre, acta.datos.tecnico) && esTeambimcivil(a.empresa);
   const vistos = new Set();
   sugeridos = [];
+  actas.sort((x, y) => String(y.modificada).localeCompare(String(x.modificada)));   // de cada persona, lo más reciente
   for (const otra of actas) {
-    if (otra.id === acta.id || otra.datos.expediente.trim().toLowerCase() !== expediente) continue;
+    if (otra.id === acta.id || otra.id === acta.corrigeA || otra.sustituidaPor
+      || otra.datos.expediente.trim().toLowerCase() !== expediente) continue;     // de lo corregido, solo la revisión
     for (const a of otra.asistentes) {
-      const k = clave(a);
-      if (!a.nombre.trim() || presentes.has(k) || vistos.has(k)) continue;
+      const k = clavePersona(a);
+      if (!a.nombre.trim() || presentes.has(k) || vistos.has(k) || esElTecnico(a)) continue;
       vistos.add(k);
       sugeridos.push({ nombre: a.nombre, empresa: a.empresa, cargo: a.cargo, firma: a.firma });
     }
@@ -2855,7 +3153,7 @@ async function pintarSugeridos() {
 
 function anadirSugerido(indice) {
   const s = sugeridos[indice];
-  if (s) anadirAsistente({ ...s });
+  if (s) anadirAsistente({ ...s, empresa: empresaActual(s.empresa) });
 }
 
 function validarAsistentes() {
@@ -3123,7 +3421,6 @@ function alEscribirComentario(e) {
 function construirAcuerdos() {
   $('observaciones').value = state.acta.observaciones;
   $('obsCount').textContent = state.acta.observaciones.length;
-  $('responsablesLista').innerHTML = responsablesPosibles().map(r => `<option value="${esc(r)}"></option>`).join('');
   pintarSeguimiento();
   pintarIndicaciones();
   cargarSeguimiento(5).then(cambio => {     // si ya había un seguimiento cargado y cambia, se avisa
@@ -3378,11 +3675,18 @@ function alEditarSeguimiento(e) {
   guardarPronto();
 }
 
-// Sugerencias para «Responsable»: el técnico y cada asistente («Empresa · cargo»).
+// Responsables posibles: el técnico y cada asistente («Empresa · cargo», o su nombre si no tiene empresa ni cargo).
 function responsablesPosibles() {
-  const lista = [empresaCargo(EMPRESA, state.acta.datos.cargoTecnico)];
+  const lista = [empresaCargo(empresaTecnico(state.acta), state.acta.datos.cargoTecnico)];
   for (const a of state.acta.asistentes) lista.push(empresaCargo(a.empresa, a.cargo) || a.nombre.trim());
   return [...new Set(lista.filter(Boolean))];
+}
+
+// «Responsable» de una indicación: desplegable con los responsables posibles y «Otro…» para escribirlo (v3.1.3).
+function opcionesResponsable(valor) {
+  const lista = responsablesPosibles(), deLista = lista.find(r => mismoTexto(r, valor)) || null;
+  const otro = Boolean(String(valor || '').trim()) && !deLista;
+  return opcion('', 'Sin responsable', !deLista && !otro) + lista.map(r => opcion(r, r, r === deLista)).join('') + opcion(OTRO, 'Otro…', otro);
 }
 
 function pintarIndicaciones() {
@@ -3397,7 +3701,8 @@ function pintarIndicaciones() {
       <label class="field-label" for="indTexto${i}">Indicación <span class="required">*</span></label>
       <textarea class="field-input ind-textarea" id="indTexto${i}" data-campo="texto" maxlength="${MAX_INDICACION}" placeholder="Qué hay que hacer">${esc(ind.texto)}</textarea>
       <div class="ind-row">
-        <div><label class="field-label" for="indResp${i}">Responsable</label><input type="text" class="field-input" id="indResp${i}" data-campo="responsable" list="responsablesLista" value="${esc(ind.responsable)}" placeholder="Empresa · cargo"></div>
+        <div><label class="field-label" for="indRespLista${i}">Responsable</label><select class="field-input" id="indRespLista${i}" data-campo="responsableLista">${opcionesResponsable(ind.responsable)}</select>
+          <input type="text" class="field-input campo-otro${responsablesPosibles().some(r => mismoTexto(r, ind.responsable)) || !ind.responsable.trim() ? ' hidden' : ''}" id="indResp${i}" data-campo="responsable" value="${esc(responsablesPosibles().some(r => mismoTexto(r, ind.responsable)) ? '' : ind.responsable)}" placeholder="Empresa · cargo" aria-label="Otro responsable de la indicación ${i + 1}"></div>
         <div><label class="field-label" for="indPlazo${i}">Plazo</label><input type="date" class="field-input" id="indPlazo${i}" data-campo="plazo" value="${esc(ind.plazo)}"></div>
       </div>
     </div>`).join('');
@@ -3405,8 +3710,17 @@ function pintarIndicaciones() {
 
 function alEditarIndicacion(e) {
   const campo = e.target.dataset.campo, tarjeta = e.target.closest('[data-indicacion]');
-  if (!campo || !tarjeta || soloLectura()) return;
-  state.acta.indicaciones[Number(tarjeta.dataset.indicacion)][campo] = e.target.value;
+  if (!campo || !tarjeta || soloLectura() || e.target.classList.contains('hidden')) return;
+  const i = Number(tarjeta.dataset.indicacion), indicacion = state.acta.indicaciones[i];
+  if (campo === 'responsableLista') {            // responsable de la lista; con «Otro» se escribe en el campo de debajo
+    const otro = e.target.value === OTRO, campoOtro = $(`indResp${i}`);
+    if (otro) campoOtro.value = indicacion.responsable;   // para corregirlo, sin volver a escribirlo
+    campoOtro.classList.toggle('hidden', !otro);
+    indicacion.responsable = otro ? campoOtro.value : e.target.value;
+    if (otro) campoOtro.focus();
+  } else {
+    indicacion[campo] = e.target.value;
+  }
   guardarPronto();
 }
 
@@ -3549,7 +3863,7 @@ function entrarFirmas() {
   const d = state.acta.datos;
   padTecnico.ajustar();
   $('sigNameDisplay').textContent = d.tecnico.trim() || '—';
-  $('sigDateDisplay').textContent = `${empresaCargo(EMPRESA, d.cargoTecnico)} · ${fechaES(d.fecha)} ${d.hora}`;
+  $('sigDateDisplay').textContent = `${empresaCargo(empresaTecnico(state.acta), d.cargoTecnico)} · ${fechaES(d.fecha)} ${d.hora}`;
   padsAsistentes.forEach(p => p.destruir());
   padsAsistentes = [];
   const firmantes = state.acta.asistentes.filter(a => a.firma);
@@ -3674,7 +3988,7 @@ function firmaComoImagen(trazosFirma) {
 function firmantesDelActa(acta = state.acta) {
   const d = acta.datos;
   return [
-    { nombre: d.tecnico.trim(), empresa: EMPRESA, cargo: d.cargoTecnico.trim() || 'Técnico', imagen: firmaComoImagen(acta.firma) },
+    { nombre: d.tecnico.trim(), empresa: empresaTecnico(acta), cargo: d.cargoTecnico.trim() || 'Técnico', imagen: firmaComoImagen(acta.firma) },
     ...acta.asistentes.map(a => ({
       nombre: a.nombre.trim(), empresa: a.empresa.trim(), cargo: a.cargo.trim(),
       imagen: asistenteFirmo(a, acta) ? firmaComoImagen(acta.firmasAsistentes[a.id].trazos) : null,
@@ -3936,6 +4250,11 @@ function compararVersiones(a, b) {
 // Un acta emitida vuelve a generar el PDF que se distribuyó: sin lo que llegó después.
 function emitidaAntesDe(acta, version) {
   return acta.estado === 'emitida' && compararVersiones(acta.versionEmision || '0', version) < 0;
+}
+
+// Empresa del técnico: «TEAMBIMCIVIL S.L.» desde la v3.1.3; las emitidas antes, «TEAMBIMCIVIL», como en su PDF.
+function empresaTecnico(acta) {
+  return emitidaAntesDe(acta, EMPRESA_TECNICO.desde) ? EMPRESA_TECNICO.anterior : EMPRESA_TECNICO.nombre;
 }
 
 // Formato del SGC del acta: el vigente, o el anterior si se emitió antes de la v3.1.1.
@@ -4312,7 +4631,7 @@ async function crearPDF(acta, blobs, emision, alProgresar = () => {}) {
   pdf.setProperties({
     title: info(`${formatoActa.nombre} ${d.actaNum} · Rev. ${acta.revision}`),
     subject: info(`Expediente ${d.expediente} · Visita del ${fechaES(d.fecha)}${d.descripcion ? ` · ${d.descripcion}` : ''}`),
-    author: info(`${d.tecnico} · ${EMPRESA}`),
+    author: info(`${d.tecnico} · ${empresaTecnico(acta)}`),
     keywords: info([d.expediente, d.actaNum, formatoActa.palabraClave, EMPRESA].filter(Boolean).join(', ')),
     creator: info(`${NOMBRE_APP} v${VERSION} · ${EMPRESA}`),
   });
@@ -4381,6 +4700,7 @@ async function emitirActa(emision, acta = state.acta) {
   if (pdfEmision.listo && pdfEmision.listo.emision === emision) pdfEmision.clave = clavePDF(acta);   // es el mismo PDF
   await guardarYa();
   if (state.acta !== acta) return;    // otra ventana ya la había emitido: se muestra aquella (resolverConflicto)
+  recordarDelActa(acta);              // su expediente y sus asistentes se siguen proponiendo aunque se borre el acta
   if (acta.corrigeA) await marcarSustituida(acta);
   pintarActa();
   construirEmision();
@@ -4414,7 +4734,7 @@ async function abrirMisActas() {
   $('panelActas').classList.add('open');
 }
 
-function cerrarMisActas() { $('panelActas').classList.remove('open'); }
+function cerrarMisActas() { $('panelActas').classList.remove('open'); actualizarUsados(); }
 
 function tarjetaActa(a) {
   const emitida = a.estado === 'emitida', sustituida = Boolean(a.sustituidaPor);
@@ -4460,7 +4780,7 @@ async function nuevaVisita(id) {
   if (!origen) return;
   const { tecnico, cargoTecnico, expediente, descripcion, objeto } = origen.datos;
   const nueva = actaNueva({ tecnico, cargoTecnico, expediente, descripcion, objeto: objeto || '' });
-  nueva.asistentes = origen.asistentes.map(a => ({ ...a, id: nuevoId('asis') }));
+  nueva.asistentes = origen.asistentes.map(a => ({ ...a, id: nuevoId('asis'), empresa: empresaActual(a.empresa) }));
   await abrirActa(nueva, { nueva: true });
   guardarPronto();
   await proponerNumero();
@@ -4496,11 +4816,11 @@ async function corregirActa(id) {
   copia.gps = origen.gps ? { ...origen.gps } : null;
   copia.sinGps = { ...origen.sinGps };
   copia.condiciones = { meteo: [...origen.condiciones.meteo], temperatura: origen.condiciones.temperatura };
-  copia.asistentes = origen.asistentes.map(a => ({ ...a }));
+  copia.asistentes = origen.asistentes.map(a => ({ ...a, empresa: empresaActual(a.empresa) }));   // TEAMBIMCIVIL S.L. (v3.1.3)
   copia.observaciones = origen.observaciones;
   copia.seguimiento = origen.seguimiento.map(s => ({ ...s, origen: { ...s.origen } }));
   copia.seguimientoOrigen = origen.seguimientoOrigen ? { ...origen.seguimientoOrigen } : null;
-  copia.indicaciones = origen.indicaciones.map(ind => ({ ...ind }));
+  copia.indicaciones = origen.indicaciones.map(ind => ({ ...ind, responsable: responsableActual(ind.responsable) }));
   copia.corrigeA = origen.id;
   try {
     const imagenes = new Map((await Almacen.fotosDeActa(origen.id)).map(f => [f.id, f.blob]));
@@ -5097,6 +5417,7 @@ async function importarActas(entrada) {
   // Puede haber llegado un acta emitida posterior del mismo expediente que el borrador en pantalla.
   const seguimientoCambiado = await revisarSeguimientoEnPantalla();
   await abrirMisActas();
+  actualizarUsados();
   const partes = [
     r.nuevas && `${r.nuevas} acta(s) nueva(s)`,
     r.actualizadas && `${r.actualizadas} actualizada(s)`,
@@ -5178,6 +5499,7 @@ async function marcarSustituidasImportadas(actas, porId) {
       if (await Almacen.marcarSustituida(anterior.id, revision)) marcadas.push(anterior.id);   // con la versión de ese momento
       anterior.sustituidaPor = revision.id;
       anterior.sustituidaRev = revision.revision;
+      olvidarCorregida(anterior.id);
     } catch (e) { /* la revisión importada sigue siendo válida */ }
   }
   return marcadas;
